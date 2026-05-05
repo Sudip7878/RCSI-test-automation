@@ -68,9 +68,7 @@ export class CsiTrainingPage extends BasePage {
     await expect(searchTriggers.first()).toBeVisible({ timeout: 10_000 });
   }
 
-  /**
-   * `courseSlotIndex`: 0 = first `Search...`, 1 = second (after first course is chosen).
-   */
+  /** `courseSlotIndex`: 0 = first `Search...`, 1 = second slot. */
   async selectCourseByVirtualSelectSearch(courseName: string, courseSlotIndex: number) {
     await this.waitForCourseSelectionStepReady();
 
