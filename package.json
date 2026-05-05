@@ -1,0 +1,33 @@
+{
+  "name": "avotech-regression-testsuite",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:csi": "playwright test tests/csi",
+    "test:ui": "playwright test --ui",
+    "test:browserstack": "dotenv -- browserstack-node-sdk playwright test",
+    "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dxmanning/Avotech-Regression-TestSuite.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/dxmanning/Avotech-Regression-TestSuite/issues"
+  },
+  "homepage": "https://github.com/dxmanning/Avotech-Regression-TestSuite#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "@types/node": "^25.6.0",
+    "browserstack-node-sdk": "^1.52.2",
+    "dotenv": "^16.6.1",
+    "dotenv-cli": "^11.0.0",
+    "typescript": "^5.9.0"
+  }
+}

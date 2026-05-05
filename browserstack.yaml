@@ -1,0 +1,11 @@
+platforms:
+  - os: Windows
+    osVersion: 11
+    browserName: chrome
+    browserVersion: latest
+
+browserstackLocal: true
+buildName: "Avotech-Regression-TestSuite"
+
+video: true
+interactiveDebugging: true

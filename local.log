@@ -1,0 +1,246 @@
+
+Tue Apr 28 2026 11:26:26:969 GMT-0600 (Mountain Daylight Time) -- Binary semantic version is v8.9.29
+Tue Apr 28 2026 11:26:26:969 GMT-0600 (Mountain Daylight Time) -- Setting output as extra verbose with request parsing
+Tue Apr 28 2026 11:26:30:885 GMT-0600 (Mountain Daylight Time) -- Starting configuration console on http://localhost:45454
+Tue Apr 28 2026 11:26:32:832 GMT-0600 (Mountain Daylight Time) -- [SUCCESS] You can now access your local server(s) in our remote browser
+
+Tue Apr 28 2026 11:26:34:207 GMT-0600 (Mountain Daylight Time) -- undefined
+Tue Apr 28 2026 11:26:36:853 GMT-0600 (Mountain Daylight Time) -- Connecting to BrowserStack using WebSocket protocol...
+Tue Apr 28 2026 11:26:36:853 GMT-0600 (Mountain Daylight Time) -- Platform supports WebSocket connections.
+
+Tue Apr 28 2026 11:26:36:961 GMT-0600 (Mountain Daylight Time) -- Press Ctrl-C to exit
+
+
+
+Tue Apr 28 2026 11:32:05:330 GMT-0600 (Mountain Daylight Time) -- Binary semantic version is v8.9.29
+Tue Apr 28 2026 11:32:05:330 GMT-0600 (Mountain Daylight Time) -- Setting output as extra verbose with request parsing
+Tue Apr 28 2026 11:32:08:328 GMT-0600 (Mountain Daylight Time) -- Starting configuration console on http://localhost:45454
+Tue Apr 28 2026 11:32:10:280 GMT-0600 (Mountain Daylight Time) -- [SUCCESS] You can now access your local server(s) in our remote browser
+
+Tue Apr 28 2026 11:32:11:661 GMT-0600 (Mountain Daylight Time) -- undefined
+Tue Apr 28 2026 11:32:14:286 GMT-0600 (Mountain Daylight Time) -- Connecting to BrowserStack using WebSocket protocol...
+Tue Apr 28 2026 11:32:14:286 GMT-0600 (Mountain Daylight Time) -- Platform supports WebSocket connections.
+
+Tue Apr 28 2026 11:32:14:387 GMT-0600 (Mountain Daylight Time) -- Press Ctrl-C to exit
+
+
+
+Tue Apr 28 2026 11:42:54:756 GMT-0600 (Mountain Daylight Time) -- Binary semantic version is v8.9.29
+Tue Apr 28 2026 11:42:54:756 GMT-0600 (Mountain Daylight Time) -- Setting output as extra verbose with request parsing
+Tue Apr 28 2026 11:42:57:698 GMT-0600 (Mountain Daylight Time) -- Starting configuration console on http://localhost:45454
+Tue Apr 28 2026 11:42:59:845 GMT-0600 (Mountain Daylight Time) -- [SUCCESS] You can now access your local server(s) in our remote browser
+
+Tue Apr 28 2026 11:43:01:226 GMT-0600 (Mountain Daylight Time) -- undefined
+Tue Apr 28 2026 11:43:03:871 GMT-0600 (Mountain Daylight Time) -- Connecting to BrowserStack using WebSocket protocol...
+Tue Apr 28 2026 11:43:03:871 GMT-0600 (Mountain Daylight Time) -- Platform supports WebSocket connections.
+
+Tue Apr 28 2026 11:43:03:979 GMT-0600 (Mountain Daylight Time) -- Press Ctrl-C to exit
+
+
+
+Tue Apr 28 2026 11:49:26:467 GMT-0600 (Mountain Daylight Time) -- Binary semantic version is v8.9.29
+Tue Apr 28 2026 11:49:26:467 GMT-0600 (Mountain Daylight Time) -- Setting output as extra verbose with request parsing
+Tue Apr 28 2026 11:49:29:389 GMT-0600 (Mountain Daylight Time) -- Starting configuration console on http://localhost:45454
+Tue Apr 28 2026 11:49:31:299 GMT-0600 (Mountain Daylight Time) -- [SUCCESS] You can now access your local server(s) in our remote browser
+
+Tue Apr 28 2026 11:49:32:705 GMT-0600 (Mountain Daylight Time) -- undefined
+Tue Apr 28 2026 11:49:35:344 GMT-0600 (Mountain Daylight Time) -- Connecting to BrowserStack using WebSocket protocol...
+Tue Apr 28 2026 11:49:35:344 GMT-0600 (Mountain Daylight Time) -- Platform supports WebSocket connections.
+
+Tue Apr 28 2026 11:49:35:456 GMT-0600 (Mountain Daylight Time) -- Press Ctrl-C to exit
+
+
+Tue Apr 28 2026 11:50:06:477 GMT-0600 (Mountain Daylight Time) -- Request to: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:06:477 GMT-0600 (Mountain Daylight Time) -- [PARSING HANDSHAKE][11][5087956] Handshake request to csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:06:478 GMT-0600 (Mountain Daylight Time) -- Connecting to: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:07:342 GMT-0600 (Mountain Daylight Time) -- csi-tst.avotech.com:443 socket connected.
+Tue Apr 28 2026 11:50:07:343 GMT-0600 (Mountain Daylight Time) -- Connected to: 43.198.163.205
+Tue Apr 28 2026 11:50:08:155 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:08:156 GMT-0600 (Mountain Daylight Time) -- Writing 2082 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:09:35 GMT-0600 (Mountain Daylight Time) -- Writing 241 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:09:534 GMT-0600 (Mountain Daylight Time) -- Writing 31 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:09:549 GMT-0600 (Mountain Daylight Time) -- Writing 943 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:09:550 GMT-0600 (Mountain Daylight Time) -- Writing 1064 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:10:601 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:12:588 GMT-0600 (Mountain Daylight Time) -- Writing 19149 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:12:600 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:13:582 GMT-0600 (Mountain Daylight Time) -- Writing 2624 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:13:583 GMT-0600 (Mountain Daylight Time) -- Writing 11808 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:13:630 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:13:636 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:14:77 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:14:78 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:14:120 GMT-0600 (Mountain Daylight Time) -- Writing 2624 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:14:758 GMT-0600 (Mountain Daylight Time) -- Writing 2624 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:15:81 GMT-0600 (Mountain Daylight Time) -- Writing 9184 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:15:123 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:16:67 GMT-0600 (Mountain Daylight Time) -- Writing 5248 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:16:563 GMT-0600 (Mountain Daylight Time) -- Writing 3936 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:16:670 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:17:60 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:17:109 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:17:221 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:17:221 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:17:610 GMT-0600 (Mountain Daylight Time) -- Writing 2624 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:18:340 GMT-0600 (Mountain Daylight Time) -- Writing 3936 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:18:840 GMT-0600 (Mountain Daylight Time) -- Writing 2624 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:19:337 GMT-0600 (Mountain Daylight Time) -- Writing 2624 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:19:338 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:19:831 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:19:832 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:19:882 GMT-0600 (Mountain Daylight Time) -- Writing 2624 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:20:331 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:20:332 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:21:883 GMT-0600 (Mountain Daylight Time) -- Writing 7872 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:22:380 GMT-0600 (Mountain Daylight Time) -- Writing 2624 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:22:879 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:22:880 GMT-0600 (Mountain Daylight Time) -- Writing 2624 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:23:374 GMT-0600 (Mountain Daylight Time) -- Writing 2624 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:24:0 GMT-0600 (Mountain Daylight Time) -- Writing 5248 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:24:368 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:24:493 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:24:868 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:24:868 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:25:32 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:25:365 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:25:365 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:26:201 GMT-0600 (Mountain Daylight Time) -- Writing 6560 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:26:570 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:26:697 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:27:118 GMT-0600 (Mountain Daylight Time) -- Writing 2624 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:27:239 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:27:611 GMT-0600 (Mountain Daylight Time) -- Writing 2624 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:27:779 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:27:779 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:28:105 GMT-0600 (Mountain Daylight Time) -- Writing 2624 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:28:274 GMT-0600 (Mountain Daylight Time) -- Writing 2624 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:28:602 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:28:603 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:28:770 GMT-0600 (Mountain Daylight Time) -- Writing 2624 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:29:97 GMT-0600 (Mountain Daylight Time) -- Writing 2624 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:29:270 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:29:271 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:29:590 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:29:590 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:29:764 GMT-0600 (Mountain Daylight Time) -- Writing 2624 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:29:770 GMT-0600 (Mountain Daylight Time) -- Writing 1312 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:30:86 GMT-0600 (Mountain Daylight Time) -- Writing 2624 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:30:86 GMT-0600 (Mountain Daylight Time) -- Writing 2624 bytes response from: csi-tst.avotech.com:443
+Tue Apr 28 2026 11:50:30:802 GMT-0600 (Mountain Daylight Time) -- Writing 10496 bytes response from: csi-tst.avotech.com:443
+
+Tue Apr 28 2026 13:30:22:723 GMT-0600 (Mountain Daylight Time) -- Binary semantic version is v8.9.29
+Tue Apr 28 2026 13:30:22:723 GMT-0600 (Mountain Daylight Time) -- Setting output as extra verbose with request parsing
+Tue Apr 28 2026 13:30:25:871 GMT-0600 (Mountain Daylight Time) -- Starting configuration console on http://localhost:45454
+Tue Apr 28 2026 13:30:27:886 GMT-0600 (Mountain Daylight Time) -- [SUCCESS] You can now access your local server(s) in our remote browser
+
+Tue Apr 28 2026 13:30:29:281 GMT-0600 (Mountain Daylight Time) -- undefined
+Tue Apr 28 2026 13:30:32:124 GMT-0600 (Mountain Daylight Time) -- Connecting to BrowserStack using WebSocket protocol...
+Tue Apr 28 2026 13:30:32:124 GMT-0600 (Mountain Daylight Time) -- Platform supports WebSocket connections.
+
+Tue Apr 28 2026 13:30:32:232 GMT-0600 (Mountain Daylight Time) -- Press Ctrl-C to exit
+
+
+
+Tue Apr 28 2026 13:54:55:957 GMT-0600 (Mountain Daylight Time) -- Binary semantic version is v8.9.29
+Tue Apr 28 2026 13:54:55:958 GMT-0600 (Mountain Daylight Time) -- Setting output as extra verbose with request parsing
+Tue Apr 28 2026 13:54:58:982 GMT-0600 (Mountain Daylight Time) -- Starting configuration console on http://localhost:45454
+Tue Apr 28 2026 13:55:00:966 GMT-0600 (Mountain Daylight Time) -- [SUCCESS] You can now access your local server(s) in our remote browser
+
+Tue Apr 28 2026 13:55:02:362 GMT-0600 (Mountain Daylight Time) -- undefined
+Tue Apr 28 2026 13:55:05:225 GMT-0600 (Mountain Daylight Time) -- Connecting to BrowserStack using WebSocket protocol...
+Tue Apr 28 2026 13:55:05:225 GMT-0600 (Mountain Daylight Time) -- Platform supports WebSocket connections.
+
+Tue Apr 28 2026 13:55:05:330 GMT-0600 (Mountain Daylight Time) -- Press Ctrl-C to exit
+
+
+
+Tue Apr 28 2026 14:00:18:674 GMT-0600 (Mountain Daylight Time) -- Binary semantic version is v8.9.29
+Tue Apr 28 2026 14:00:18:674 GMT-0600 (Mountain Daylight Time) -- Setting output as extra verbose with request parsing
+Tue Apr 28 2026 14:00:21:646 GMT-0600 (Mountain Daylight Time) -- Starting configuration console on http://localhost:45454
+Tue Apr 28 2026 14:00:23:747 GMT-0600 (Mountain Daylight Time) -- [SUCCESS] You can now access your local server(s) in our remote browser
+
+Tue Apr 28 2026 14:00:25:119 GMT-0600 (Mountain Daylight Time) -- undefined
+Tue Apr 28 2026 14:00:28:8 GMT-0600 (Mountain Daylight Time) -- Connecting to BrowserStack using WebSocket protocol...
+Tue Apr 28 2026 14:00:28:8 GMT-0600 (Mountain Daylight Time) -- Platform supports WebSocket connections.
+
+Tue Apr 28 2026 14:00:28:120 GMT-0600 (Mountain Daylight Time) -- Press Ctrl-C to exit
+
+
+
+Tue Apr 28 2026 14:11:02:132 GMT-0600 (Mountain Daylight Time) -- Binary semantic version is v8.9.29
+Tue Apr 28 2026 14:11:02:132 GMT-0600 (Mountain Daylight Time) -- Setting output as extra verbose with request parsing
+Tue Apr 28 2026 14:11:05:76 GMT-0600 (Mountain Daylight Time) -- Starting configuration console on http://localhost:45454
+Tue Apr 28 2026 14:11:07:57 GMT-0600 (Mountain Daylight Time) -- [SUCCESS] You can now access your local server(s) in our remote browser
+
+Tue Apr 28 2026 14:11:08:460 GMT-0600 (Mountain Daylight Time) -- undefined
+Tue Apr 28 2026 14:11:11:166 GMT-0600 (Mountain Daylight Time) -- Connecting to BrowserStack using WebSocket protocol...
+Tue Apr 28 2026 14:11:11:166 GMT-0600 (Mountain Daylight Time) -- Platform supports WebSocket connections.
+
+Tue Apr 28 2026 14:11:11:267 GMT-0600 (Mountain Daylight Time) -- Press Ctrl-C to exit
+
+
+
+Mon May 04 2026 09:35:04:393 GMT-0600 (Mountain Daylight Time) -- Binary semantic version is v8.9.29
+Mon May 04 2026 09:35:04:393 GMT-0600 (Mountain Daylight Time) -- Setting output as extra verbose with request parsing
+Mon May 04 2026 09:35:07:663 GMT-0600 (Mountain Daylight Time) -- Starting configuration console on http://localhost:45454
+Mon May 04 2026 09:35:07:679 GMT-0600 (Mountain Daylight Time) -- [SUCCESS] You can now access your local server(s) in our remote browser
+
+Mon May 04 2026 09:35:07:971 GMT-0600 (Mountain Daylight Time) -- Connecting to BrowserStack using WebSocket protocol...
+Mon May 04 2026 09:35:07:971 GMT-0600 (Mountain Daylight Time) -- Platform supports WebSocket connections.
+
+Mon May 04 2026 09:35:08:88 GMT-0600 (Mountain Daylight Time) -- Press Ctrl-C to exit
+
+
+
+Mon May 04 2026 11:56:07:141 GMT-0600 (Mountain Daylight Time) -- Binary semantic version is v8.9.29
+Mon May 04 2026 11:56:07:141 GMT-0600 (Mountain Daylight Time) -- Setting output as extra verbose with request parsing
+Mon May 04 2026 11:56:10:417 GMT-0600 (Mountain Daylight Time) -- Starting configuration console on http://localhost:45454
+Mon May 04 2026 11:56:12:394 GMT-0600 (Mountain Daylight Time) -- [SUCCESS] You can now access your local server(s) in our remote browser
+
+Mon May 04 2026 11:56:13:791 GMT-0600 (Mountain Daylight Time) -- undefined
+Mon May 04 2026 11:56:16:482 GMT-0600 (Mountain Daylight Time) -- Connecting to BrowserStack using WebSocket protocol...
+Mon May 04 2026 11:56:16:482 GMT-0600 (Mountain Daylight Time) -- Platform supports WebSocket connections.
+
+Mon May 04 2026 11:56:16:593 GMT-0600 (Mountain Daylight Time) -- Press Ctrl-C to exit
+
+
+
+Mon May 04 2026 13:57:50:665 GMT-0600 (Mountain Daylight Time) -- Binary semantic version is v8.9.29
+Mon May 04 2026 13:57:50:666 GMT-0600 (Mountain Daylight Time) -- Setting output as extra verbose with request parsing
+Mon May 04 2026 13:57:53:869 GMT-0600 (Mountain Daylight Time) -- Starting configuration console on http://localhost:45454
+Mon May 04 2026 13:57:56:133 GMT-0600 (Mountain Daylight Time) -- [SUCCESS] You can now access your local server(s) in our remote browser
+
+Mon May 04 2026 13:57:57:525 GMT-0600 (Mountain Daylight Time) -- undefined
+Mon May 04 2026 13:58:00:341 GMT-0600 (Mountain Daylight Time) -- Connecting to BrowserStack using WebSocket protocol...
+Mon May 04 2026 13:58:00:341 GMT-0600 (Mountain Daylight Time) -- Platform supports WebSocket connections.
+
+Mon May 04 2026 13:58:00:450 GMT-0600 (Mountain Daylight Time) -- Press Ctrl-C to exit
+
+
+
+Mon May 04 2026 14:19:38:359 GMT-0600 (Mountain Daylight Time) -- Binary semantic version is v8.9.29
+Mon May 04 2026 14:19:38:359 GMT-0600 (Mountain Daylight Time) -- Setting output as extra verbose with request parsing
+Mon May 04 2026 14:19:41:560 GMT-0600 (Mountain Daylight Time) -- Starting configuration console on http://localhost:45454
+Mon May 04 2026 14:19:43:588 GMT-0600 (Mountain Daylight Time) -- [SUCCESS] You can now access your local server(s) in our remote browser
+
+Mon May 04 2026 14:19:44:948 GMT-0600 (Mountain Daylight Time) -- undefined
+Mon May 04 2026 14:19:47:749 GMT-0600 (Mountain Daylight Time) -- Connecting to BrowserStack using WebSocket protocol...
+Mon May 04 2026 14:19:47:749 GMT-0600 (Mountain Daylight Time) -- Platform supports WebSocket connections.
+
+Mon May 04 2026 14:19:47:855 GMT-0600 (Mountain Daylight Time) -- Press Ctrl-C to exit
+
+
+
+Tue May 05 2026 03:33:06:740 GMT-0600 (Mountain Daylight Time) -- Binary semantic version is v8.9.30
+Tue May 05 2026 03:33:06:740 GMT-0600 (Mountain Daylight Time) -- Setting output as extra verbose with request parsing
+Tue May 05 2026 03:33:09:963 GMT-0600 (Mountain Daylight Time) -- Starting configuration console on http://localhost:45454
+Tue May 05 2026 03:33:09:963 GMT-0600 (Mountain Daylight Time) -- [SUCCESS] You can now access your local server(s) in our remote browser
+
+Tue May 05 2026 03:33:10:291 GMT-0600 (Mountain Daylight Time) -- Connecting to BrowserStack using WebSocket protocol...
+Tue May 05 2026 03:33:10:292 GMT-0600 (Mountain Daylight Time) -- Platform supports WebSocket connections.
+
+Tue May 05 2026 03:33:10:398 GMT-0600 (Mountain Daylight Time) -- Press Ctrl-C to exit
+
+
+Tue May 05 2026 03:33:11:824 GMT-0600 (Mountain Daylight Time) -- undefined
+Tue May 05 2026 03:33:12:811 GMT-0600 (Mountain Daylight Time) -- undefined

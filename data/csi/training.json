@@ -1,0 +1,7 @@
+{
+  "courseDistribution": {
+    "namePrefix": "TestDist_",
+    "firstCourse": "Advanced Phishing",
+    "secondCourse": "Dark Web Monitoring"
+  }
+}
