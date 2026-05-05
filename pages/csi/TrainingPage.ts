@@ -56,9 +56,7 @@ export class CsiTrainingPage extends BasePage {
     await this.distributionNameInput.fill(name);
   }
 
-  /**
-   * Wait until the wizard step and VirtualSelect controls are mounted before opening `Search...`.
-   */
+  /** Course step: wait for VirtualSelect / `Search...` before opening dropdown. */
   private async waitForCourseSelectionStepReady() {
     await this.page.waitForLoadState('domcontentloaded');
     await this.page.waitForLoadState('networkidle').catch(() => {});
