@@ -6170,3 +6170,1493 @@ for call at
 2026-05-05 03:41:53 - [32minfo[39m: Local binary stopped
 2026-05-05 03:41:53 - [32minfo[39m: [BrowserstackCLI] stop: CLI is not running, skipping stop
 2026-05-05 03:41:53 - [32minfo[39m: [BrowserstackCLI] stop: CLI is not running, skipping stop
+2026-05-05 08:50:37 - [32minfo[39m: Reading configs from D:\CODES\CSI-QA-testing\browserstack.yaml
+2026-05-05 08:50:37 - [32minfo[39m: Log Directory has been set to D:\CODES\CSI-QA-testing\log
+2026-05-05 08:50:37 - [32minfo[39m: Log Directory has been set to D:\CODES\CSI-QA-testing\log
+2026-05-05 08:50:37 - [32minfo[39m: Running SDK with args C:\Program Files\nodejs\node.exe D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\runner.js playwright test
+2026-05-05 08:50:37 - [32minfo[39m: SDK run started with id: f91ebc87-6ccb-4e95-b09e-efcf2057adc6
+2026-05-05 08:50:38 - [32minfo[39m: Project and debug logs are captured by default. To disable, set disableAutoCaptureLogs: true in config.
+2026-05-05 08:50:43 - [31merror[39m: Error: LocalError: No output received
+    at BrowserStackSetup.setupBrowserstackLocal (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\helpers\BrowserStackSetup.js:1:18056)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async BrowserStackSetup.initialize (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\helpers\BrowserStackSetup.js:1:15394)
+    at async D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\command.js:2:13073
+2026-05-05 08:50:43 - [32minfo[39m: Shutdown triggered by SIGINT
+2026-05-05 08:50:43 - [31merror[39m: [ClientTroubleShootingService] Process Interruption details not found: {}
+2026-05-05 08:50:43 - [32minfo[39m: [BrowserstackCLI] stop: CLI is not running, skipping stop
+2026-05-05 08:50:37 - [32minfo[39m: Running SDK with args C:\Program Files\nodejs\node.exe D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\runner.js playwright test
+2026-05-05 08:50:37 - [32minfo[39m: SDK run started with id: f91ebc87-6ccb-4e95-b09e-efcf2057adc6
+2026-05-05 08:50:38 - [32minfo[39m: Project and debug logs are captured by default. To disable, set disableAutoCaptureLogs: true in config.
+2026-05-05 08:50:43 - [31merror[39m: Error: LocalError: No output received
+    at BrowserStackSetup.setupBrowserstackLocal (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\helpers\BrowserStackSetup.js:1:18056)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async BrowserStackSetup.initialize (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\helpers\BrowserStackSetup.js:1:15394)
+    at async D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\command.js:2:13073
+2026-05-05 08:50:43 - [32minfo[39m: Shutdown triggered by SIGINT
+2026-05-05 08:50:43 - [31merror[39m: [ClientTroubleShootingService] Process Interruption details not found: {}
+2026-05-05 08:50:43 - [32minfo[39m: [BrowserstackCLI] stop: CLI is not running, skipping stop
+2026-05-05 08:50:43 - [31merror[39m: Size mismatch
+2026-05-05 08:50:43 - [31merror[39m: Size mismatch
+2026-05-05 08:50:43 - [31merror[39m: Size mismatch
+2026-05-05 08:50:43 - [31merror[39m: already finalized or destroyed
+2026-05-05 08:50:43 - [31merror[39m: Size mismatch
+2026-05-05 08:50:43 - [31merror[39m: already finalized or destroyed
+2026-05-05 08:50:43 - [32minfo[39m: [BrowserstackCLI] stop: CLI is not running, skipping stop
+2026-05-05 08:50:43 - [32minfo[39m: [BrowserstackCLI] stop: CLI is not running, skipping stop
+2026-05-05 08:50:44 - [32minfo[39m: [BrowserstackCLI] stop: CLI is not running, skipping stop
+2026-05-05 08:50:44 - [32minfo[39m: [BrowserstackCLI] stop: CLI is not running, skipping stop
+2026-05-05 08:50:44 - [31merror[39m: The "sdk:cleanup-start" performance mark has not been set
+2026-05-05 08:50:44 - [31merror[39m: The "sdk:cleanup-start" performance mark has not been set
+2026-05-05 10:16:49 - [32minfo[39m: Reading configs from D:\CODES\CSI-QA-testing\browserstack.yaml
+2026-05-05 10:16:49 - [32minfo[39m: Log Directory has been set to D:\CODES\CSI-QA-testing\log
+2026-05-05 10:16:49 - [32minfo[39m: Log Directory has been set to D:\CODES\CSI-QA-testing\log
+2026-05-05 10:16:49 - [32minfo[39m: Running SDK with args C:\Program Files\nodejs\node.exe D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\runner.js playwright test
+2026-05-05 10:16:49 - [32minfo[39m: SDK run started with id: 0d2a7746-2b24-4f70-aba5-7de9caf7d11d
+2026-05-05 10:16:50 - [32minfo[39m: Project and debug logs are captured by default. To disable, set disableAutoCaptureLogs: true in config.
+2026-05-05 10:16:59 - [32minfo[39m: Local binary started successfully
+2026-05-05 10:16:49 - [32minfo[39m: Running SDK with args C:\Program Files\nodejs\node.exe D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\runner.js playwright test
+2026-05-05 10:16:49 - [32minfo[39m: SDK run started with id: 0d2a7746-2b24-4f70-aba5-7de9caf7d11d
+2026-05-05 10:16:50 - [32minfo[39m: Project and debug logs are captured by default. To disable, set disableAutoCaptureLogs: true in config.
+2026-05-05 10:16:59 - [32minfo[39m: Local binary started successfully
+2026-05-05 10:17:00 - [32minfo[39m: [BrowserstackCLI] startMain: Starting main process
+2026-05-05 10:17:00 - [32minfo[39m: [BrowserstackCLI] startMain: Starting main process
+2026-05-05 10:17:00 - [32minfo[39m: [CLIUtils] Current CLI Path Found: C:\Users\giver\.browserstack\cli\binary-win-x64.exe
+2026-05-05 10:17:00 - [32minfo[39m: [CLIUtils] Current CLI Path Found: C:\Users\giver\.browserstack\cli\binary-win-x64.exe
+2026-05-05 10:17:02 - [32minfo[39m: [BrowserstackCLI] spawning command='C:\Users\giver\.browserstack\cli\binary-win-x64.exe,sdk'
+2026-05-05 10:17:02 - [32minfo[39m: [BrowserstackCLI] spawning command='C:\Users\giver\.browserstack\cli\binary-win-x64.exe,sdk'
+2026-05-05 10:17:04 - [32minfo[39m: [BrowserstackCLI] CLI params loaded: {"id":"18939546-50ec-4db3-9f05-e87fea13f441","listen":"127.0.0.1:5400","port":"5400"}
+2026-05-05 10:17:04 - [32minfo[39m: [BrowserstackCLI] CLI params loaded: {"id":"18939546-50ec-4db3-9f05-e87fea13f441","listen":"127.0.0.1:5400","port":"5400"}
+2026-05-05 10:17:04 - [32minfo[39m: [GrpcClient] Connected to gRPC server at 127.0.0.1:5400
+2026-05-05 10:17:04 - [32minfo[39m: [GrpcClient] Initialized gRPC client with bin session id: 18939546-50ec-4db3-9f05-e87fea13f441 and listen address: 127.0.0.1:5400
+2026-05-05 10:17:04 - [32minfo[39m: [GrpcClient] startBinSession: Calling startBinSession
+2026-05-05 10:17:04 - [32minfo[39m: [GrpcClient] setCliArgs: cliArgs=["playwright","test"], parsedConfig=[]
+2026-05-05 10:17:04 - [32minfo[39m: [GrpcClient] Connected to gRPC server at 127.0.0.1:5400
+2026-05-05 10:17:04 - [32minfo[39m: [GrpcClient] Initialized gRPC client with bin session id: 18939546-50ec-4db3-9f05-e87fea13f441 and listen address: 127.0.0.1:5400
+2026-05-05 10:17:04 - [32minfo[39m: [GrpcClient] startBinSession: Calling startBinSession
+2026-05-05 10:17:04 - [32minfo[39m: [GrpcClient] setCliArgs: cliArgs=["playwright","test"], parsedConfig=[]
+2026-05-05 10:17:05 - [31merror[39m: [BrowserstackCLI] CLI stderr: Exiting with code 1 due to uncaught exception [Error: EBUSY: resource busy or locked, open 'C:\Users\giver\.browserstack\BrowserStackLocal.exe'] {
+  errno: -4082,
+  code: 'EBUSY',
+  syscall: 'open',
+  path: 'C:\\Users\\giver\\.browserstack\\BrowserStackLocal.exe'
+}
+2026-05-05 10:17:05 - [31merror[39m: [BrowserstackCLI] CLI stderr: Exiting with code 1 due to uncaught exception [Error: EBUSY: resource busy or locked, open 'C:\Users\giver\.browserstack\BrowserStackLocal.exe'] {
+  errno: -4082,
+  code: 'EBUSY',
+  syscall: 'open',
+  path: 'C:\\Users\\giver\\.browserstack\\BrowserStackLocal.exe'
+}
+2026-05-05 10:17:06 - [31merror[39m: [GrpcClient] StartBinSession error: 14 UNAVAILABLE: read ECONNRESET
+2026-05-05 10:17:06 - [31merror[39m: [GrpcClient] StartBinSession error: 14 UNAVAILABLE: read ECONNRESET
+2026-05-05 10:17:06 - [31merror[39m: [BrowserstackCLI] bootstrap: failed to bootstrap=Error: 14 UNAVAILABLE: read ECONNRESET
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\build\src\call.js:32:19)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\build\src\client.js:193:76)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\build\src\client-interceptors.js:367:141)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\build\src\client-interceptors.js:327:181)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\build\src\resolving-call.js:135:78
+    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\build\src\client.js:161:32)
+    at ServiceClientImpl.startBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\build\src\make-client.js:105:19)
+    at D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:11720
+    at new Promise (<anonymous>)
+    at GrpcClient.startBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:11618)
+    at BrowserstackCLI.startMain (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:8713)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7997)
+    at async D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\command.js:2:13334
+2026-05-05 10:17:06 - [31merror[39m: [BrowserstackCLI] bootstrap: failed to bootstrap=Error: 14 UNAVAILABLE: read ECONNRESET
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\build\src\call.js:32:19)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\build\src\client.js:193:76)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\build\src\client-interceptors.js:367:141)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\build\src\client-interceptors.js:327:181)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\build\src\resolving-call.js:135:78
+    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\build\src\client.js:161:32)
+    at ServiceClientImpl.startBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\build\src\make-client.js:105:19)
+    at D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:11720
+    at new Promise (<anonymous>)
+    at GrpcClient.startBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:11618)
+    at BrowserstackCLI.startMain (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:8713)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7997)
+    at async D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\command.js:2:13334
+2026-05-05 10:17:06 - [32minfo[39m: [BrowserstackCLI] stop: CLI is not running, skipping stop
+2026-05-05 10:17:06 - [32minfo[39m: [BrowserstackCLI] stop: CLI is not running, skipping stop
+2026-05-05 10:17:09 - [31merror[39m: ACCESSIBILITY Build creation failed
+2026-05-05 10:17:09 - [31merror[39m: ACCESSIBILITY Build creation failed
+2026-05-05 10:17:09 - [32minfo[39m: Testhub started with id: p5rip6j4igualjbloht5kahyvis60cl8yvwbn3f5
+2026-05-05 10:17:09 - [32minfo[39m: Testhub started with id: p5rip6j4igualjbloht5kahyvis60cl8yvwbn3f5
+2026-05-05 10:17:11 - [32minfo[39m: [BrowserstackCLI] Starting as child process with session ID: 18939546-50ec-4db3-9f05-e87fea13f441
+2026-05-05 10:17:11 - [32minfo[39m: [GrpcClient] Connected to gRPC server at 127.0.0.1:5400
+2026-05-05 10:17:11 - [32minfo[39m: [GrpcClient] Connecting bin session
+2026-05-05 10:17:12 - [31merror[39m: [GrpcClient] ConnectBinSession error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+2026-05-05 10:17:12 - [31merror[39m: [GrpcClient] Error in connectBinSession: Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\call.ts:84:17)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:360:55)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:466:34)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:424:48)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\resolving-call.ts:170:24
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:325:42)
+    at ServiceClientImpl.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\make-client.ts:189:15)
+    at _0xcc7d46 (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13224)
+    at new Promise (<anonymous>)
+    at GrpcClient.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13122)
+    at BrowserstackCLI.startChild (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:20593)
+    at BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7905)
+    at Object._modifyPlaywright (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\modifyPlaywrightConf.js:1:21681)
+    at Object.<anonymous> (D:\CODES\CSI-QA-testing\playwright-browserstack-sdk.config.ts:4:24)
+    at Module._compile (node:internal/modules/cjs/loader:1830:14)
+    at Module.newCompile2 (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:46:29)
+    at Object.<anonymous> (node:internal/modules/cjs/loader:1961:10)
+    at Object.newLoader2 [as .ts] (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:52:22)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1576:12)
+    at require (node:internal/modules/helpers:153:16)
+    at requireOrImport (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\transform\transform.js:218:18)
+    at loadUserConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:107:89)
+    at loadConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:119:28)
+    at loadConfigFromFile (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:331:10)
+    at runTests (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\testActions.js:51:18)
+    at i.<anonymous> (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\program.js:56:7) {
+  code: 14,
+  details: 'No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: ',
+  metadata: Metadata {
+    internalRepr: Map(0) {},
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-05-05 10:17:12 - [31merror[39m: [BrowserstackCLI] Failed to start as child process: Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\call.ts:84:17)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:360:55)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:466:34)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:424:48)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\resolving-call.ts:170:24
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:325:42)
+    at ServiceClientImpl.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\make-client.ts:189:15)
+    at _0xcc7d46 (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13224)
+    at new Promise (<anonymous>)
+    at GrpcClient.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13122)
+    at BrowserstackCLI.startChild (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:20593)
+    at BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7905)
+    at Object._modifyPlaywright (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\modifyPlaywrightConf.js:1:21681)
+    at Object.<anonymous> (D:\CODES\CSI-QA-testing\playwright-browserstack-sdk.config.ts:4:24)
+    at Module._compile (node:internal/modules/cjs/loader:1830:14)
+    at Module.newCompile2 (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:46:29)
+    at Object.<anonymous> (node:internal/modules/cjs/loader:1961:10)
+    at Object.newLoader2 [as .ts] (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:52:22)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1576:12)
+    at require (node:internal/modules/helpers:153:16)
+    at requireOrImport (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\transform\transform.js:218:18)
+    at loadUserConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:107:89)
+    at loadConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:119:28)
+    at loadConfigFromFile (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:331:10)
+    at runTests (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\testActions.js:51:18)
+    at i.<anonymous> (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\program.js:56:7) {
+  code: 14,
+  details: 'No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: ',
+  metadata: Metadata {
+    internalRepr: Map(0) {},
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-05-05 10:17:12 - [32minfo[39m: Setting up TestInfo directory at D:\CODES\CSI-QA-testing\log\.obs_test_details-p5rip6j4igualjbloht5kahyvis60cl8yvwbn3f5
+2026-05-05 10:17:14 - [32minfo[39m: [BrowserstackCLI] Starting as child process with session ID: 18939546-50ec-4db3-9f05-e87fea13f441
+2026-05-05 10:17:14 - [32minfo[39m: [GrpcClient] Connected to gRPC server at 127.0.0.1:5400
+2026-05-05 10:17:14 - [32minfo[39m: [GrpcClient] Connecting bin session
+2026-05-05 10:17:14 - [31merror[39m: [GrpcClient] ConnectBinSession error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+2026-05-05 10:17:14 - [31merror[39m: [GrpcClient] Error in connectBinSession: Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\call.ts:84:17)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:360:55)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:466:34)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:424:48)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\resolving-call.ts:170:24
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:325:42)
+    at ServiceClientImpl.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\make-client.ts:189:15)
+    at _0xcc7d46 (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13224)
+    at new Promise (<anonymous>)
+    at GrpcClient.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13122)
+    at BrowserstackCLI.startChild (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:20593)
+    at BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7905)
+    at Object._modifyPlaywright (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\modifyPlaywrightConf.js:1:21681)
+    at Object.<anonymous> (D:\CODES\CSI-QA-testing\playwright-browserstack-sdk.config.ts:4:24)
+    at Module._compile (node:internal/modules/cjs/loader:1830:14)
+    at Module.newCompile2 (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:46:29)
+    at Object.<anonymous> (node:internal/modules/cjs/loader:1961:10)
+    at Object.newLoader2 [as .ts] (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:52:22)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1576:12)
+    at require (node:internal/modules/helpers:153:16)
+    at requireOrImport (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\transform\transform.js:218:18)
+    at loadUserConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:107:89)
+    at loadConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:119:28)
+    at deserializeConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:104:10)
+    at WorkerMain._loadIfNeeded (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:165:20)
+    at WorkerMain.runTestGroup (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:179:7)
+    at process.<anonymous> (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\process.js:73:22) {
+  code: 14,
+  details: 'No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: ',
+  metadata: Metadata {
+    internalRepr: Map(0) {},
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-05-05 10:17:14 - [31merror[39m: [BrowserstackCLI] Failed to start as child process: Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\call.ts:84:17)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:360:55)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:466:34)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:424:48)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\resolving-call.ts:170:24
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:325:42)
+    at ServiceClientImpl.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\make-client.ts:189:15)
+    at _0xcc7d46 (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13224)
+    at new Promise (<anonymous>)
+    at GrpcClient.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13122)
+    at BrowserstackCLI.startChild (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:20593)
+    at BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7905)
+    at Object._modifyPlaywright (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\modifyPlaywrightConf.js:1:21681)
+    at Object.<anonymous> (D:\CODES\CSI-QA-testing\playwright-browserstack-sdk.config.ts:4:24)
+    at Module._compile (node:internal/modules/cjs/loader:1830:14)
+    at Module.newCompile2 (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:46:29)
+    at Object.<anonymous> (node:internal/modules/cjs/loader:1961:10)
+    at Object.newLoader2 [as .ts] (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:52:22)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1576:12)
+    at require (node:internal/modules/helpers:153:16)
+    at requireOrImport (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\transform\transform.js:218:18)
+    at loadUserConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:107:89)
+    at loadConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:119:28)
+    at deserializeConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:104:10)
+    at WorkerMain._loadIfNeeded (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:165:20)
+    at WorkerMain.runTestGroup (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:179:7)
+    at process.<anonymous> (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\process.js:73:22) {
+  code: 14,
+  details: 'No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: ',
+  metadata: Metadata {
+    internalRepr: Map(0) {},
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-05-05 10:18:05 - [32minfo[39m: Automate test case execution has ended. Processing for accessibility testing is underway. 
+2026-05-05 10:18:05 - [33mwarn[39m: Not a valid Accessibility Automation session for playwright-page, cannot perform scan with retry.
+2026-05-05 10:18:05 - [33mwarn[39m: Not a valid Accessibility Automation session for playwright-page, cannot save accessibility results with retry.
+2026-05-05 10:18:05 - [32minfo[39m: Accessibility testing for this test case has ended.
+2026-05-05 10:18:05 - [32minfo[39m: [Accessibility] afterTestHook state: accessibilityPlatform=false, bstackA11yShouldScan=true
+2026-05-05 10:18:09 - [32minfo[39m: [BrowserstackCLI] Starting as child process with session ID: 18939546-50ec-4db3-9f05-e87fea13f441
+2026-05-05 10:18:09 - [32minfo[39m: [GrpcClient] Connected to gRPC server at 127.0.0.1:5400
+2026-05-05 10:18:09 - [32minfo[39m: [GrpcClient] Connecting bin session
+2026-05-05 10:18:09 - [31merror[39m: [GrpcClient] ConnectBinSession error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+2026-05-05 10:18:09 - [31merror[39m: [GrpcClient] Error in connectBinSession: Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\call.ts:84:17)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:360:55)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:466:34)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:424:48)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\resolving-call.ts:170:24
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:325:42)
+    at ServiceClientImpl.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\make-client.ts:189:15)
+    at _0xcc7d46 (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13224)
+    at new Promise (<anonymous>)
+    at GrpcClient.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13122)
+    at BrowserstackCLI.startChild (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:20593)
+    at BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7905)
+    at Object._modifyPlaywright (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\modifyPlaywrightConf.js:1:21681)
+    at Object.<anonymous> (D:\CODES\CSI-QA-testing\playwright-browserstack-sdk.config.ts:4:24)
+    at Module._compile (node:internal/modules/cjs/loader:1830:14)
+    at Module.newCompile2 (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:46:29)
+    at Object.<anonymous> (node:internal/modules/cjs/loader:1961:10)
+    at Object.newLoader2 [as .ts] (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:52:22)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1576:12)
+    at require (node:internal/modules/helpers:153:16)
+    at requireOrImport (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\transform\transform.js:218:18)
+    at loadUserConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:107:89)
+    at loadConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:119:28)
+    at deserializeConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:104:10)
+    at WorkerMain._loadIfNeeded (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:165:20)
+    at WorkerMain.runTestGroup (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:179:7)
+    at process.<anonymous> (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\process.js:73:22) {
+  code: 14,
+  details: 'No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: ',
+  metadata: Metadata {
+    internalRepr: Map(0) {},
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-05-05 10:18:09 - [31merror[39m: [BrowserstackCLI] Failed to start as child process: Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\call.ts:84:17)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:360:55)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:466:34)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:424:48)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\resolving-call.ts:170:24
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:325:42)
+    at ServiceClientImpl.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\make-client.ts:189:15)
+    at _0xcc7d46 (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13224)
+    at new Promise (<anonymous>)
+    at GrpcClient.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13122)
+    at BrowserstackCLI.startChild (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:20593)
+    at BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7905)
+    at Object._modifyPlaywright (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\modifyPlaywrightConf.js:1:21681)
+    at Object.<anonymous> (D:\CODES\CSI-QA-testing\playwright-browserstack-sdk.config.ts:4:24)
+    at Module._compile (node:internal/modules/cjs/loader:1830:14)
+    at Module.newCompile2 (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:46:29)
+    at Object.<anonymous> (node:internal/modules/cjs/loader:1961:10)
+    at Object.newLoader2 [as .ts] (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:52:22)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1576:12)
+    at require (node:internal/modules/helpers:153:16)
+    at requireOrImport (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\transform\transform.js:218:18)
+    at loadUserConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:107:89)
+    at loadConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:119:28)
+    at deserializeConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:104:10)
+    at WorkerMain._loadIfNeeded (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:165:20)
+    at WorkerMain.runTestGroup (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:179:7)
+    at process.<anonymous> (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\process.js:73:22) {
+  code: 14,
+  details: 'No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: ',
+  metadata: Metadata {
+    internalRepr: Map(0) {},
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-05-05 10:18:38 - [32minfo[39m: Automate test case execution has ended. Processing for accessibility testing is underway. 
+2026-05-05 10:18:38 - [33mwarn[39m: Not a valid Accessibility Automation session for playwright-page, cannot perform scan with retry.
+2026-05-05 10:18:38 - [33mwarn[39m: Not a valid Accessibility Automation session for playwright-page, cannot save accessibility results with retry.
+2026-05-05 10:18:38 - [32minfo[39m: Accessibility testing for this test case has ended.
+2026-05-05 10:18:38 - [32minfo[39m: [Accessibility] afterTestHook state: accessibilityPlatform=false, bstackA11yShouldScan=true
+2026-05-05 10:18:42 - [32minfo[39m: [BrowserstackCLI] Starting as child process with session ID: 18939546-50ec-4db3-9f05-e87fea13f441
+2026-05-05 10:18:42 - [32minfo[39m: [GrpcClient] Connected to gRPC server at 127.0.0.1:5400
+2026-05-05 10:18:42 - [32minfo[39m: [GrpcClient] Connecting bin session
+2026-05-05 10:18:42 - [31merror[39m: [GrpcClient] ConnectBinSession error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+2026-05-05 10:18:42 - [31merror[39m: [GrpcClient] Error in connectBinSession: Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\call.ts:84:17)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:360:55)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:466:34)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:424:48)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\resolving-call.ts:170:24
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:325:42)
+    at ServiceClientImpl.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\make-client.ts:189:15)
+    at _0xcc7d46 (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13224)
+    at new Promise (<anonymous>)
+    at GrpcClient.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13122)
+    at BrowserstackCLI.startChild (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:20593)
+    at BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7905)
+    at Object._modifyPlaywright (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\modifyPlaywrightConf.js:1:21681)
+    at Object.<anonymous> (D:\CODES\CSI-QA-testing\playwright-browserstack-sdk.config.ts:4:24)
+    at Module._compile (node:internal/modules/cjs/loader:1830:14)
+    at Module.newCompile2 (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:46:29)
+    at Object.<anonymous> (node:internal/modules/cjs/loader:1961:10)
+    at Object.newLoader2 [as .ts] (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:52:22)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1576:12)
+    at require (node:internal/modules/helpers:153:16)
+    at requireOrImport (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\transform\transform.js:218:18)
+    at loadUserConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:107:89)
+    at loadConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:119:28)
+    at deserializeConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:104:10)
+    at WorkerMain._loadIfNeeded (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:165:20)
+    at WorkerMain.runTestGroup (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:179:7)
+    at process.<anonymous> (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\process.js:73:22) {
+  code: 14,
+  details: 'No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: ',
+  metadata: Metadata {
+    internalRepr: Map(0) {},
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-05-05 10:18:42 - [31merror[39m: [BrowserstackCLI] Failed to start as child process: Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\call.ts:84:17)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:360:55)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:466:34)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:424:48)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\resolving-call.ts:170:24
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:325:42)
+    at ServiceClientImpl.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\make-client.ts:189:15)
+    at _0xcc7d46 (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13224)
+    at new Promise (<anonymous>)
+    at GrpcClient.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13122)
+    at BrowserstackCLI.startChild (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:20593)
+    at BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7905)
+    at Object._modifyPlaywright (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\modifyPlaywrightConf.js:1:21681)
+    at Object.<anonymous> (D:\CODES\CSI-QA-testing\playwright-browserstack-sdk.config.ts:4:24)
+    at Module._compile (node:internal/modules/cjs/loader:1830:14)
+    at Module.newCompile2 (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:46:29)
+    at Object.<anonymous> (node:internal/modules/cjs/loader:1961:10)
+    at Object.newLoader2 [as .ts] (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:52:22)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1576:12)
+    at require (node:internal/modules/helpers:153:16)
+    at requireOrImport (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\transform\transform.js:218:18)
+    at loadUserConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:107:89)
+    at loadConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:119:28)
+    at deserializeConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:104:10)
+    at WorkerMain._loadIfNeeded (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:165:20)
+    at WorkerMain.runTestGroup (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:179:7)
+    at process.<anonymous> (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\process.js:73:22) {
+  code: 14,
+  details: 'No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: ',
+  metadata: Metadata {
+    internalRepr: Map(0) {},
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-05-05 10:20:06 - [32minfo[39m: Automate test case execution has ended. Processing for accessibility testing is underway. 
+2026-05-05 10:20:06 - [33mwarn[39m: Not a valid Accessibility Automation session for playwright-page, cannot perform scan with retry.
+2026-05-05 10:20:06 - [33mwarn[39m: Not a valid Accessibility Automation session for playwright-page, cannot save accessibility results with retry.
+2026-05-05 10:20:06 - [32minfo[39m: Accessibility testing for this test case has ended.
+2026-05-05 10:20:07 - [32minfo[39m: [Accessibility] afterTestHook state: accessibilityPlatform=false, bstackA11yShouldScan=true
+2026-05-05 10:20:10 - [32minfo[39m: [BrowserstackCLI] Starting as child process with session ID: 18939546-50ec-4db3-9f05-e87fea13f441
+2026-05-05 10:20:10 - [32minfo[39m: [GrpcClient] Connected to gRPC server at 127.0.0.1:5400
+2026-05-05 10:20:10 - [32minfo[39m: [GrpcClient] Connecting bin session
+2026-05-05 10:20:10 - [31merror[39m: [GrpcClient] ConnectBinSession error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+2026-05-05 10:20:10 - [31merror[39m: [GrpcClient] Error in connectBinSession: Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\call.ts:84:17)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:360:55)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:466:34)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:424:48)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\resolving-call.ts:170:24
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:325:42)
+    at ServiceClientImpl.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\make-client.ts:189:15)
+    at _0xcc7d46 (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13224)
+    at new Promise (<anonymous>)
+    at GrpcClient.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13122)
+    at BrowserstackCLI.startChild (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:20593)
+    at BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7905)
+    at Object._modifyPlaywright (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\modifyPlaywrightConf.js:1:21681)
+    at Object.<anonymous> (D:\CODES\CSI-QA-testing\playwright-browserstack-sdk.config.ts:4:24)
+    at Module._compile (node:internal/modules/cjs/loader:1830:14)
+    at Module.newCompile2 (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:46:29)
+    at Object.<anonymous> (node:internal/modules/cjs/loader:1961:10)
+    at Object.newLoader2 [as .ts] (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:52:22)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1576:12)
+    at require (node:internal/modules/helpers:153:16)
+    at requireOrImport (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\transform\transform.js:218:18)
+    at loadUserConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:107:89)
+    at loadConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:119:28)
+    at deserializeConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:104:10)
+    at WorkerMain._loadIfNeeded (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:165:20)
+    at WorkerMain.runTestGroup (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:179:7)
+    at process.<anonymous> (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\process.js:73:22) {
+  code: 14,
+  details: 'No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: ',
+  metadata: Metadata {
+    internalRepr: Map(0) {},
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-05-05 10:20:10 - [31merror[39m: [BrowserstackCLI] Failed to start as child process: Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\call.ts:84:17)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:360:55)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:466:34)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:424:48)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\resolving-call.ts:170:24
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:325:42)
+    at ServiceClientImpl.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\make-client.ts:189:15)
+    at _0xcc7d46 (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13224)
+    at new Promise (<anonymous>)
+    at GrpcClient.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13122)
+    at BrowserstackCLI.startChild (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:20593)
+    at BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7905)
+    at Object._modifyPlaywright (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\modifyPlaywrightConf.js:1:21681)
+    at Object.<anonymous> (D:\CODES\CSI-QA-testing\playwright-browserstack-sdk.config.ts:4:24)
+    at Module._compile (node:internal/modules/cjs/loader:1830:14)
+    at Module.newCompile2 (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:46:29)
+    at Object.<anonymous> (node:internal/modules/cjs/loader:1961:10)
+    at Object.newLoader2 [as .ts] (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:52:22)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1576:12)
+    at require (node:internal/modules/helpers:153:16)
+    at requireOrImport (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\transform\transform.js:218:18)
+    at loadUserConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:107:89)
+    at loadConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:119:28)
+    at deserializeConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:104:10)
+    at WorkerMain._loadIfNeeded (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:165:20)
+    at WorkerMain.runTestGroup (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:179:7)
+    at process.<anonymous> (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\process.js:73:22) {
+  code: 14,
+  details: 'No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: ',
+  metadata: Metadata {
+    internalRepr: Map(0) {},
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-05-05 10:21:01 - [32minfo[39m: Automate test case execution has ended. Processing for accessibility testing is underway. 
+2026-05-05 10:21:01 - [33mwarn[39m: Not a valid Accessibility Automation session for playwright-page, cannot perform scan with retry.
+2026-05-05 10:21:01 - [33mwarn[39m: Not a valid Accessibility Automation session for playwright-page, cannot save accessibility results with retry.
+2026-05-05 10:21:01 - [32minfo[39m: Accessibility testing for this test case has ended.
+2026-05-05 10:21:01 - [32minfo[39m: [Accessibility] afterTestHook state: accessibilityPlatform=false, bstackA11yShouldScan=true
+2026-05-05 10:23:07 - [32minfo[39m: Automate test case execution has ended. Processing for accessibility testing is underway. 
+2026-05-05 10:23:07 - [33mwarn[39m: Not a valid Accessibility Automation session for playwright-page, cannot perform scan with retry.
+2026-05-05 10:23:07 - [33mwarn[39m: Not a valid Accessibility Automation session for playwright-page, cannot save accessibility results with retry.
+2026-05-05 10:23:07 - [32minfo[39m: Accessibility testing for this test case has ended.
+2026-05-05 10:23:07 - [32minfo[39m: [Accessibility] afterTestHook state: accessibilityPlatform=false, bstackA11yShouldScan=true
+2026-05-05 10:23:10 - [32minfo[39m: [BrowserstackCLI] Starting as child process with session ID: 18939546-50ec-4db3-9f05-e87fea13f441
+2026-05-05 10:23:10 - [32minfo[39m: [GrpcClient] Connected to gRPC server at 127.0.0.1:5400
+2026-05-05 10:23:10 - [32minfo[39m: [GrpcClient] Connecting bin session
+2026-05-05 10:23:10 - [31merror[39m: [GrpcClient] ConnectBinSession error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+2026-05-05 10:23:10 - [31merror[39m: [GrpcClient] Error in connectBinSession: Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\call.ts:84:17)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:360:55)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:466:34)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:424:48)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\resolving-call.ts:170:24
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:325:42)
+    at ServiceClientImpl.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\make-client.ts:189:15)
+    at _0xcc7d46 (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13224)
+    at new Promise (<anonymous>)
+    at GrpcClient.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13122)
+    at BrowserstackCLI.startChild (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:20593)
+    at BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7905)
+    at Object._modifyPlaywright (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\modifyPlaywrightConf.js:1:21681)
+    at Object.<anonymous> (D:\CODES\CSI-QA-testing\playwright-browserstack-sdk.config.ts:4:24)
+    at Module._compile (node:internal/modules/cjs/loader:1830:14)
+    at Module.newCompile2 (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:46:29)
+    at Object.<anonymous> (node:internal/modules/cjs/loader:1961:10)
+    at Object.newLoader2 [as .ts] (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:52:22)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1576:12)
+    at require (node:internal/modules/helpers:153:16)
+    at requireOrImport (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\transform\transform.js:218:18)
+    at loadUserConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:107:89)
+    at loadConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:119:28)
+    at deserializeConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:104:10)
+    at WorkerMain._loadIfNeeded (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:165:20)
+    at WorkerMain.runTestGroup (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:179:7)
+    at process.<anonymous> (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\process.js:73:22) {
+  code: 14,
+  details: 'No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: ',
+  metadata: Metadata {
+    internalRepr: Map(0) {},
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-05-05 10:23:10 - [31merror[39m: [BrowserstackCLI] Failed to start as child process: Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\call.ts:84:17)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:360:55)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:466:34)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:424:48)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\resolving-call.ts:170:24
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:325:42)
+    at ServiceClientImpl.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\make-client.ts:189:15)
+    at _0xcc7d46 (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13224)
+    at new Promise (<anonymous>)
+    at GrpcClient.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13122)
+    at BrowserstackCLI.startChild (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:20593)
+    at BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7905)
+    at Object._modifyPlaywright (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\modifyPlaywrightConf.js:1:21681)
+    at Object.<anonymous> (D:\CODES\CSI-QA-testing\playwright-browserstack-sdk.config.ts:4:24)
+    at Module._compile (node:internal/modules/cjs/loader:1830:14)
+    at Module.newCompile2 (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:46:29)
+    at Object.<anonymous> (node:internal/modules/cjs/loader:1961:10)
+    at Object.newLoader2 [as .ts] (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:52:22)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1576:12)
+    at require (node:internal/modules/helpers:153:16)
+    at requireOrImport (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\transform\transform.js:218:18)
+    at loadUserConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:107:89)
+    at loadConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:119:28)
+    at deserializeConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:104:10)
+    at WorkerMain._loadIfNeeded (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:165:20)
+    at WorkerMain.runTestGroup (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:179:7)
+    at process.<anonymous> (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\process.js:73:22) {
+  code: 14,
+  details: 'No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: ',
+  metadata: Metadata {
+    internalRepr: Map(0) {},
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-05-05 10:24:06 - [32minfo[39m: Automate test case execution has ended. Processing for accessibility testing is underway. 
+2026-05-05 10:24:06 - [33mwarn[39m: Not a valid Accessibility Automation session for playwright-page, cannot perform scan with retry.
+2026-05-05 10:24:06 - [33mwarn[39m: Not a valid Accessibility Automation session for playwright-page, cannot save accessibility results with retry.
+2026-05-05 10:24:06 - [32minfo[39m: Accessibility testing for this test case has ended.
+2026-05-05 10:24:06 - [32minfo[39m: [Accessibility] afterTestHook state: accessibilityPlatform=false, bstackA11yShouldScan=true
+2026-05-05 10:24:09 - [32minfo[39m: [BrowserstackCLI] Starting as child process with session ID: 18939546-50ec-4db3-9f05-e87fea13f441
+2026-05-05 10:24:09 - [32minfo[39m: [GrpcClient] Connected to gRPC server at 127.0.0.1:5400
+2026-05-05 10:24:09 - [32minfo[39m: [GrpcClient] Connecting bin session
+2026-05-05 10:24:10 - [31merror[39m: [GrpcClient] ConnectBinSession error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+2026-05-05 10:24:10 - [31merror[39m: [GrpcClient] Error in connectBinSession: Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\call.ts:84:17)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:360:55)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:466:34)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:424:48)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\resolving-call.ts:170:24
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:325:42)
+    at ServiceClientImpl.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\make-client.ts:189:15)
+    at _0xcc7d46 (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13224)
+    at new Promise (<anonymous>)
+    at GrpcClient.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13122)
+    at BrowserstackCLI.startChild (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:20593)
+    at BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7905)
+    at Object._modifyPlaywright (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\modifyPlaywrightConf.js:1:21681)
+    at Object.<anonymous> (D:\CODES\CSI-QA-testing\playwright-browserstack-sdk.config.ts:4:24)
+    at Module._compile (node:internal/modules/cjs/loader:1830:14)
+    at Module.newCompile2 (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:46:29)
+    at Object.<anonymous> (node:internal/modules/cjs/loader:1961:10)
+    at Object.newLoader2 [as .ts] (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:52:22)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1576:12)
+    at require (node:internal/modules/helpers:153:16)
+    at requireOrImport (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\transform\transform.js:218:18)
+    at loadUserConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:107:89)
+    at loadConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:119:28)
+    at deserializeConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:104:10)
+    at WorkerMain._loadIfNeeded (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:165:20)
+    at WorkerMain.runTestGroup (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:179:7)
+    at process.<anonymous> (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\process.js:73:22) {
+  code: 14,
+  details: 'No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: ',
+  metadata: Metadata {
+    internalRepr: Map(0) {},
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-05-05 10:24:10 - [31merror[39m: [BrowserstackCLI] Failed to start as child process: Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\call.ts:84:17)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:360:55)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:466:34)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:424:48)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\resolving-call.ts:170:24
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:325:42)
+    at ServiceClientImpl.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\make-client.ts:189:15)
+    at _0xcc7d46 (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13224)
+    at new Promise (<anonymous>)
+    at GrpcClient.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13122)
+    at BrowserstackCLI.startChild (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:20593)
+    at BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7905)
+    at Object._modifyPlaywright (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\modifyPlaywrightConf.js:1:21681)
+    at Object.<anonymous> (D:\CODES\CSI-QA-testing\playwright-browserstack-sdk.config.ts:4:24)
+    at Module._compile (node:internal/modules/cjs/loader:1830:14)
+    at Module.newCompile2 (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:46:29)
+    at Object.<anonymous> (node:internal/modules/cjs/loader:1961:10)
+    at Object.newLoader2 [as .ts] (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:52:22)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1576:12)
+    at require (node:internal/modules/helpers:153:16)
+    at requireOrImport (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\transform\transform.js:218:18)
+    at loadUserConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:107:89)
+    at loadConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:119:28)
+    at deserializeConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:104:10)
+    at WorkerMain._loadIfNeeded (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:165:20)
+    at WorkerMain.runTestGroup (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:179:7)
+    at process.<anonymous> (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\process.js:73:22) {
+  code: 14,
+  details: 'No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: ',
+  metadata: Metadata {
+    internalRepr: Map(0) {},
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-05-05 10:24:54 - [32minfo[39m: Automate test case execution has ended. Processing for accessibility testing is underway. 
+2026-05-05 10:24:54 - [33mwarn[39m: Not a valid Accessibility Automation session for playwright-page, cannot perform scan with retry.
+2026-05-05 10:24:54 - [33mwarn[39m: Not a valid Accessibility Automation session for playwright-page, cannot save accessibility results with retry.
+2026-05-05 10:24:54 - [32minfo[39m: Accessibility testing for this test case has ended.
+2026-05-05 10:24:55 - [32minfo[39m: [Accessibility] afterTestHook state: accessibilityPlatform=false, bstackA11yShouldScan=true
+2026-05-05 10:26:48 - [32minfo[39m: Shutdown triggered by SIGINT
+2026-05-05 10:26:48 - [32minfo[39m: Shutdown triggered by SIGINT
+2026-05-05 10:26:48 - [31merror[39m: [ClientTroubleShootingService] Process Interruption details not found: {}
+2026-05-05 10:26:48 - [31merror[39m: [ClientTroubleShootingService] Process Interruption details not found: {}
+2026-05-05 10:26:49 - [32minfo[39m: [BrowserstackCLI] stop: CLI is not running, skipping stop
+2026-05-05 10:26:49 - [32minfo[39m: [BrowserstackCLI] stop: CLI is not running, skipping stop
+2026-05-05 10:26:49 - [32minfo[39m: [BrowserstackCLI] stop: CLI is not running, skipping stop
+2026-05-05 10:26:49 - [32minfo[39m: [BrowserstackCLI] stop: CLI is not running, skipping stop
+2026-05-05 10:26:49 - [32minfo[39m: Visit https://automation.browserstack.com/builds/p5rip6j4igualjbloht5kahyvis60cl8yvwbn3f5 to view build report, insights, and many more debugging information all at one place!
+
+2026-05-05 10:26:50 - [32minfo[39m: View build on BrowserStack dashboard: https://automate.browserstack.com/dashboard/v2/builds/391c0a3dab61cb92eefb8caa3a3d5bce1d4bde85
+2026-05-05 10:26:50 - [32minfo[39m: SDK run ended for id: 0d2a7746-2b24-4f70-aba5-7de9caf7d11d, testhub id: p5rip6j4igualjbloht5kahyvis60cl8yvwbn3f5
+2026-05-05 10:26:50 - [32minfo[39m: SDK run ended for id: 0d2a7746-2b24-4f70-aba5-7de9caf7d11d, testhub id: p5rip6j4igualjbloht5kahyvis60cl8yvwbn3f5
+2026-05-05 10:26:54 - [32minfo[39m: Deleting D:\CODES\CSI-QA-testing\playwright-browserstack-sdk.config.ts
+2026-05-05 10:26:54 - [32minfo[39m: Deleting D:\CODES\CSI-QA-testing\playwright-browserstack-sdk.config.ts
+2026-05-05 10:26:54 - [32minfo[39m: Local binary stopped
+2026-05-05 10:26:54 - [32minfo[39m: Local binary stopped
+2026-05-05 10:26:54 - [32minfo[39m: [BrowserstackCLI] stop: CLI is not running, skipping stop
+2026-05-05 10:26:54 - [32minfo[39m: [BrowserstackCLI] stop: CLI is not running, skipping stop
+2026-05-05 10:27:35 - [32minfo[39m: Reading configs from D:\CODES\CSI-QA-testing\browserstack.yaml
+2026-05-05 10:27:35 - [32minfo[39m: Log Directory has been set to D:\CODES\CSI-QA-testing\log
+2026-05-05 10:27:35 - [32minfo[39m: Log Directory has been set to D:\CODES\CSI-QA-testing\log
+2026-05-05 10:27:35 - [32minfo[39m: Running SDK with args C:\Program Files\nodejs\node.exe D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\runner.js playwright test
+2026-05-05 10:27:35 - [32minfo[39m: SDK run started with id: 46b4b147-e10a-429f-ba45-28d36564f635
+2026-05-05 10:27:35 - [32minfo[39m: Project and debug logs are captured by default. To disable, set disableAutoCaptureLogs: true in config.
+2026-05-05 10:27:45 - [32minfo[39m: Local binary started successfully
+2026-05-05 10:27:35 - [32minfo[39m: Running SDK with args C:\Program Files\nodejs\node.exe D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\runner.js playwright test
+2026-05-05 10:27:35 - [32minfo[39m: SDK run started with id: 46b4b147-e10a-429f-ba45-28d36564f635
+2026-05-05 10:27:35 - [32minfo[39m: Project and debug logs are captured by default. To disable, set disableAutoCaptureLogs: true in config.
+2026-05-05 10:27:45 - [32minfo[39m: Local binary started successfully
+2026-05-05 10:27:45 - [32minfo[39m: [BrowserstackCLI] startMain: Starting main process
+2026-05-05 10:27:45 - [32minfo[39m: [BrowserstackCLI] startMain: Starting main process
+2026-05-05 10:27:45 - [32minfo[39m: [CLIUtils] Current CLI Path Found: C:\Users\giver\.browserstack\cli\binary-win-x64.exe
+2026-05-05 10:27:45 - [32minfo[39m: [CLIUtils] Current CLI Path Found: C:\Users\giver\.browserstack\cli\binary-win-x64.exe
+2026-05-05 10:27:47 - [32minfo[39m: [BrowserstackCLI] spawning command='C:\Users\giver\.browserstack\cli\binary-win-x64.exe,sdk'
+2026-05-05 10:27:47 - [32minfo[39m: [BrowserstackCLI] spawning command='C:\Users\giver\.browserstack\cli\binary-win-x64.exe,sdk'
+2026-05-05 10:27:48 - [32minfo[39m: [BrowserstackCLI] CLI params loaded: {"id":"ba3ee7a3-ab6a-42f0-a360-eaad5d3a892f","listen":"127.0.0.1:5400","port":"5400"}
+2026-05-05 10:27:48 - [32minfo[39m: [BrowserstackCLI] CLI params loaded: {"id":"ba3ee7a3-ab6a-42f0-a360-eaad5d3a892f","listen":"127.0.0.1:5400","port":"5400"}
+2026-05-05 10:27:48 - [32minfo[39m: [GrpcClient] Connected to gRPC server at 127.0.0.1:5400
+2026-05-05 10:27:48 - [32minfo[39m: [GrpcClient] Initialized gRPC client with bin session id: ba3ee7a3-ab6a-42f0-a360-eaad5d3a892f and listen address: 127.0.0.1:5400
+2026-05-05 10:27:48 - [32minfo[39m: [GrpcClient] startBinSession: Calling startBinSession
+2026-05-05 10:27:48 - [32minfo[39m: [GrpcClient] setCliArgs: cliArgs=["playwright","test"], parsedConfig=[]
+2026-05-05 10:27:48 - [32minfo[39m: [GrpcClient] Connected to gRPC server at 127.0.0.1:5400
+2026-05-05 10:27:48 - [32minfo[39m: [GrpcClient] Initialized gRPC client with bin session id: ba3ee7a3-ab6a-42f0-a360-eaad5d3a892f and listen address: 127.0.0.1:5400
+2026-05-05 10:27:48 - [32minfo[39m: [GrpcClient] startBinSession: Calling startBinSession
+2026-05-05 10:27:48 - [32minfo[39m: [GrpcClient] setCliArgs: cliArgs=["playwright","test"], parsedConfig=[]
+2026-05-05 10:27:51 - [31merror[39m: [BrowserstackCLI] CLI stderr: Exiting with code 1 due to uncaught exception [Error: EBUSY: resource busy or locked, open 'C:\Users\giver\.browserstack\BrowserStackLocal.exe'] {
+  errno: -4082,
+  code: 'EBUSY',
+  syscall: 'open',
+  path: 'C:\\Users\\giver\\.browserstack\\BrowserStackLocal.exe'
+}
+2026-05-05 10:27:51 - [31merror[39m: [BrowserstackCLI] CLI stderr: Exiting with code 1 due to uncaught exception [Error: EBUSY: resource busy or locked, open 'C:\Users\giver\.browserstack\BrowserStackLocal.exe'] {
+  errno: -4082,
+  code: 'EBUSY',
+  syscall: 'open',
+  path: 'C:\\Users\\giver\\.browserstack\\BrowserStackLocal.exe'
+}
+2026-05-05 10:27:52 - [31merror[39m: [GrpcClient] StartBinSession error: 14 UNAVAILABLE: read ECONNRESET
+2026-05-05 10:27:52 - [31merror[39m: [GrpcClient] StartBinSession error: 14 UNAVAILABLE: read ECONNRESET
+2026-05-05 10:27:52 - [31merror[39m: [BrowserstackCLI] bootstrap: failed to bootstrap=Error: 14 UNAVAILABLE: read ECONNRESET
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\build\src\call.js:32:19)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\build\src\client.js:193:76)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\build\src\client-interceptors.js:367:141)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\build\src\client-interceptors.js:327:181)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\build\src\resolving-call.js:135:78
+    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\build\src\client.js:161:32)
+    at ServiceClientImpl.startBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\build\src\make-client.js:105:19)
+    at D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:11720
+    at new Promise (<anonymous>)
+    at GrpcClient.startBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:11618)
+    at BrowserstackCLI.startMain (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:8713)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7997)
+    at async D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\command.js:2:13334
+2026-05-05 10:27:52 - [32minfo[39m: [BrowserstackCLI] stop: CLI is not running, skipping stop
+2026-05-05 10:27:52 - [31merror[39m: [BrowserstackCLI] bootstrap: failed to bootstrap=Error: 14 UNAVAILABLE: read ECONNRESET
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\build\src\call.js:32:19)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\build\src\client.js:193:76)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\build\src\client-interceptors.js:367:141)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\build\src\client-interceptors.js:327:181)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\build\src\resolving-call.js:135:78
+    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\build\src\client.js:161:32)
+    at ServiceClientImpl.startBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\build\src\make-client.js:105:19)
+    at D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:11720
+    at new Promise (<anonymous>)
+    at GrpcClient.startBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:11618)
+    at BrowserstackCLI.startMain (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:8713)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7997)
+    at async D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\command.js:2:13334
+2026-05-05 10:27:52 - [32minfo[39m: [BrowserstackCLI] stop: CLI is not running, skipping stop
+2026-05-05 10:27:54 - [31merror[39m: ACCESSIBILITY Build creation failed
+2026-05-05 10:27:54 - [31merror[39m: ACCESSIBILITY Build creation failed
+2026-05-05 10:27:54 - [32minfo[39m: Testhub started with id: 1gdastcn8kq9sxsko6uvecgoi3hmpl1o1ghvf2we
+2026-05-05 10:27:54 - [32minfo[39m: Testhub started with id: 1gdastcn8kq9sxsko6uvecgoi3hmpl1o1ghvf2we
+2026-05-05 10:27:57 - [32minfo[39m: [BrowserstackCLI] Starting as child process with session ID: ba3ee7a3-ab6a-42f0-a360-eaad5d3a892f
+2026-05-05 10:27:57 - [32minfo[39m: [GrpcClient] Connected to gRPC server at 127.0.0.1:5400
+2026-05-05 10:27:57 - [32minfo[39m: [GrpcClient] Connecting bin session
+2026-05-05 10:27:57 - [31merror[39m: [GrpcClient] ConnectBinSession error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+2026-05-05 10:27:57 - [31merror[39m: [GrpcClient] Error in connectBinSession: Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\call.ts:84:17)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:360:55)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:466:34)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:424:48)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\resolving-call.ts:170:24
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:325:42)
+    at ServiceClientImpl.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\make-client.ts:189:15)
+    at _0xcc7d46 (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13224)
+    at new Promise (<anonymous>)
+    at GrpcClient.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13122)
+    at BrowserstackCLI.startChild (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:20593)
+    at BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7905)
+    at Object._modifyPlaywright (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\modifyPlaywrightConf.js:1:21681)
+    at Object.<anonymous> (D:\CODES\CSI-QA-testing\playwright-browserstack-sdk.config.ts:4:24)
+    at Module._compile (node:internal/modules/cjs/loader:1830:14)
+    at Module.newCompile2 (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:46:29)
+    at Object.<anonymous> (node:internal/modules/cjs/loader:1961:10)
+    at Object.newLoader2 [as .ts] (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:52:22)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1576:12)
+    at require (node:internal/modules/helpers:153:16)
+    at requireOrImport (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\transform\transform.js:218:18)
+    at loadUserConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:107:89)
+    at loadConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:119:28)
+    at loadConfigFromFile (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:331:10)
+    at runTests (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\testActions.js:51:18)
+    at i.<anonymous> (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\program.js:56:7) {
+  code: 14,
+  details: 'No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: ',
+  metadata: Metadata {
+    internalRepr: Map(0) {},
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-05-05 10:27:57 - [31merror[39m: [BrowserstackCLI] Failed to start as child process: Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\call.ts:84:17)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:360:55)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:466:34)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:424:48)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\resolving-call.ts:170:24
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:325:42)
+    at ServiceClientImpl.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\make-client.ts:189:15)
+    at _0xcc7d46 (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13224)
+    at new Promise (<anonymous>)
+    at GrpcClient.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13122)
+    at BrowserstackCLI.startChild (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:20593)
+    at BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7905)
+    at Object._modifyPlaywright (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\modifyPlaywrightConf.js:1:21681)
+    at Object.<anonymous> (D:\CODES\CSI-QA-testing\playwright-browserstack-sdk.config.ts:4:24)
+    at Module._compile (node:internal/modules/cjs/loader:1830:14)
+    at Module.newCompile2 (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:46:29)
+    at Object.<anonymous> (node:internal/modules/cjs/loader:1961:10)
+    at Object.newLoader2 [as .ts] (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:52:22)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1576:12)
+    at require (node:internal/modules/helpers:153:16)
+    at requireOrImport (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\transform\transform.js:218:18)
+    at loadUserConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:107:89)
+    at loadConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:119:28)
+    at loadConfigFromFile (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:331:10)
+    at runTests (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\testActions.js:51:18)
+    at i.<anonymous> (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\program.js:56:7) {
+  code: 14,
+  details: 'No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: ',
+  metadata: Metadata {
+    internalRepr: Map(0) {},
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-05-05 10:27:57 - [32minfo[39m: Setting up TestInfo directory at D:\CODES\CSI-QA-testing\log\.obs_test_details-1gdastcn8kq9sxsko6uvecgoi3hmpl1o1ghvf2we
+2026-05-05 10:27:59 - [32minfo[39m: [BrowserstackCLI] Starting as child process with session ID: ba3ee7a3-ab6a-42f0-a360-eaad5d3a892f
+2026-05-05 10:27:59 - [32minfo[39m: [GrpcClient] Connected to gRPC server at 127.0.0.1:5400
+2026-05-05 10:27:59 - [32minfo[39m: [GrpcClient] Connecting bin session
+2026-05-05 10:27:59 - [31merror[39m: [GrpcClient] ConnectBinSession error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+2026-05-05 10:27:59 - [31merror[39m: [GrpcClient] Error in connectBinSession: Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\call.ts:84:17)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:360:55)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:466:34)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:424:48)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\resolving-call.ts:170:24
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:325:42)
+    at ServiceClientImpl.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\make-client.ts:189:15)
+    at _0xcc7d46 (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13224)
+    at new Promise (<anonymous>)
+    at GrpcClient.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13122)
+    at BrowserstackCLI.startChild (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:20593)
+    at BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7905)
+    at Object._modifyPlaywright (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\modifyPlaywrightConf.js:1:21681)
+    at Object.<anonymous> (D:\CODES\CSI-QA-testing\playwright-browserstack-sdk.config.ts:4:24)
+    at Module._compile (node:internal/modules/cjs/loader:1830:14)
+    at Module.newCompile2 (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:46:29)
+    at Object.<anonymous> (node:internal/modules/cjs/loader:1961:10)
+    at Object.newLoader2 [as .ts] (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:52:22)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1576:12)
+    at require (node:internal/modules/helpers:153:16)
+    at requireOrImport (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\transform\transform.js:218:18)
+    at loadUserConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:107:89)
+    at loadConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:119:28)
+    at deserializeConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:104:10)
+    at WorkerMain._loadIfNeeded (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:165:20)
+    at WorkerMain.runTestGroup (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:179:7)
+    at process.<anonymous> (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\process.js:73:22) {
+  code: 14,
+  details: 'No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: ',
+  metadata: Metadata {
+    internalRepr: Map(0) {},
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-05-05 10:27:59 - [31merror[39m: [BrowserstackCLI] Failed to start as child process: Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\call.ts:84:17)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:360:55)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:466:34)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:424:48)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\resolving-call.ts:170:24
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:325:42)
+    at ServiceClientImpl.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\make-client.ts:189:15)
+    at _0xcc7d46 (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13224)
+    at new Promise (<anonymous>)
+    at GrpcClient.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13122)
+    at BrowserstackCLI.startChild (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:20593)
+    at BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7905)
+    at Object._modifyPlaywright (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\modifyPlaywrightConf.js:1:21681)
+    at Object.<anonymous> (D:\CODES\CSI-QA-testing\playwright-browserstack-sdk.config.ts:4:24)
+    at Module._compile (node:internal/modules/cjs/loader:1830:14)
+    at Module.newCompile2 (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:46:29)
+    at Object.<anonymous> (node:internal/modules/cjs/loader:1961:10)
+    at Object.newLoader2 [as .ts] (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:52:22)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1576:12)
+    at require (node:internal/modules/helpers:153:16)
+    at requireOrImport (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\transform\transform.js:218:18)
+    at loadUserConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:107:89)
+    at loadConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:119:28)
+    at deserializeConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:104:10)
+    at WorkerMain._loadIfNeeded (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:165:20)
+    at WorkerMain.runTestGroup (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:179:7)
+    at process.<anonymous> (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\process.js:73:22) {
+  code: 14,
+  details: 'No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: ',
+  metadata: Metadata {
+    internalRepr: Map(0) {},
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-05-05 10:28:49 - [32minfo[39m: Automate test case execution has ended. Processing for accessibility testing is underway. 
+2026-05-05 10:28:49 - [33mwarn[39m: Not a valid Accessibility Automation session for playwright-page, cannot perform scan with retry.
+2026-05-05 10:28:49 - [33mwarn[39m: Not a valid Accessibility Automation session for playwright-page, cannot save accessibility results with retry.
+2026-05-05 10:28:49 - [32minfo[39m: Accessibility testing for this test case has ended.
+2026-05-05 10:28:49 - [32minfo[39m: [Accessibility] afterTestHook state: accessibilityPlatform=false, bstackA11yShouldScan=true
+2026-05-05 10:28:53 - [32minfo[39m: [BrowserstackCLI] Starting as child process with session ID: ba3ee7a3-ab6a-42f0-a360-eaad5d3a892f
+2026-05-05 10:28:53 - [32minfo[39m: [GrpcClient] Connected to gRPC server at 127.0.0.1:5400
+2026-05-05 10:28:53 - [32minfo[39m: [GrpcClient] Connecting bin session
+2026-05-05 10:28:53 - [31merror[39m: [GrpcClient] ConnectBinSession error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+2026-05-05 10:28:53 - [31merror[39m: [GrpcClient] Error in connectBinSession: Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\call.ts:84:17)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:360:55)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:466:34)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:424:48)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\resolving-call.ts:170:24
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:325:42)
+    at ServiceClientImpl.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\make-client.ts:189:15)
+    at _0xcc7d46 (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13224)
+    at new Promise (<anonymous>)
+    at GrpcClient.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13122)
+    at BrowserstackCLI.startChild (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:20593)
+    at BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7905)
+    at Object._modifyPlaywright (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\modifyPlaywrightConf.js:1:21681)
+    at Object.<anonymous> (D:\CODES\CSI-QA-testing\playwright-browserstack-sdk.config.ts:4:24)
+    at Module._compile (node:internal/modules/cjs/loader:1830:14)
+    at Module.newCompile2 (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:46:29)
+    at Object.<anonymous> (node:internal/modules/cjs/loader:1961:10)
+    at Object.newLoader2 [as .ts] (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:52:22)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1576:12)
+    at require (node:internal/modules/helpers:153:16)
+    at requireOrImport (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\transform\transform.js:218:18)
+    at loadUserConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:107:89)
+    at loadConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:119:28)
+    at deserializeConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:104:10)
+    at WorkerMain._loadIfNeeded (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:165:20)
+    at WorkerMain.runTestGroup (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:179:7)
+    at process.<anonymous> (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\process.js:73:22) {
+  code: 14,
+  details: 'No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: ',
+  metadata: Metadata {
+    internalRepr: Map(0) {},
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-05-05 10:28:53 - [31merror[39m: [BrowserstackCLI] Failed to start as child process: Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\call.ts:84:17)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:360:55)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:466:34)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:424:48)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\resolving-call.ts:170:24
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:325:42)
+    at ServiceClientImpl.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\make-client.ts:189:15)
+    at _0xcc7d46 (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13224)
+    at new Promise (<anonymous>)
+    at GrpcClient.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13122)
+    at BrowserstackCLI.startChild (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:20593)
+    at BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7905)
+    at Object._modifyPlaywright (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\modifyPlaywrightConf.js:1:21681)
+    at Object.<anonymous> (D:\CODES\CSI-QA-testing\playwright-browserstack-sdk.config.ts:4:24)
+    at Module._compile (node:internal/modules/cjs/loader:1830:14)
+    at Module.newCompile2 (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:46:29)
+    at Object.<anonymous> (node:internal/modules/cjs/loader:1961:10)
+    at Object.newLoader2 [as .ts] (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:52:22)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1576:12)
+    at require (node:internal/modules/helpers:153:16)
+    at requireOrImport (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\transform\transform.js:218:18)
+    at loadUserConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:107:89)
+    at loadConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:119:28)
+    at deserializeConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:104:10)
+    at WorkerMain._loadIfNeeded (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:165:20)
+    at WorkerMain.runTestGroup (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:179:7)
+    at process.<anonymous> (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\process.js:73:22) {
+  code: 14,
+  details: 'No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: ',
+  metadata: Metadata {
+    internalRepr: Map(0) {},
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-05-05 10:29:21 - [32minfo[39m: Automate test case execution has ended. Processing for accessibility testing is underway. 
+2026-05-05 10:29:21 - [33mwarn[39m: Not a valid Accessibility Automation session for playwright-page, cannot perform scan with retry.
+2026-05-05 10:29:21 - [33mwarn[39m: Not a valid Accessibility Automation session for playwright-page, cannot save accessibility results with retry.
+2026-05-05 10:29:21 - [32minfo[39m: Accessibility testing for this test case has ended.
+2026-05-05 10:29:21 - [32minfo[39m: [Accessibility] afterTestHook state: accessibilityPlatform=false, bstackA11yShouldScan=true
+2026-05-05 10:29:26 - [32minfo[39m: [BrowserstackCLI] Starting as child process with session ID: ba3ee7a3-ab6a-42f0-a360-eaad5d3a892f
+2026-05-05 10:29:26 - [32minfo[39m: [GrpcClient] Connected to gRPC server at 127.0.0.1:5400
+2026-05-05 10:29:26 - [32minfo[39m: [GrpcClient] Connecting bin session
+2026-05-05 10:29:26 - [31merror[39m: [GrpcClient] ConnectBinSession error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+2026-05-05 10:29:26 - [31merror[39m: [GrpcClient] Error in connectBinSession: Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\call.ts:84:17)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:360:55)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:466:34)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:424:48)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\resolving-call.ts:170:24
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:325:42)
+    at ServiceClientImpl.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\make-client.ts:189:15)
+    at _0xcc7d46 (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13224)
+    at new Promise (<anonymous>)
+    at GrpcClient.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13122)
+    at BrowserstackCLI.startChild (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:20593)
+    at BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7905)
+    at Object._modifyPlaywright (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\modifyPlaywrightConf.js:1:21681)
+    at Object.<anonymous> (D:\CODES\CSI-QA-testing\playwright-browserstack-sdk.config.ts:4:24)
+    at Module._compile (node:internal/modules/cjs/loader:1830:14)
+    at Module.newCompile2 (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:46:29)
+    at Object.<anonymous> (node:internal/modules/cjs/loader:1961:10)
+    at Object.newLoader2 [as .ts] (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:52:22)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1576:12)
+    at require (node:internal/modules/helpers:153:16)
+    at requireOrImport (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\transform\transform.js:218:18)
+    at loadUserConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:107:89)
+    at loadConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:119:28)
+    at deserializeConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:104:10)
+    at WorkerMain._loadIfNeeded (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:165:20)
+    at WorkerMain.runTestGroup (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:179:7)
+    at process.<anonymous> (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\process.js:73:22) {
+  code: 14,
+  details: 'No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: ',
+  metadata: Metadata {
+    internalRepr: Map(0) {},
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-05-05 10:29:26 - [31merror[39m: [BrowserstackCLI] Failed to start as child process: Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\call.ts:84:17)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:360:55)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:466:34)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:424:48)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\resolving-call.ts:170:24
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:325:42)
+    at ServiceClientImpl.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\make-client.ts:189:15)
+    at _0xcc7d46 (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13224)
+    at new Promise (<anonymous>)
+    at GrpcClient.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13122)
+    at BrowserstackCLI.startChild (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:20593)
+    at BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7905)
+    at Object._modifyPlaywright (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\modifyPlaywrightConf.js:1:21681)
+    at Object.<anonymous> (D:\CODES\CSI-QA-testing\playwright-browserstack-sdk.config.ts:4:24)
+    at Module._compile (node:internal/modules/cjs/loader:1830:14)
+    at Module.newCompile2 (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:46:29)
+    at Object.<anonymous> (node:internal/modules/cjs/loader:1961:10)
+    at Object.newLoader2 [as .ts] (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:52:22)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1576:12)
+    at require (node:internal/modules/helpers:153:16)
+    at requireOrImport (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\transform\transform.js:218:18)
+    at loadUserConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:107:89)
+    at loadConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:119:28)
+    at deserializeConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:104:10)
+    at WorkerMain._loadIfNeeded (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:165:20)
+    at WorkerMain.runTestGroup (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:179:7)
+    at process.<anonymous> (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\process.js:73:22) {
+  code: 14,
+  details: 'No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: ',
+  metadata: Metadata {
+    internalRepr: Map(0) {},
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-05-05 10:30:49 - [32minfo[39m: Automate test case execution has ended. Processing for accessibility testing is underway. 
+2026-05-05 10:30:49 - [33mwarn[39m: Not a valid Accessibility Automation session for playwright-page, cannot perform scan with retry.
+2026-05-05 10:30:49 - [33mwarn[39m: Not a valid Accessibility Automation session for playwright-page, cannot save accessibility results with retry.
+2026-05-05 10:30:49 - [32minfo[39m: Accessibility testing for this test case has ended.
+2026-05-05 10:30:49 - [32minfo[39m: [Accessibility] afterTestHook state: accessibilityPlatform=false, bstackA11yShouldScan=true
+2026-05-05 10:30:53 - [32minfo[39m: [BrowserstackCLI] Starting as child process with session ID: ba3ee7a3-ab6a-42f0-a360-eaad5d3a892f
+2026-05-05 10:30:53 - [32minfo[39m: [GrpcClient] Connected to gRPC server at 127.0.0.1:5400
+2026-05-05 10:30:53 - [32minfo[39m: [GrpcClient] Connecting bin session
+2026-05-05 10:30:53 - [31merror[39m: [GrpcClient] ConnectBinSession error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+2026-05-05 10:30:53 - [31merror[39m: [GrpcClient] Error in connectBinSession: Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\call.ts:84:17)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:360:55)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:466:34)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:424:48)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\resolving-call.ts:170:24
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:325:42)
+    at ServiceClientImpl.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\make-client.ts:189:15)
+    at _0xcc7d46 (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13224)
+    at new Promise (<anonymous>)
+    at GrpcClient.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13122)
+    at BrowserstackCLI.startChild (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:20593)
+    at BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7905)
+    at Object._modifyPlaywright (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\modifyPlaywrightConf.js:1:21681)
+    at Object.<anonymous> (D:\CODES\CSI-QA-testing\playwright-browserstack-sdk.config.ts:4:24)
+    at Module._compile (node:internal/modules/cjs/loader:1830:14)
+    at Module.newCompile2 (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:46:29)
+    at Object.<anonymous> (node:internal/modules/cjs/loader:1961:10)
+    at Object.newLoader2 [as .ts] (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:52:22)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1576:12)
+    at require (node:internal/modules/helpers:153:16)
+    at requireOrImport (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\transform\transform.js:218:18)
+    at loadUserConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:107:89)
+    at loadConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:119:28)
+    at deserializeConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:104:10)
+    at WorkerMain._loadIfNeeded (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:165:20)
+    at WorkerMain.runTestGroup (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:179:7)
+    at process.<anonymous> (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\process.js:73:22) {
+  code: 14,
+  details: 'No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: ',
+  metadata: Metadata {
+    internalRepr: Map(0) {},
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-05-05 10:30:53 - [31merror[39m: [BrowserstackCLI] Failed to start as child process: Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\call.ts:84:17)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:360:55)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:466:34)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:424:48)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\resolving-call.ts:170:24
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:325:42)
+    at ServiceClientImpl.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\make-client.ts:189:15)
+    at _0xcc7d46 (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13224)
+    at new Promise (<anonymous>)
+    at GrpcClient.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13122)
+    at BrowserstackCLI.startChild (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:20593)
+    at BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7905)
+    at Object._modifyPlaywright (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\modifyPlaywrightConf.js:1:21681)
+    at Object.<anonymous> (D:\CODES\CSI-QA-testing\playwright-browserstack-sdk.config.ts:4:24)
+    at Module._compile (node:internal/modules/cjs/loader:1830:14)
+    at Module.newCompile2 (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:46:29)
+    at Object.<anonymous> (node:internal/modules/cjs/loader:1961:10)
+    at Object.newLoader2 [as .ts] (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:52:22)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1576:12)
+    at require (node:internal/modules/helpers:153:16)
+    at requireOrImport (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\transform\transform.js:218:18)
+    at loadUserConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:107:89)
+    at loadConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:119:28)
+    at deserializeConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:104:10)
+    at WorkerMain._loadIfNeeded (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:165:20)
+    at WorkerMain.runTestGroup (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:179:7)
+    at process.<anonymous> (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\process.js:73:22) {
+  code: 14,
+  details: 'No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: ',
+  metadata: Metadata {
+    internalRepr: Map(0) {},
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-05-05 10:31:39 - [32minfo[39m: Automate test case execution has ended. Processing for accessibility testing is underway. 
+2026-05-05 10:31:39 - [33mwarn[39m: Not a valid Accessibility Automation session for playwright-page, cannot perform scan with retry.
+2026-05-05 10:31:39 - [33mwarn[39m: Not a valid Accessibility Automation session for playwright-page, cannot save accessibility results with retry.
+2026-05-05 10:31:39 - [32minfo[39m: Accessibility testing for this test case has ended.
+2026-05-05 10:31:39 - [32minfo[39m: [Accessibility] afterTestHook state: accessibilityPlatform=false, bstackA11yShouldScan=true
+2026-05-05 10:33:44 - [32minfo[39m: Automate test case execution has ended. Processing for accessibility testing is underway. 
+2026-05-05 10:33:44 - [33mwarn[39m: Not a valid Accessibility Automation session for playwright-page, cannot perform scan with retry.
+2026-05-05 10:33:44 - [33mwarn[39m: Not a valid Accessibility Automation session for playwright-page, cannot save accessibility results with retry.
+2026-05-05 10:33:44 - [32minfo[39m: Accessibility testing for this test case has ended.
+2026-05-05 10:33:44 - [32minfo[39m: [Accessibility] afterTestHook state: accessibilityPlatform=false, bstackA11yShouldScan=true
+2026-05-05 10:33:47 - [32minfo[39m: [BrowserstackCLI] Starting as child process with session ID: ba3ee7a3-ab6a-42f0-a360-eaad5d3a892f
+2026-05-05 10:33:47 - [32minfo[39m: [GrpcClient] Connected to gRPC server at 127.0.0.1:5400
+2026-05-05 10:33:47 - [32minfo[39m: [GrpcClient] Connecting bin session
+2026-05-05 10:33:47 - [31merror[39m: [GrpcClient] ConnectBinSession error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+2026-05-05 10:33:47 - [31merror[39m: [GrpcClient] Error in connectBinSession: Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\call.ts:84:17)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:360:55)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:466:34)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:424:48)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\resolving-call.ts:170:24
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:325:42)
+    at ServiceClientImpl.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\make-client.ts:189:15)
+    at _0xcc7d46 (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13224)
+    at new Promise (<anonymous>)
+    at GrpcClient.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13122)
+    at BrowserstackCLI.startChild (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:20593)
+    at BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7905)
+    at Object._modifyPlaywright (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\modifyPlaywrightConf.js:1:21681)
+    at Object.<anonymous> (D:\CODES\CSI-QA-testing\playwright-browserstack-sdk.config.ts:4:24)
+    at Module._compile (node:internal/modules/cjs/loader:1830:14)
+    at Module.newCompile2 (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:46:29)
+    at Object.<anonymous> (node:internal/modules/cjs/loader:1961:10)
+    at Object.newLoader2 [as .ts] (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:52:22)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1576:12)
+    at require (node:internal/modules/helpers:153:16)
+    at requireOrImport (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\transform\transform.js:218:18)
+    at loadUserConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:107:89)
+    at loadConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:119:28)
+    at deserializeConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:104:10)
+    at WorkerMain._loadIfNeeded (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:165:20)
+    at WorkerMain.runTestGroup (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:179:7)
+    at process.<anonymous> (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\process.js:73:22) {
+  code: 14,
+  details: 'No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: ',
+  metadata: Metadata {
+    internalRepr: Map(0) {},
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-05-05 10:33:47 - [31merror[39m: [BrowserstackCLI] Failed to start as child process: Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\call.ts:84:17)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:360:55)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:466:34)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:424:48)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\resolving-call.ts:170:24
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:325:42)
+    at ServiceClientImpl.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\make-client.ts:189:15)
+    at _0xcc7d46 (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13224)
+    at new Promise (<anonymous>)
+    at GrpcClient.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13122)
+    at BrowserstackCLI.startChild (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:20593)
+    at BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7905)
+    at Object._modifyPlaywright (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\modifyPlaywrightConf.js:1:21681)
+    at Object.<anonymous> (D:\CODES\CSI-QA-testing\playwright-browserstack-sdk.config.ts:4:24)
+    at Module._compile (node:internal/modules/cjs/loader:1830:14)
+    at Module.newCompile2 (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:46:29)
+    at Object.<anonymous> (node:internal/modules/cjs/loader:1961:10)
+    at Object.newLoader2 [as .ts] (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:52:22)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1576:12)
+    at require (node:internal/modules/helpers:153:16)
+    at requireOrImport (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\transform\transform.js:218:18)
+    at loadUserConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:107:89)
+    at loadConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:119:28)
+    at deserializeConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:104:10)
+    at WorkerMain._loadIfNeeded (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:165:20)
+    at WorkerMain.runTestGroup (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:179:7)
+    at process.<anonymous> (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\process.js:73:22) {
+  code: 14,
+  details: 'No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: ',
+  metadata: Metadata {
+    internalRepr: Map(0) {},
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-05-05 10:34:40 - [32minfo[39m: Automate test case execution has ended. Processing for accessibility testing is underway. 
+2026-05-05 10:34:40 - [33mwarn[39m: Not a valid Accessibility Automation session for playwright-page, cannot perform scan with retry.
+2026-05-05 10:34:40 - [33mwarn[39m: Not a valid Accessibility Automation session for playwright-page, cannot save accessibility results with retry.
+2026-05-05 10:34:40 - [32minfo[39m: Accessibility testing for this test case has ended.
+2026-05-05 10:34:40 - [32minfo[39m: [Accessibility] afterTestHook state: accessibilityPlatform=false, bstackA11yShouldScan=true
+2026-05-05 10:34:44 - [32minfo[39m: [BrowserstackCLI] Starting as child process with session ID: ba3ee7a3-ab6a-42f0-a360-eaad5d3a892f
+2026-05-05 10:34:44 - [32minfo[39m: [GrpcClient] Connected to gRPC server at 127.0.0.1:5400
+2026-05-05 10:34:44 - [32minfo[39m: [GrpcClient] Connecting bin session
+2026-05-05 10:34:44 - [31merror[39m: [GrpcClient] ConnectBinSession error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+2026-05-05 10:34:44 - [31merror[39m: [GrpcClient] Error in connectBinSession: Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\call.ts:84:17)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:360:55)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:466:34)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:424:48)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\resolving-call.ts:170:24
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:325:42)
+    at ServiceClientImpl.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\make-client.ts:189:15)
+    at _0xcc7d46 (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13224)
+    at new Promise (<anonymous>)
+    at GrpcClient.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13122)
+    at BrowserstackCLI.startChild (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:20593)
+    at BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7905)
+    at Object._modifyPlaywright (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\modifyPlaywrightConf.js:1:21681)
+    at Object.<anonymous> (D:\CODES\CSI-QA-testing\playwright-browserstack-sdk.config.ts:4:24)
+    at Module._compile (node:internal/modules/cjs/loader:1830:14)
+    at Module.newCompile2 (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:46:29)
+    at Object.<anonymous> (node:internal/modules/cjs/loader:1961:10)
+    at Object.newLoader2 [as .ts] (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:52:22)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1576:12)
+    at require (node:internal/modules/helpers:153:16)
+    at requireOrImport (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\transform\transform.js:218:18)
+    at loadUserConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:107:89)
+    at loadConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:119:28)
+    at deserializeConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:104:10)
+    at WorkerMain._loadIfNeeded (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:165:20)
+    at WorkerMain.runTestGroup (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:179:7)
+    at process.<anonymous> (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\process.js:73:22) {
+  code: 14,
+  details: 'No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: ',
+  metadata: Metadata {
+    internalRepr: Map(0) {},
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-05-05 10:34:44 - [31merror[39m: [BrowserstackCLI] Failed to start as child process: Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: 
+    at callErrorFromStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\call.ts:84:17)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:360:55)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:466:34)
+    at Object.onReceiveStatus (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client-interceptors.ts:424:48)
+    at D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\resolving-call.ts:170:24
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\client.ts:325:42)
+    at ServiceClientImpl.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\@grpc\grpc-js\src\make-client.ts:189:15)
+    at _0xcc7d46 (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13224)
+    at new Promise (<anonymous>)
+    at GrpcClient.connectBinSession (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\grpcClient.js:1:13122)
+    at BrowserstackCLI.startChild (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:20593)
+    at BrowserstackCLI.bootstrap (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\v2\browserstackCLI.js:1:7905)
+    at Object._modifyPlaywright (D:\CODES\CSI-QA-testing\node_modules\browserstack-node-sdk\src\bin\playwright\modifyPlaywrightConf.js:1:21681)
+    at Object.<anonymous> (D:\CODES\CSI-QA-testing\playwright-browserstack-sdk.config.ts:4:24)
+    at Module._compile (node:internal/modules/cjs/loader:1830:14)
+    at Module.newCompile2 (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:46:29)
+    at Object.<anonymous> (node:internal/modules/cjs/loader:1961:10)
+    at Object.newLoader2 [as .ts] (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\third_party\pirates.js:52:22)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1576:12)
+    at require (node:internal/modules/helpers:153:16)
+    at requireOrImport (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\transform\transform.js:218:18)
+    at loadUserConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:107:89)
+    at loadConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:119:28)
+    at deserializeConfig (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\configLoader.js:104:10)
+    at WorkerMain._loadIfNeeded (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:165:20)
+    at WorkerMain.runTestGroup (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\worker\workerMain.js:179:7)
+    at process.<anonymous> (D:\CODES\CSI-QA-testing\node_modules\playwright\lib\common\process.js:73:22) {
+  code: 14,
+  details: 'No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:5400. Resolution note: ',
+  metadata: Metadata {
+    internalRepr: Map(0) {},
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-05-05 10:35:29 - [32minfo[39m: Automate test case execution has ended. Processing for accessibility testing is underway. 
+2026-05-05 10:35:29 - [33mwarn[39m: Not a valid Accessibility Automation session for playwright-page, cannot perform scan with retry.
+2026-05-05 10:35:29 - [33mwarn[39m: Not a valid Accessibility Automation session for playwright-page, cannot save accessibility results with retry.
+2026-05-05 10:35:29 - [32minfo[39m: Accessibility testing for this test case has ended.
+2026-05-05 10:35:29 - [32minfo[39m: [Accessibility] afterTestHook state: accessibilityPlatform=false, bstackA11yShouldScan=true

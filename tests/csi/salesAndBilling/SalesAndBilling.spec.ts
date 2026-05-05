@@ -61,19 +61,27 @@ test.describe('CSI · Sales and Billing', () => {
     await csiSalesAndBillingPage.clickAddSalesOrder();
 
     const salesOrderDropdownMaxAttempts = 4;
+    await csiSalesAndBillingPage.waitForSalesOrderDropdownToSettle();
     await csiSalesAndBillingPage.selectLastOptionByTriggerText(
       'Select Client',
       salesOrderDropdownMaxAttempts,
     );
+    await csiSalesAndBillingPage.waitForSalesOrderDropdownToSettle();
+
     await csiSalesAndBillingPage.selectFirstOptionByTriggerText(
       'Select Sales Partner',
       salesOrderDropdownMaxAttempts,
     );
+    await csiSalesAndBillingPage.waitForSalesOrderDropdownToSettle();
+
     await csiSalesAndBillingPage.selectFirstBillingPartnerOption(salesOrderDropdownMaxAttempts);
+    await csiSalesAndBillingPage.waitForSalesOrderDropdownToSettle();
+
     await csiSalesAndBillingPage.selectFirstOptionByTriggerText(
       'Select Package Type',
       salesOrderDropdownMaxAttempts,
     );
+    await csiSalesAndBillingPage.waitForSalesOrderDropdownToSettle();
 
     const salesOrderDatePickerMaxAttempts = 4;
     await csiSalesAndBillingPage.pickTodaySalesStartDate(salesOrderDatePickerMaxAttempts);

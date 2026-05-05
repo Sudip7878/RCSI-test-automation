@@ -57,9 +57,25 @@ export class CsiTrainingPage extends BasePage {
   }
 
   /**
+   * Wait until the wizard step and VirtualSelect controls are mounted before opening `Search...`.
+   */
+  private async waitForCourseSelectionStepReady() {
+    await this.page.waitForLoadState('domcontentloaded');
+    await this.page.waitForLoadState('networkidle').catch(() => {});
+    await expect(this.distributionNameInput).toBeVisible({ timeout: 15_000 });
+
+    const searchTriggers = this.page.getByText('Search...', { exact: true });
+    await expect(searchTriggers.first()).toBeVisible({ timeout: 15_000 });
+    await this.safeSleep(400);
+    await expect(searchTriggers.first()).toBeVisible({ timeout: 10_000 });
+  }
+
+  /**
    * `courseSlotIndex`: 0 = first `Search...`, 1 = second (after first course is chosen).
    */
   async selectCourseByVirtualSelectSearch(courseName: string, courseSlotIndex: number) {
+    await this.waitForCourseSelectionStepReady();
+
     const searchTriggers = this.page.getByText('Search...', { exact: true });
     for (let attempt = 0; attempt < COURSE_SEARCH_MAX_ATTEMPTS; attempt += 1) {
       const trigger =

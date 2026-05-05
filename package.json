@@ -29,5 +29,8 @@
     "dotenv": "^16.6.1",
     "dotenv-cli": "^11.0.0",
     "typescript": "^5.9.0"
+  },
+  "dependencies": {
+    "docx": "^9.6.1"
   }
 }
