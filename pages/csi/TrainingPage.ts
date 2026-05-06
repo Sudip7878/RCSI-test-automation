@@ -51,12 +51,14 @@ export class CsiTrainingPage extends BasePage {
     await expect(this.distributionNameInput).toBeVisible({ timeout: 30_000 });
   }
 
+  /** 3s after fill so course VirtualSelect is not opened immediately (training flow). */
   async fillDistributionName(name: string) {
     await this.distributionNameInput.click();
     await this.distributionNameInput.fill(name);
+    await this.safeSleep(3000);
   }
 
-  /** Course step: wait for VirtualSelect / `Search...` before opening dropdown. */
+  /** Course step: `Search...` visible, then 3s for VirtualSelect to settle before opening. */
   private async waitForCourseSelectionStepReady() {
     await this.page.waitForLoadState('domcontentloaded');
     await this.page.waitForLoadState('networkidle').catch(() => {});
@@ -64,7 +66,7 @@ export class CsiTrainingPage extends BasePage {
 
     const searchTriggers = this.page.getByText('Search...', { exact: true });
     await expect(searchTriggers.first()).toBeVisible({ timeout: 15_000 });
-    await this.safeSleep(400);
+    await this.safeSleep(3000);
     await expect(searchTriggers.first()).toBeVisible({ timeout: 10_000 });
   }
 

@@ -253,3 +253,37 @@
 2026-05-05T16:27:51.316Z CLI info [main]  [lhceu1o48ytqe52sgzuvtgrhietpwx8kcqehxjhn]  [ba3ee7a3-ab6a-42f0-a360-eaad5d3a892f]  Received graceful signal termination (none), performing cleanup
 2026-05-05T16:27:51.317Z CLI info  [lhceu1o48ytqe52sgzuvtgrhietpwx8kcqehxjhn]  [ba3ee7a3-ab6a-42f0-a360-eaad5d3a892f]  [PRODUCTION] Making PUT request to https://collector-observability.browserstack.com
 2026-05-05T16:27:52.237Z CLI info [testhub:module]  [lhceu1o48ytqe52sgzuvtgrhietpwx8kcqehxjhn]  [ba3ee7a3-ab6a-42f0-a360-eaad5d3a892f]  stopBuild: lhceu1o48ytqe52sgzuvtgrhietpwx8kcqehxjhn request={"finished_at":"2026-05-05T16:27:51.317Z","finished_metadata":[],"custom_metadata":null} response={"data":""}
+2026-05-06T18:59:18.781Z CLI info [main]    Server listening on port: 5400
+2026-05-06T18:59:18.845Z CLI info    Config : {"platforms":[{"os":"Windows","osVersion":"11","browserName":"chrome","browserVersion":"latest"}],"browserstackLocal":true,"buildName":"Avotech-Regression-TestSuite","video":true,"interactiveDebugging":true}
+2026-05-06T18:59:18.925Z CLI info    Should start debug utility: undefined
+2026-05-06T18:59:18.929Z CLI info [testhub:module]   [e4642fb9-6950-409e-b061-534dfba2124d]  Starting testhub from 24396:0
+2026-05-06T18:59:18.930Z CLI info   [e4642fb9-6950-409e-b061-534dfba2124d]  [PRODUCTION] Making POST request to https://sdk.browserstack.com
+2026-05-06T18:59:18.932Z CLI info   [e4642fb9-6950-409e-b061-534dfba2124d]  [PRODUCTION] Making GET request to https://hub.browserstack.com
+2026-05-06T18:59:20.214Z CLI info   [e4642fb9-6950-409e-b061-534dfba2124d]  [PRODUCTION] Making GET request to https://hub-use.browserstack.com
+2026-05-06T18:59:20.216Z CLI info   [e4642fb9-6950-409e-b061-534dfba2124d]  [PRODUCTION] Making GET request to https://hub-usw.browserstack.com
+2026-05-06T18:59:20.218Z CLI info   [e4642fb9-6950-409e-b061-534dfba2124d]  [PRODUCTION] Making GET request to https://hub-euw.browserstack.com
+2026-05-06T18:59:20.964Z CLI info [testhub:module]   [e4642fb9-6950-409e-b061-534dfba2124d]  startBuild: response=knnazm7wr0jdrzwioyqt7bgwsvqatixwvld5wq8v
+2026-05-06T18:59:20.966Z CLI info  [knnazm7wr0jdrzwioyqt7bgwsvqatixwvld5wq8v]  [e4642fb9-6950-409e-b061-534dfba2124d]  [PRODUCTION] Making POST request to https://api.browserstack.com
+2026-05-06T18:59:22.874Z CLI info [main]  [knnazm7wr0jdrzwioyqt7bgwsvqatixwvld5wq8v]  [e4642fb9-6950-409e-b061-534dfba2124d]  Uncaught Exception occurred, error: Error: EBUSY: resource busy or locked, open 'C:\Users\giver\.browserstack\BrowserStackLocal.exe', error stack trace: Error: EBUSY: resource busy or locked, open 'C:\Users\giver\.browserstack\BrowserStackLocal.exe'
+2026-05-06T18:59:22.874Z CLI info [main]  [knnazm7wr0jdrzwioyqt7bgwsvqatixwvld5wq8v]  [e4642fb9-6950-409e-b061-534dfba2124d]  Upgrade available: Please update from beta to the latest stable version.
+2026-05-06T18:59:22.874Z CLI error [main]  [knnazm7wr0jdrzwioyqt7bgwsvqatixwvld5wq8v]  [e4642fb9-6950-409e-b061-534dfba2124d]  error: Error: EBUSY: resource busy or locked, open 'C:\Users\giver\.browserstack\BrowserStackLocal.exe'
+2026-05-06T18:59:22.877Z CLI info [main]  [knnazm7wr0jdrzwioyqt7bgwsvqatixwvld5wq8v]  [e4642fb9-6950-409e-b061-534dfba2124d]  Received graceful signal termination (none), performing cleanup
+2026-05-06T18:59:22.878Z CLI info  [knnazm7wr0jdrzwioyqt7bgwsvqatixwvld5wq8v]  [e4642fb9-6950-409e-b061-534dfba2124d]  [PRODUCTION] Making PUT request to https://collector-observability.browserstack.com
+2026-05-06T18:59:24.150Z CLI info [testhub:module]  [knnazm7wr0jdrzwioyqt7bgwsvqatixwvld5wq8v]  [e4642fb9-6950-409e-b061-534dfba2124d]  stopBuild: knnazm7wr0jdrzwioyqt7bgwsvqatixwvld5wq8v request={"finished_at":"2026-05-06T18:59:22.877Z","finished_metadata":[],"custom_metadata":null} response={"data":""}
+2026-05-06T19:22:46.104Z CLI info [main]    Server listening on port: 5400
+2026-05-06T19:22:46.159Z CLI info    Config : {"platforms":[{"os":"Windows","osVersion":"11","browserName":"chrome","browserVersion":"latest"}],"browserstackLocal":true,"buildName":"Avotech-Regression-TestSuite","video":true,"interactiveDebugging":true}
+2026-05-06T19:22:46.181Z CLI info    Should start debug utility: undefined
+2026-05-06T19:22:46.185Z CLI info [testhub:module]   [af9603a3-cea5-4675-b78b-49004c36274d]  Starting testhub from 9092:0
+2026-05-06T19:22:46.186Z CLI info   [af9603a3-cea5-4675-b78b-49004c36274d]  [PRODUCTION] Making POST request to https://sdk.browserstack.com
+2026-05-06T19:22:46.188Z CLI info   [af9603a3-cea5-4675-b78b-49004c36274d]  [PRODUCTION] Making GET request to https://hub.browserstack.com
+2026-05-06T19:22:47.579Z CLI info   [af9603a3-cea5-4675-b78b-49004c36274d]  [PRODUCTION] Making GET request to https://hub-use.browserstack.com
+2026-05-06T19:22:47.580Z CLI info   [af9603a3-cea5-4675-b78b-49004c36274d]  [PRODUCTION] Making GET request to https://hub-usw.browserstack.com
+2026-05-06T19:22:47.580Z CLI info   [af9603a3-cea5-4675-b78b-49004c36274d]  [PRODUCTION] Making GET request to https://hub-euw.browserstack.com
+2026-05-06T19:22:48.129Z CLI info [testhub:module]   [af9603a3-cea5-4675-b78b-49004c36274d]  startBuild: response=dsduzt3b1qshofbuevarwdsus2fr0m6vutsuonuz
+2026-05-06T19:22:48.130Z CLI info  [dsduzt3b1qshofbuevarwdsus2fr0m6vutsuonuz]  [af9603a3-cea5-4675-b78b-49004c36274d]  [PRODUCTION] Making POST request to https://api.browserstack.com
+2026-05-06T19:22:50.022Z CLI info [main]  [dsduzt3b1qshofbuevarwdsus2fr0m6vutsuonuz]  [af9603a3-cea5-4675-b78b-49004c36274d]  Uncaught Exception occurred, error: Error: EBUSY: resource busy or locked, open 'C:\Users\giver\.browserstack\BrowserStackLocal.exe', error stack trace: Error: EBUSY: resource busy or locked, open 'C:\Users\giver\.browserstack\BrowserStackLocal.exe'
+2026-05-06T19:22:50.022Z CLI info [main]  [dsduzt3b1qshofbuevarwdsus2fr0m6vutsuonuz]  [af9603a3-cea5-4675-b78b-49004c36274d]  Upgrade available: Please update from beta to the latest stable version.
+2026-05-06T19:22:50.022Z CLI error [main]  [dsduzt3b1qshofbuevarwdsus2fr0m6vutsuonuz]  [af9603a3-cea5-4675-b78b-49004c36274d]  error: Error: EBUSY: resource busy or locked, open 'C:\Users\giver\.browserstack\BrowserStackLocal.exe'
+2026-05-06T19:22:50.025Z CLI info [main]  [dsduzt3b1qshofbuevarwdsus2fr0m6vutsuonuz]  [af9603a3-cea5-4675-b78b-49004c36274d]  Received graceful signal termination (none), performing cleanup
+2026-05-06T19:22:50.027Z CLI info  [dsduzt3b1qshofbuevarwdsus2fr0m6vutsuonuz]  [af9603a3-cea5-4675-b78b-49004c36274d]  [PRODUCTION] Making PUT request to https://collector-observability.browserstack.com
+2026-05-06T19:22:51.373Z CLI info [testhub:module]  [dsduzt3b1qshofbuevarwdsus2fr0m6vutsuonuz]  [af9603a3-cea5-4675-b78b-49004c36274d]  stopBuild: dsduzt3b1qshofbuevarwdsus2fr0m6vutsuonuz request={"finished_at":"2026-05-06T19:22:50.026Z","finished_metadata":[],"custom_metadata":null} response={"data":""}
