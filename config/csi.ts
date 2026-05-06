@@ -18,6 +18,7 @@ export const CSI_LOGIN_PATH = '/Login' as const;
 export const CSI_LEGACY_LOGIN_PATH = '/Avotech/Login' as const;
 export const CSI_HOME_PATH = '/' as const;
 export const CSI_PACKAGE_LIST_PATH = '/PackageList' as const;
+export const CSI_INCIDENT_REPORT_DASHBOARD_PATH = '/IncidentReportDashboard' as const;
 
 function toUrl(url: string | URL): URL {
   return url instanceof URL ? url : new URL(url);

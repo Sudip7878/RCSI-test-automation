@@ -48,3 +48,19 @@ export function csiPhisingAdminTestPassword(): string {
   }
   return p;
 }
+
+export function csiIncidentReporterTestEmail(): string {
+  const e = process.env.CSI_INCIDENT_REPORTER_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_INCIDENT_REPORTER_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+export function csiIncidentReporterTestPassword(): string {
+  const p = process.env.CSI_INCIDENT_REPORTER_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_INCIDENT_REPORTER_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
