@@ -218,6 +218,39 @@ export class CsiPolicyManagementPage extends BasePage {
     });
   }
 
+  async openViewPolicies() {
+    await this.page.goto(`${CSI_BASE_URL}/ViewPolicies`);
+    await this.page.waitForLoadState('domcontentloaded');
+    await expect(this.page.locator('table.table[role="grid"]')).toBeVisible({ timeout: 60_000 });
+  }
+
+  /** PM-010: walk `tbody tr.table-row` top-down; first ● Pending For Approval → status cell + Review link. */
+  async openReviewForFirstPendingForApproval() {
+    const grid = this.page.locator('table.table[role="grid"]');
+    await expect(grid).toBeVisible({ timeout: 60_000 });
+    const pendingLabel = '● Pending For Approval';
+    const rows = grid.locator('tbody tr.table-row');
+    const n = await rows.count();
+    for (let i = 0; i < n; i += 1) {
+      const row = rows.nth(i);
+      const statusCell = row.getByRole('gridcell', { name: pendingLabel });
+      if ((await statusCell.count()) === 0) {
+        continue;
+      }
+      await statusCell.click();
+      await row.getByRole('link', { name: 'Review' }).click();
+      return;
+    }
+    throw new Error('No table row with status Pending For Approval');
+  }
+
+  async approveAndPublishExpectApprovalSent() {
+    const approve = this.page.getByRole('button', { name: 'Approve and Publish' });
+    await expect(approve).toBeVisible({ timeout: 60_000 });
+    await approve.click();
+    await expect(this.page.getByText('Approval Sent')).toBeVisible({ timeout: 60_000 });
+  }
+
   buildEditedDocxPath(downloadPath: string, uniqueSuffix: string): string {
     const parsed = path.parse(downloadPath);
     return path.join(parsed.dir, `${parsed.name}_${uniqueSuffix}${parsed.ext || '.docx'}`);

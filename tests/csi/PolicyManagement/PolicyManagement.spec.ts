@@ -59,4 +59,12 @@ test.describe('CSI · Policy Management', () => {
     await csiPolicyManagementPage.expectPolicyCreated();
     await csiPolicyManagementPage.expectOnViewPoliciesWithPendingPolicy(policyTitle);
   });
+
+  test('PM-010 approve first Pending For Approval policy from View Policies', async ({
+    csiPolicyManagementPage,
+  }) => {
+    await csiPolicyManagementPage.openViewPolicies();
+    await csiPolicyManagementPage.openReviewForFirstPendingForApproval();
+    await csiPolicyManagementPage.approveAndPublishExpectApprovalSent();
+  });
 });
