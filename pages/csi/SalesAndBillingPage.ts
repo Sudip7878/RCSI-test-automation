@@ -110,8 +110,8 @@ export class CsiSalesAndBillingPage extends BasePage {
     await this.waitForElement(this.addSalesOrderFormReady, 30_000);
   }
 
-  /** Small buffer between dependent Sales Order dropdown selections. */
-  async waitForSalesOrderDropdownToSettle(ms = 700) {
+   /** Buffer between dependent Sales Order dropdown selections (default 5s). */
+  async waitForSalesOrderDropdownToSettle(ms = 5000) {
     await this.safeSleep(ms);
   }
 
