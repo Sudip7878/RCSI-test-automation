@@ -1,5 +1,11 @@
 import { test } from '../../../fixtures/csi/testSetup';
 import { csiTestEmail, csiTestPassword } from '../../../utils/csi/credentials';
+import { writeInvoiceCompareDebugJsonFiles } from '../../../utils/csi/invoiceCompareDebugLog';
+import {
+  assertInvoicePdfSubsetOfPreviewTemplate,
+  extractInvoicePdfText,
+  previewKeyValuesToCompareJson,
+} from '../../../utils/csi/invoicePdfPreviewCompare';
 import {
   csiPackageDescription,
   csiPackagePricePerModule,
@@ -116,5 +122,27 @@ test.describe('CSI · Sales and Billing', () => {
     await csiSalesAndBillingPage.clickNextOnAddSalesPartnerWizard();
     await csiSalesAndBillingPage.submitAddSalesPartnerWizard();
     await csiSalesAndBillingPage.expectSalesPartnerCreated(partnerName);
+  });
+
+  test('SB-062 invoice PDF matches on-page preview semantics', async ({ csiSalesAndBillingPage }) => {
+    await csiSalesAndBillingPage.openInvoiceList();
+    await csiSalesAndBillingPage.openFirstInvoiceViewDetails();
+    await csiSalesAndBillingPage.expectInvoiceDetailPreviewReady();
+
+    const previewFullText = await csiSalesAndBillingPage.readInvoiceTemplatePreviewText();
+    const previewKeyValues = await csiSalesAndBillingPage.readInvoiceTemplateKeyValues();
+    const previewJson = previewKeyValuesToCompareJson(previewKeyValues);
+    const pdfBuffer = await csiSalesAndBillingPage.downloadInvoicePdfBytes();
+    const pdfText = await extractInvoicePdfText(pdfBuffer);
+
+    // write `debug-output/invoice-compare/invoice-template-snapshot.json` and `invoice-pdf-snapshot.json`.
+    await writeInvoiceCompareDebugJsonFiles({
+      previewCompareJson: previewJson,
+      previewKeyValues,
+      previewFullText,
+      pdfText,
+    });
+
+    assertInvoicePdfSubsetOfPreviewTemplate(previewJson, previewFullText, pdfText);
   });
 });

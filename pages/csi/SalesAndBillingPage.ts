@@ -1,5 +1,7 @@
+import { readFileSync } from 'node:fs';
+
 import { expect, type Locator } from '@playwright/test';
-import { CSI_BASE_URL } from '../../config/csi';
+import { CSI_BASE_URL, CSI_INVOICE_LIST_PATH } from '../../config/csi';
 import { BasePage } from '../BasePage';
 
 /** OutSystems `#bNN-Input_*` ids for Add Sales Partner → email template step (fragile if module is republished). */
@@ -28,6 +30,9 @@ export class CsiSalesAndBillingPage extends BasePage {
   readonly salesAndBillingNav = this.page.locator('#b3-Sales_Billing2').getByText('Sales & Billing');
   readonly packageManagementLink = this.page.getByRole('link', { name: 'Package Management' });
   readonly addPackageButton = this.page.getByRole('button', { name: 'Add Package' });
+  readonly downloadInvoiceButton = this.page.getByRole('button', { name: 'Download' });
+  /** SB-062: on invoice detail, preview block below Download. */
+  readonly invoiceTemplateDetails = this.page.locator('[data-block="Invoice.InvoiceTemplateDetails"]');
 
   readonly packageNameInput = this.page.getByRole('textbox', { name: 'Package Name*' });
   readonly packageDescriptionInput = this.page.getByRole('textbox', { name: /description/i });
@@ -511,5 +516,150 @@ export class CsiSalesAndBillingPage extends BasePage {
     await expect(this.page.getByText('You have successfully added')).toBeVisible({ timeout: 60_000 });
     await this.page.waitForURL(/\/SalesPartnerList/, { timeout: 60_000 });
     await expect(this.page.getByRole('gridcell', { name: partnerName })).toBeVisible();
+  }
+
+  async openInvoiceList() {
+    await this.page.goto(`${CSI_BASE_URL}${CSI_INVOICE_LIST_PATH}`);
+    await expect(this.page.getByRole('columnheader', { name: /Invoice No/i })).toBeVisible({
+      timeout: 60_000,
+    });
+  }
+
+  /** SB-062: first data row in the invoice grid. */
+  async openFirstInvoiceViewDetails() {
+    const firstRow = this.page.locator('table[role="grid"] tbody tr.table-row').first();
+    await expect(firstRow).toBeVisible({ timeout: 60_000 });
+    await firstRow.getByRole('link', { name: 'View Details' }).click();
+  }
+
+  async expectInvoiceDetailPreviewReady() {
+    await expect(this.downloadInvoiceButton).toBeVisible({ timeout: 60_000 });
+    await expect(this.invoiceTemplateDetails).toBeVisible({ timeout: 60_000 });
+    // SB-062: template/async bindings settle before snapshot vs PDF.
+    await this.page.waitForTimeout(5_000);
+  }
+
+  async readInvoiceTemplatePreviewText(): Promise<string> {
+    await expect(this.invoiceTemplateDetails).toBeVisible();
+    return (await this.invoiceTemplateDetails.innerText()).trim();
+  }
+
+  /**
+   * SB-062: walks `Invoice.InvoiceTemplateDetails` DOM (labels, total rows, line items, bank lines)
+   * to build key/value pairs for PDF comparison — no invoice-specific strings hardcoded.
+   */
+  async readInvoiceTemplateKeyValues(): Promise<Array<{ key: string; value: string }>> {
+    await expect(this.invoiceTemplateDetails).toBeVisible();
+    return this.invoiceTemplateDetails.evaluate((root) => {
+      const rows: { key: string; value: string }[] = [];
+      const seen = new Set<string>();
+      const inner = (el: Element) => (el as HTMLElement).innerText;
+
+      const push = (key: string, value: string) => {
+        const k = key.replace(/\s+/g, ' ').trim();
+        const v = value.replace(/\s+/g, ' ').trim();
+        if (!k || !v || k.length > 400 || v.length > 4000) {
+          return;
+        }
+        const sig = `${k}\0${v}`;
+        if (seen.has(sig)) {
+          return;
+        }
+        seen.add(sig);
+        rows.push({ key: k, value: v });
+      };
+
+      root.querySelectorAll('label').forEach((label) => {
+        const key = inner(label).replace(/\s+/g, ' ').trim();
+        if (!key) {
+          return;
+        }
+        let el: Element | null = label.nextElementSibling;
+        while (el) {
+          if (el.matches('span[data-expression]')) {
+            const v = (el as HTMLElement).innerText.trim();
+            if (v) {
+              push(key, v);
+            }
+          }
+          el.querySelectorAll(':scope span[data-expression]').forEach((sp) => {
+            const v = sp.textContent?.trim() ?? '';
+            if (v) {
+              push(key, v);
+            }
+          });
+          el = el.nextElementSibling;
+        }
+      });
+
+      root.querySelectorAll('div.columns2').forEach((wrapper) => {
+        const items = wrapper.querySelectorAll(':scope > .columns-item');
+        if (items.length < 2) {
+          return;
+        }
+        const key = inner(items[0]).replace(/\s+/g, ' ').trim();
+        if (!key) {
+          return;
+        }
+        items[1].querySelectorAll('span[data-expression]').forEach((sp) => {
+          const v = sp.textContent?.trim() ?? '';
+          if (v) {
+            push(key, v);
+          }
+        });
+      });
+
+      root.querySelectorAll('div.columns-medium-left').forEach((row) => {
+        const items = row.querySelectorAll(':scope > .columns-item');
+        if (items.length < 2) {
+          return;
+        }
+        const valueSpans = items[1].querySelectorAll('span[data-expression]');
+        if (valueSpans.length === 0) {
+          return;
+        }
+        const key = inner(items[0]).replace(/\s+/g, ' ').trim();
+        if (!key) {
+          return;
+        }
+        const parts: string[] = [];
+        valueSpans.forEach((sp) => {
+          const t = sp.textContent?.trim() ?? '';
+          if (t) {
+            parts.push(t);
+          }
+        });
+        if (parts.length) {
+          push(key, parts.join(' | '));
+        }
+      });
+
+      root.querySelectorAll('.margin-bottom-base').forEach((div) => {
+        const sp = div.querySelector(':scope > span[data-expression]');
+        if (!sp) {
+          return;
+        }
+        const val = sp.textContent?.trim() ?? '';
+        const full = inner(div).trim();
+        if (!val || !full.includes(val)) {
+          return;
+        }
+        const key = full.slice(0, full.indexOf(val)).replace(/:\s*$/u, '').trim();
+        if (key) {
+          push(key, val);
+        }
+      });
+
+      return rows;
+    });
+  }
+
+  async downloadInvoicePdfBytes(): Promise<Buffer> {
+    const downloadPromise = this.page.waitForEvent('download', { timeout: 120_000 });
+    await this.downloadInvoiceButton.click();
+    const download = await downloadPromise;
+    const path = await download.path();
+    expect(path, 'browser should materialize download to a temp path').toBeTruthy();
+    return readFileSync(path as string);
   }
 }
