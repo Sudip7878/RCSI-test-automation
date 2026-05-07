@@ -1,5 +1,6 @@
 import { expect } from '@playwright/test';
 import { CSI_BASE_URL } from '../../config/csi';
+import { csiUserListSearchTokenFromEmail } from '../../utils/csi/userListSearch';
 import { BasePage } from '../BasePage';
 
 export class CsiAccountManagementPage extends BasePage {
@@ -11,6 +12,8 @@ export class CsiAccountManagementPage extends BasePage {
   readonly lastNameInput = this.page.getByRole('textbox', { name: 'Last Name*' });
   readonly emailInput = this.page.getByRole('textbox', { name: 'Email*' });
   readonly createNewUserButton = this.page.getByRole('button', { name: 'Create New User' });
+  readonly userNameSearchBox = this.page.getByRole('searchbox', { name: 'Enter user name' });
+  readonly userSearchButton = this.page.getByRole('button', { name: 'Search' });
 
   async openUserList() {
     await this.page.goto(`${CSI_BASE_URL}/userList`);
@@ -64,5 +67,64 @@ export class CsiAccountManagementPage extends BasePage {
 
   async expectUserCreatedSuccess() {
     await expect(this.page.getByText('You have successfully added')).toBeVisible({ timeout: 60_000 });
+  }
+
+  /** IR-001: `/userList` with search box ready (recorded flow). */
+  async openUserListWithSearchReady() {
+    await this.page.goto(`${CSI_BASE_URL}/userList`);
+    await expect(this.userNameSearchBox).toBeVisible({ timeout: 30_000 });
+  }
+
+  /** IR-001: fill search from {@link csiUserListSearchTokenFromEmail} and run Search. */
+  async searchUserListForReporterEmail(reporterEmail: string) {
+    const token = csiUserListSearchTokenFromEmail(reporterEmail);
+    await this.userNameSearchBox.click();
+    await this.userNameSearchBox.fill(token);
+    await this.userSearchButton.click();
+  }
+
+  async expectUserGridShowsEmail(email: string) {
+    await expect(this.page.getByRole('gridcell', { name: email })).toBeVisible({ timeout: 60_000 });
+  }
+
+  userTableRowForEmail(email: string) {
+    return this.page.locator('tr.table-row').filter({
+      has: this.page.getByRole('gridcell', { name: email }),
+    });
+  }
+
+  /** Actions column ellipsis for the row that matches `email` in the user grid. */
+  async openUserRowActionsMenu(email: string) {
+    const row = this.userTableRowForEmail(email);
+    await expect(row).toBeVisible();
+    await row.locator('i.fa-ellipsis-v').click();
+  }
+
+  async openChangeRoleFromActionsMenu() {
+    await this.page.getByRole('link', { name: /Change role/i }).click();
+  }
+
+  /**
+   * IR-001: in the role grid, ensure the Incident Reporter row’s assignment checkbox is checked
+   * (idempotent if already checked).
+   */
+  async ensureIncidentReporterRoleChecked() {
+    const roleRow = this.page.locator('tr.table-row').filter({
+      has: this.page.getByRole('gridcell', { name: 'Incident Reporter' }),
+    });
+    await expect(roleRow).toBeVisible({ timeout: 30_000 });
+    const checkbox = roleRow.locator('input[type="checkbox"]').first();
+    await expect(checkbox).toBeVisible();
+    if (!(await checkbox.isChecked())) {
+      await checkbox.check();
+    }
+  }
+
+  async confirmRoleChange() {
+    await this.page.getByRole('button', { name: 'Confirm Role' }).click();
+  }
+
+  async expectRecordUpdatedSuccess() {
+    await expect(this.page.getByText('Record updated.')).toBeVisible({ timeout: 60_000 });
   }
 }

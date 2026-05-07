@@ -1,4 +1,4 @@
-import { type Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 import { CSI_LEGACY_LOGIN_PATH, CSI_LOGIN_PATH } from '../../config/csi';
 import { BasePage } from '../BasePage';
 
@@ -60,5 +60,24 @@ export class CsiAvotechLoginPage extends BasePage {
 
   async expectOnHome() {
     await this.page.waitForURL('**/');
+  }
+
+  /**
+   * User menu under `#b2-LoginInfo` → `Common.UserInfo` / `.user-info-top` (IR-001).
+   * Do not use the first `.popover-top` in the header — that targets notifications or cart.
+   */
+  async openHeaderAccountMenu() {
+    const trigger = this.page.locator('#b2-LoginInfo .user-info-top .popover-top').first();
+    await expect(trigger).toBeVisible({ timeout: 15_000 });
+    await trigger.click();
+  }
+
+  async logoutViaHeaderMenu() {
+    await this.openHeaderAccountMenu();
+    await this.page.getByRole('link', { name: /Logout/i }).click();
+  }
+
+  async expectEmailStepVisible() {
+    await expect(this.emailField).toBeVisible({ timeout: 30_000 });
   }
 }
