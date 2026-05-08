@@ -1,5 +1,5 @@
 import { expect, type Page } from '@playwright/test';
-import { CSI_LEGACY_LOGIN_PATH, CSI_LOGIN_PATH } from '../../config/csi';
+import { CSI_HOME_PATH, CSI_LEGACY_LOGIN_PATH, CSI_LOGIN_PATH } from '../../config/csi';
 import { BasePage } from '../BasePage';
 
 /**
@@ -15,8 +15,23 @@ export class CsiAvotechLoginPage extends BasePage {
   readonly passwordField = this.page.locator('#Input_password');
   readonly loginButton = this.page.getByRole('button', { name: 'Log in' });
 
+  private isAtHomePath(): boolean {
+    const url = new URL(this.page.url());
+    const path = url.pathname.replace(/\/$/, '');
+    return (
+      path === CSI_HOME_PATH.replace(/\/$/, '') ||
+      path === '/Home' ||
+      path === '/Avotech/Home'
+    );
+  }
+
   async gotoLogin() {
     await this.page.goto(CSI_LOGIN_PATH);
+    await this.page.waitForLoadState('domcontentloaded');
+    if (this.isAtHomePath()) {
+      return;
+    }
+
     const visibleOnPrimary = await this.emailField
       .waitFor({ state: 'visible', timeout: 10_000 })
       .then(() => true)
@@ -24,6 +39,10 @@ export class CsiAvotechLoginPage extends BasePage {
 
     if (!visibleOnPrimary) {
       await this.page.goto(CSI_LEGACY_LOGIN_PATH);
+      await this.page.waitForLoadState('domcontentloaded');
+      if (this.isAtHomePath()) {
+        return;
+      }
       await this.emailField.waitFor({ state: 'visible', timeout: 10_000 });
     }
   }
@@ -51,6 +70,10 @@ export class CsiAvotechLoginPage extends BasePage {
   }
 
   async signInWithEmailAndPassword(email: string, password: string) {
+    const emailStepVisible = await this.emailField.isVisible({ timeout: 2_000 }).catch(() => false);
+    if (!emailStepVisible && this.isAtHomePath()) {
+      return;
+    }
     await this.enterEmail(email);
     await this.goToPasswordStep();
     await this.expectPasswordFieldVisible();
