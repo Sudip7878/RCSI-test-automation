@@ -68,7 +68,7 @@ test.describe('CSI · Incident Report', () => {
       await csiLoginPage.expectOnHome();
 
       await csiAccountManagementPage.openUserListWithSearchReady();
-      await csiAccountManagementPage.searchUserListForReporterEmail(reporterEmail);
+      await csiAccountManagementPage.searchUserListByEmail(reporterEmail);
       await csiAccountManagementPage.expectUserGridShowsEmail(reporterEmail);
       await csiAccountManagementPage.openUserRowActionsMenu(reporterEmail);
       await csiAccountManagementPage.openChangeRoleFromActionsMenu();

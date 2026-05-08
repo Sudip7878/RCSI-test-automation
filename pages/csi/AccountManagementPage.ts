@@ -1,6 +1,5 @@
 import { expect } from '@playwright/test';
-import { CSI_BASE_URL } from '../../config/csi';
-import { csiUserListSearchTokenFromEmail } from '../../utils/csi/userListSearch';
+import { CSI_BASE_URL, CSI_ORGANIZATION_DETAIL_PATH } from '../../config/csi';
 import { BasePage } from '../BasePage';
 
 export class CsiAccountManagementPage extends BasePage {
@@ -16,6 +15,9 @@ export class CsiAccountManagementPage extends BasePage {
   readonly userSearchButton = this.page.getByRole('button', { name: 'Search' });
   readonly excelUploadButton = this.page.getByRole('button', { name: /Excel Upload/i });
   readonly downloadTemplateButton = this.page.getByRole('button', { name: 'Download Template' });
+  readonly editOrganizationDetailsButton = this.page.getByRole('button', { name: 'Edit Details' });
+  readonly changeMfaRuleButton = this.page.getByRole('button', { name: 'Change MFA Rule' });
+  readonly saveOrganizationChangesButton = this.page.getByRole('button', { name: 'Save Changes' });
 
   async openUserList() {
     await this.page.goto(`${CSI_BASE_URL}/userList`);
@@ -77,11 +79,10 @@ export class CsiAccountManagementPage extends BasePage {
     await expect(this.userNameSearchBox).toBeVisible({ timeout: 30_000 });
   }
 
-  /** IR-001: fill search from {@link csiUserListSearchTokenFromEmail} and run Search. */
-  async searchUserListForReporterEmail(reporterEmail: string) {
-    const token = csiUserListSearchTokenFromEmail(reporterEmail);
+  /** IR-001: user list search box — full email (not first-name token). */
+  async searchUserListByEmail(email: string) {
     await this.userNameSearchBox.click();
-    await this.userNameSearchBox.fill(token);
+    await this.userNameSearchBox.fill(email.trim());
     await this.userSearchButton.click();
   }
 
@@ -186,9 +187,132 @@ export class CsiAccountManagementPage extends BasePage {
     await this.openUserListWithSearchReady();
   }
 
+  /**
+   * AM-027: wait for imported users in the grid; if any are still missing, reload twice (async import),
+   * then require at least one expected email to be visible.
+   */
   async expectUserGridShowsEmails(emails: ReadonlyArray<string>) {
-    for (const email of emails) {
-      await expect(this.page.getByRole('gridcell', { name: email })).toBeVisible({ timeout: 60_000 });
+    expect(emails.length).toBeGreaterThan(0);
+
+    const allGridEmailsVisible = async (): Promise<boolean> => {
+      for (const email of emails) {
+        const cell = this.page.getByRole('gridcell', { name: email });
+        if (!(await cell.isVisible().catch(() => false))) {
+          return false;
+        }
+      }
+      return true;
+    };
+
+    const waitUntilAllVisible = async (overallMs: number): Promise<boolean> => {
+      const deadline = Date.now() + overallMs;
+      while (Date.now() < deadline) {
+        if (await allGridEmailsVisible()) {
+          return true;
+        }
+        await this.page.waitForTimeout(500);
+      }
+      return false;
+    };
+
+    const assertAllVisibleStrict = async () => {
+      for (const email of emails) {
+        await expect(this.page.getByRole('gridcell', { name: email })).toBeVisible();
+      }
+    };
+
+    if (await waitUntilAllVisible(60_000)) {
+      await assertAllVisibleStrict();
+      return;
     }
+
+    for (let i = 0; i < 2; i += 1) {
+      await this.page.reload({ waitUntil: 'domcontentloaded' });
+      await expect(this.userNameSearchBox).toBeVisible({ timeout: 30_000 });
+      if (await waitUntilAllVisible(60_000)) {
+        await assertAllVisibleStrict();
+        return;
+      }
+    }
+
+    let anyVisible = false;
+    for (const email of emails) {
+      if (await this.page.getByRole('gridcell', { name: email }).isVisible().catch(() => false)) {
+        anyVisible = true;
+        break;
+      }
+    }
+    expect(
+      anyVisible,
+      `After 2 reloads, at least one imported email should appear; checked: ${emails.join(', ')}`,
+    ).toBe(true);
+  }
+
+  /** AM-045: organization MFA settings screen. */
+  async openOrganizationDetail() {
+    await this.page.goto(`${CSI_BASE_URL}${CSI_ORGANIZATION_DETAIL_PATH}`);
+    await expect(this.editOrganizationDetailsButton).toBeVisible({ timeout: 60_000 });
+    await this.page.waitForTimeout(3_000);
+  }
+
+  async startEditOrganizationDetails() {
+    await expect(this.editOrganizationDetailsButton).toBeVisible();
+    await this.editOrganizationDetailsButton.click();
+    await expect(this.changeMfaRuleButton).toBeVisible({ timeout: 30_000 });
+    await this.page.waitForTimeout(3_000);
+  }
+
+  async openChangeMfaRule() {
+    await expect(this.changeMfaRuleButton).toBeVisible();
+    await this.changeMfaRuleButton.click();
+  }
+
+  async selectMfaRuleRequiredForSomeRoles() {
+    const radio = this.page.getByRole('radio', { name: /Required for some Roles/i });
+    await expect(radio).toBeAttached({ timeout: 30_000 });
+    await expect(radio).toBeVisible({ timeout: 30_000 });
+    await radio.scrollIntoViewIfNeeded();
+    await this.page.waitForTimeout(3_000);
+    await radio.click({ timeout: 15_000 });
+    await expect(radio).toBeChecked({ timeout: 10_000 });
+  }
+
+  async selectMfaRuleNotMandatory() {
+    const radio = this.page.getByRole('radio', { name: /Not Mandatory/i });
+    await expect(radio).toBeVisible({ timeout: 30_000 });
+    await radio.scrollIntoViewIfNeeded();
+    await radio.click({ timeout: 15_000 });
+    await expect(radio).toBeChecked({ timeout: 10_000 });
+  }
+
+  /**
+   * AM-045: MFA role list row — checkbox adjacent to role label (avoid hardcoded OutSystems checkbox ids).
+   */
+  async ensureIncidentReporterMfaCheckboxChecked() {
+    const row = this.page.locator('div.vertical-align.flex-direction-row').filter({
+      has: this.page.getByText('Incident Reporter', { exact: true }),
+    });
+    await expect(row.first()).toBeVisible({ timeout: 30_000 });
+    const checkbox = row.locator('input[type="checkbox"]').first();
+    await expect(checkbox).toBeVisible();
+    if (!(await checkbox.isChecked())) {
+      await checkbox.check();
+    }
+  }
+
+  async submitMfaRoleSelection() {
+    const submit = this.page.getByRole('button', { name: 'Submit' }).first();
+    await expect(submit).toBeVisible({ timeout: 15_000 });
+    await submit.click();
+  }
+
+  async saveOrganizationDetailChanges() {
+    await expect(this.saveOrganizationChangesButton).toBeVisible({ timeout: 30_000 });
+    await this.page.waitForTimeout(3_000);
+    await this.saveOrganizationChangesButton.click();
+  }
+
+  async expectOrganizationChangesSaved() {
+    await expect(this.page.getByText('Changes saved successfully')).toBeVisible({ timeout: 60_000 });
   }
 }

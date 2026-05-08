@@ -1,4 +1,4 @@
-import { test } from '../../../fixtures/csi/testSetup';
+import { expect, test } from '../../../fixtures/csi/testSetup';
 import path from 'node:path';
 
 import {
@@ -6,6 +6,8 @@ import {
   writeBulkUsersToTemplateXlsx,
 } from '../../../utils/csi/accountManagementBulkUpload';
 import {
+  csiIncidentReporterTestEmail,
+  csiIncidentReporterTestPassword,
   csiOrgTestEmail,
   csiOrgTestPassword,
   csiSystemOwnerTestEmail,
@@ -99,6 +101,64 @@ test.describe('CSI · Account Management', () => {
 
       await csiAccountManagementPage.waitAndOpenUserListAfterBulkImport(3_000);
       await csiAccountManagementPage.expectUserGridShowsEmails(okRowEmails);
+    });
+  });
+
+  test.describe('AM-045 organization MFA', () => {
+    test.describe.configure({ timeout: 180_000 });
+
+    test('AM-045 apply MFA for Incident Reporter role then revert to Not Mandatory', async ({
+      page,
+      csiLoginPage,
+      csiAccountManagementPage,
+    }) => {
+      if (
+        !process.env.CSI_SYSTEM_OWNER_TEST_PASSWORD?.length ||
+        !process.env.CSI_SYSTEM_OWNER_TEST_EMAIL?.trim()?.length ||
+        !process.env.CSI_INCIDENT_REPORTER_TEST_PASSWORD?.length ||
+        !process.env.CSI_INCIDENT_REPORTER_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      const ownerEmail = csiSystemOwnerTestEmail();
+      const ownerPassword = csiSystemOwnerTestPassword();
+      const reporterEmail = csiIncidentReporterTestEmail();
+      const reporterPassword = csiIncidentReporterTestPassword();
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(ownerEmail, ownerPassword);
+      await csiLoginPage.expectOnHome();
+
+      await csiAccountManagementPage.openOrganizationDetail();
+      await csiAccountManagementPage.startEditOrganizationDetails();
+      await csiAccountManagementPage.openChangeMfaRule();
+      await csiAccountManagementPage.selectMfaRuleRequiredForSomeRoles();
+      await csiAccountManagementPage.ensureIncidentReporterMfaCheckboxChecked();
+      await csiAccountManagementPage.submitMfaRoleSelection();
+      await csiAccountManagementPage.saveOrganizationDetailChanges();
+      await csiAccountManagementPage.expectOrganizationChangesSaved();
+
+      await csiLoginPage.logoutViaHeaderMenu();
+      await csiLoginPage.expectEmailStepVisible();
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(reporterEmail, reporterPassword);
+      await expect(
+        page.getByText('Multi factor Authentication', { exact: true }),
+      ).toBeVisible({ timeout: 60_000 });
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(ownerEmail, ownerPassword);
+      await csiLoginPage.expectOnHome();
+
+      await csiAccountManagementPage.openOrganizationDetail();
+      await csiAccountManagementPage.startEditOrganizationDetails();
+      await csiAccountManagementPage.openChangeMfaRule();
+      await csiAccountManagementPage.selectMfaRuleNotMandatory();
+      await csiAccountManagementPage.submitMfaRoleSelection();
+      await csiAccountManagementPage.saveOrganizationDetailChanges();
+      await csiAccountManagementPage.expectOrganizationChangesSaved();
     });
   });
 });

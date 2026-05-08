@@ -1,5 +1,5 @@
 import { expect, type Page } from '@playwright/test';
-import { CSI_HOME_PATH, CSI_LEGACY_LOGIN_PATH, CSI_LOGIN_PATH } from '../../config/csi';
+import { CSI_LEGACY_LOGIN_PATH, CSI_LOGIN_PATH } from '../../config/csi';
 import { BasePage } from '../BasePage';
 
 /**
@@ -15,14 +15,14 @@ export class CsiAvotechLoginPage extends BasePage {
   readonly passwordField = this.page.locator('#Input_password');
   readonly loginButton = this.page.getByRole('button', { name: 'Log in' });
 
+  private pathnameLooksLikeHome(pathname: string): boolean {
+    const noTrail = pathname.replace(/\/$/, '');
+    const norm = noTrail === '' ? '/' : noTrail;
+    return norm === '/' || norm === '/Home' || norm === '/Avotech/Home';
+  }
+
   private isAtHomePath(): boolean {
-    const url = new URL(this.page.url());
-    const path = url.pathname.replace(/\/$/, '');
-    return (
-      path === CSI_HOME_PATH.replace(/\/$/, '') ||
-      path === '/Home' ||
-      path === '/Avotech/Home'
-    );
+    return this.pathnameLooksLikeHome(new URL(this.page.url()).pathname);
   }
 
   async gotoLogin() {
@@ -82,7 +82,16 @@ export class CsiAvotechLoginPage extends BasePage {
   }
 
   async expectOnHome() {
-    await this.page.waitForURL('**/');
+    await this.page.waitForURL(
+      (url) => {
+        try {
+          return this.pathnameLooksLikeHome(new URL(url).pathname);
+        } catch {
+          return false;
+        }
+      },
+      { timeout: 30_000 },
+    );
   }
 
   /**
