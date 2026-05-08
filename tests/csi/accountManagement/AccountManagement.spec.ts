@@ -40,7 +40,7 @@ test.describe('CSI · Account Management', () => {
       await csiLoginPage.expectOnHome();
     });
 
-    test('System Owner manually adds user under org domain', async ({
+    test('manual add user', async ({
       csiAccountManagementPage,
     }) => {
       const firstName = csiAccountManagementFirstName();
@@ -78,7 +78,7 @@ test.describe('CSI · Account Management', () => {
       await csiLoginPage.expectOnHome();
     });
 
-    test('AM-027 bulk user creation via excel upload', async ({ csiAccountManagementPage }) => {
+    test('AM-027', async ({ csiAccountManagementPage }) => {
       const systemOwnerEmail = csiSystemOwnerTestEmail();
 
       await csiAccountManagementPage.openUserListWithSearchReady();
@@ -107,7 +107,7 @@ test.describe('CSI · Account Management', () => {
   test.describe('AM-045 organization MFA', () => {
     test.describe.configure({ timeout: 180_000 });
 
-    test('AM-045 apply MFA for Incident Reporter role then revert to Not Mandatory', async ({
+    test('AM-045', async ({
       page,
       csiLoginPage,
       csiAccountManagementPage,

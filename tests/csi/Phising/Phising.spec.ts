@@ -22,16 +22,18 @@ test.describe('CSI · Phising', () => {
     await csiLoginPage.expectOnHome();
   });
 
-  test('Create a phishing test from template', async ({ csiPhisingPage }) => {
-    const loginEmail = csiPhisingAdminTestEmail();
-    const searchToken = csiPhisingUserSearchToken(loginEmail);
-    const testName = csiUniquePhisingTestName();
+  test.describe('Create a phishing test from template', () => {
+    test('Create a phishing test from template', async ({ csiPhisingPage }) => {
+      const loginEmail = csiPhisingAdminTestEmail();
+      const searchToken = csiPhisingUserSearchToken(loginEmail);
+      const testName = csiUniquePhisingTestName();
 
-    await csiPhisingPage.openPhisingTestCreation();
-    await csiPhisingPage.selectFirstAttackTemplateAndContinue();
-    await csiPhisingPage.chooseIndividualsAndSelectLoginUser(loginEmail, searchToken);
-    await csiPhisingPage.fillPhisingTestDetailsAndContinue(testName);
-    await csiPhisingPage.finalizeAndDistribute();
-    await csiPhisingPage.expectPhisingTestCreated(testName);
+      await csiPhisingPage.openPhisingTestCreation();
+      await csiPhisingPage.selectFirstAttackTemplateAndContinue();
+      await csiPhisingPage.chooseIndividualsAndSelectLoginUser(loginEmail, searchToken);
+      await csiPhisingPage.fillPhisingTestDetailsAndContinue(testName);
+      await csiPhisingPage.finalizeAndDistribute();
+      await csiPhisingPage.expectPhisingTestCreated(testName);
+    });
   });
 });

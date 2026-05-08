@@ -28,7 +28,7 @@ test.describe('CSI · Incident Report', () => {
       await csiLoginPage.expectOnHome();
     });
 
-    test('IR-005 add new incident from dashboard', async ({ csiIncidentReportPage }) => {
+    test('IR-005', async ({ csiIncidentReportPage }) => {
       const description = csiIncidentDescription();
       const affected = csiIncidentAffectedSystems();
 
@@ -41,7 +41,7 @@ test.describe('CSI · Incident Report', () => {
   });
 
   test.describe('IR-001 — assign Incident Reporter role', () => {
-    test('IR-001 system owner assigns role; reporter reaches dashboard with Add New Incident', async ({
+    test('IR-001', async ({
       page,
       csiLoginPage,
       csiAccountManagementPage,

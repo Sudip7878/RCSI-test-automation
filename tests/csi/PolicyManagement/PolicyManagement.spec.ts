@@ -23,48 +23,52 @@ test.describe('CSI · Policy Management', () => {
     await csiLoginPage.expectOnHome();
   });
 
-  test('PM-001 clone policy template, edit docx, configure distribution, submit for review', async ({
-    csiPolicyManagementPage,
-  }) => {
-    const unique = utcDateBasedNumber();
-    const loginEmail = csiTestEmail();
-    const searchToken = csiDistributionUserSearchToken(loginEmail);
-    const dueInDays = csiPolicyDistributionDueInDays();
+  test.describe('PM-001 clone policy template, edit docx, configure distribution, submit for review', () => {
+    test('PM-001', async ({
+      csiPolicyManagementPage,
+    }) => {
+      const unique = utcDateBasedNumber();
+      const loginEmail = csiTestEmail();
+      const searchToken = csiDistributionUserSearchToken(loginEmail);
+      const dueInDays = csiPolicyDistributionDueInDays();
 
-    await csiPolicyManagementPage.openPolicyTemplateLibrary();
-    await csiPolicyManagementPage.cloneFirstPolicyTemplate();
-    await csiPolicyManagementPage.appendUniqueSuffixToPolicyTitle(unique);
-    const policyTitle = (await csiPolicyManagementPage.policyTitleInput.inputValue()).trim();
+      await csiPolicyManagementPage.openPolicyTemplateLibrary();
+      await csiPolicyManagementPage.cloneFirstPolicyTemplate();
+      await csiPolicyManagementPage.appendUniqueSuffixToPolicyTitle(unique);
+      const policyTitle = (await csiPolicyManagementPage.policyTitleInput.inputValue()).trim();
 
-    await csiPolicyManagementPage.fillPolicyReferenceNumber(unique);
-    await csiPolicyManagementPage.selectOwnerSuperAdmin();
-    const downloadPath = await csiPolicyManagementPage.downloadTemplateTo(os.tmpdir());
+      await csiPolicyManagementPage.fillPolicyReferenceNumber(unique);
+      await csiPolicyManagementPage.selectOwnerSuperAdmin();
+      const downloadPath = await csiPolicyManagementPage.downloadTemplateTo(os.tmpdir());
 
-    const editedPath = csiPolicyManagementPage.buildEditedDocxPath(downloadPath, unique);
-    await prependLineToDocx({ sourcePath: downloadPath, destPath: editedPath, line: unique });
+      const editedPath = csiPolicyManagementPage.buildEditedDocxPath(downloadPath, unique);
+      await prependLineToDocx({ sourcePath: downloadPath, destPath: editedPath, line: unique });
 
-    await csiPolicyManagementPage.uploadEditedDocx(editedPath);
-    await csiPolicyManagementPage.expectDocxUploaded();
-    await csiPolicyManagementPage.goToNextWizardStep();
+      await csiPolicyManagementPage.uploadEditedDocx(editedPath);
+      await csiPolicyManagementPage.expectDocxUploaded();
+      await csiPolicyManagementPage.goToNextWizardStep();
 
-    await csiPolicyManagementPage.waitForAcknowledgementSection();
-    await csiPolicyManagementPage.selectAcknowledgementTypeCompulsory();
-    await csiPolicyManagementPage.pickTomorrowAcknowledgementStartDate();
-    await csiPolicyManagementPage.fillAcknowledgementDurationAndDue(dueInDays);
-    await csiPolicyManagementPage.selectReviewNotRequiredNo();
-    await csiPolicyManagementPage.fillReviewDueInDays(dueInDays);
-    await csiPolicyManagementPage.searchIndividualsAndSelectLoginUser(loginEmail, searchToken);
+      await csiPolicyManagementPage.waitForAcknowledgementSection();
+      await csiPolicyManagementPage.selectAcknowledgementTypeCompulsory();
+      await csiPolicyManagementPage.pickTomorrowAcknowledgementStartDate();
+      await csiPolicyManagementPage.fillAcknowledgementDurationAndDue(dueInDays);
+      await csiPolicyManagementPage.selectReviewNotRequiredNo();
+      await csiPolicyManagementPage.fillReviewDueInDays(dueInDays);
+      await csiPolicyManagementPage.searchIndividualsAndSelectLoginUser(loginEmail, searchToken);
 
-    await csiPolicyManagementPage.submitForReview();
-    await csiPolicyManagementPage.expectPolicyCreated();
-    await csiPolicyManagementPage.expectOnViewPoliciesWithPendingPolicy(policyTitle);
+      await csiPolicyManagementPage.submitForReview();
+      await csiPolicyManagementPage.expectPolicyCreated();
+      await csiPolicyManagementPage.expectOnViewPoliciesWithPendingPolicy(policyTitle);
+    });
   });
 
-  test('PM-010 approve first Pending For Approval policy from View Policies', async ({
-    csiPolicyManagementPage,
-  }) => {
-    await csiPolicyManagementPage.openViewPolicies();
-    await csiPolicyManagementPage.openReviewForFirstPendingForApproval();
-    await csiPolicyManagementPage.approveAndPublishExpectApprovalSent();
+  test.describe('PM-010 approve first Pending For Approval policy from View Policies', () => {
+    test('PM-010', async ({
+      csiPolicyManagementPage,
+    }) => {
+      await csiPolicyManagementPage.openViewPolicies();
+      await csiPolicyManagementPage.openReviewForFirstPendingForApproval();
+      await csiPolicyManagementPage.approveAndPublishExpectApprovalSent();
+    });
   });
 });

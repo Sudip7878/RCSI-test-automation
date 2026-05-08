@@ -25,37 +25,39 @@ test.describe('CSI · IT Asset Management', () => {
     await csiLoginPage.expectOnHome();
   });
 
-  test('IA-001 add client machine asset', async ({ csiItAssetManagementPage }) => {
-    const uniqueNumeric = csiItAssetUniqueNumeric();
-    const displayName = csiItAssetDisplayName(uniqueNumeric);
-    const modelNumber = uniqueNumeric;
-    const serialNumber = csiItAssetSerialFromModelNumber(modelNumber);
+  test.describe('IA-001 add client machine asset', () => {
+    test('IA-001', async ({ csiItAssetManagementPage }) => {
+      const uniqueNumeric = csiItAssetUniqueNumeric();
+      const displayName = csiItAssetDisplayName(uniqueNumeric);
+      const modelNumber = uniqueNumeric;
+      const serialNumber = csiItAssetSerialFromModelNumber(modelNumber);
 
-    await csiItAssetManagementPage.openClientMachineList();
-    await csiItAssetManagementPage.startAddAsset();
-    await csiItAssetManagementPage.selectCategoryDesktopComputers();
+      await csiItAssetManagementPage.openClientMachineList();
+      await csiItAssetManagementPage.startAddAsset();
+      await csiItAssetManagementPage.selectCategoryDesktopComputers();
 
-    await csiItAssetManagementPage.fillAssetIdentity({
-      displayName,
-      modelNumber,
-      serialNumber,
-      osVersion: csiItAssetOsVersion(),
-      ipAddress: csiItAssetIpAddress(),
+      await csiItAssetManagementPage.fillAssetIdentity({
+        displayName,
+        modelNumber,
+        serialNumber,
+        osVersion: csiItAssetOsVersion(),
+        ipAddress: csiItAssetIpAddress(),
+      });
+
+      await csiItAssetManagementPage.fillAssetStateAndLocation({
+        location: csiItAssetLocation(),
+      });
+
+      await csiItAssetManagementPage.fillSupplierAndCommercial({
+        website: csiItAssetWebsite(),
+        purchaseCost: csiItAssetPurchaseCost(),
+      });
+
+      await csiItAssetManagementPage.pickPurchaseDateToday();
+      await csiItAssetManagementPage.pickWarrantyOrEndDateOneMonthFromToday();
+      await csiItAssetManagementPage.saveNewAsset();
+
+      await csiItAssetManagementPage.expectAssetVisibleInGridAfterAcquisitionSort(displayName);
     });
-
-    await csiItAssetManagementPage.fillAssetStateAndLocation({
-      location: csiItAssetLocation(),
-    });
-
-    await csiItAssetManagementPage.fillSupplierAndCommercial({
-      website: csiItAssetWebsite(),
-      purchaseCost: csiItAssetPurchaseCost(),
-    });
-
-    await csiItAssetManagementPage.pickPurchaseDateToday();
-    await csiItAssetManagementPage.pickWarrantyOrEndDateOneMonthFromToday();
-    await csiItAssetManagementPage.saveNewAsset();
-
-    await csiItAssetManagementPage.expectAssetVisibleInGridAfterAcquisitionSort(displayName);
   });
 });
