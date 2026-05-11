@@ -100,3 +100,21 @@ export function csiSystemOwnerTestPassword(): string {
   }
   return p;
 }
+
+/** SB-056: restricted hub user (Training / Phishing / Account Management only). */
+export function csiTrainingPhisingSysOwnerTestEmail(): string {
+  const e = process.env.CSI_TRAINING_PHISING_SYS_OWNER_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_TRAINING_PHISING_SYS_OWNER_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiTrainingPhisingSysOwnerTestEmail}. */
+export function csiTrainingPhisingSysOwnerTestPassword(): string {
+  const p = process.env.CSI_TRAINING_PHISING_SYS_OWNER_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_TRAINING_PHISING_SYS_OWNER_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
