@@ -1,4 +1,4 @@
-import { test } from '../../../fixtures/csi/testSetup';
+import { expect, test } from '../../../fixtures/csi/testSetup';
 import { csiTestEmail, csiTestPassword } from '../../../utils/csi/credentials';
 import {
   csiDistributionUserSearchToken,
@@ -43,6 +43,17 @@ test.describe('CSI · Training', () => {
       await csiTrainingPage.submitDistribute();
       await csiTrainingPage.openDistributionView();
       await csiTrainingPage.expectDistributionListed(distributionName);
+    });
+  });
+
+  test.describe('TR-025 Course report PDF export', () => {
+    test('TR-025', async ({ csiTrainingPage }) => {
+      await csiTrainingPage.openCourseReport();
+      const pdf = await csiTrainingPage.downloadCourseReportPdf();
+
+      expect(pdf.length, 'course report PDF should have bytes').toBeGreaterThan(512);
+      const header = pdf.subarray(0, Math.min(8, pdf.length)).toString('latin1');
+      expect(header.startsWith('%PDF'), 'download should be a PDF (starts with %PDF)').toBe(true);
     });
   });
 });

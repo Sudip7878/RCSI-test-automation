@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+
 import { expect } from '@playwright/test';
 import { CSI_BASE_URL } from '../../config/csi';
 import { BasePage } from '../BasePage';
@@ -160,5 +162,30 @@ export class CsiTrainingPage extends BasePage {
     await expect(this.page.getByRole('gridcell', { name: distributionName })).toBeVisible({
       timeout: 30_000,
     });
+  }
+
+  readonly exportCourseReportPdfButton = this.page.getByRole('button', { name: 'Export Page to PDF' });
+
+  async openCourseReport() {
+    await this.page.goto(`${CSI_BASE_URL}/CourseReport`);
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  /**
+   * TR-025: wait until the export control is visible, then enabled (report data finished loading).
+   */
+  async expectCourseReportExportReady() {
+    await expect(this.exportCourseReportPdfButton).toBeVisible({ timeout: 60_000 });
+    await expect(this.exportCourseReportPdfButton).toBeEnabled({ timeout: 120_000 });
+  }
+
+  async downloadCourseReportPdf(): Promise<Buffer> {
+    await this.expectCourseReportExportReady();
+    const downloadPromise = this.page.waitForEvent('download', { timeout: 120_000 });
+    await this.exportCourseReportPdfButton.click();
+    const download = await downloadPromise;
+    const downloadedPath = await download.path();
+    expect(downloadedPath, 'course report PDF should be written to a temp path').toBeTruthy();
+    return readFileSync(downloadedPath as string);
   }
 }
