@@ -31,6 +31,24 @@ export function csiOrgTestPassword(): string {
   return p;
 }
 
+/** `CSI_ORG_USER_TEST_EMAIL` — org-scoped user for AM-050 (deactivate / inactive login / reactivate). */
+export function csiOrgUserTestEmail(): string {
+  const e = process.env.CSI_ORG_USER_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_ORG_USER_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** `CSI_ORG_USER_TEST_PASSWORD` — paired with {@link csiOrgUserTestEmail}. */
+export function csiOrgUserTestPassword(): string {
+  const p = process.env.CSI_ORG_USER_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_ORG_USER_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
 /** `CSI_PHISING_ADMIN_TEST_EMAIL` — admin used for Phising test creation. */
 export function csiPhisingAdminTestEmail(): string {
   const e = process.env.CSI_PHISING_ADMIN_TEST_EMAIL?.trim();
