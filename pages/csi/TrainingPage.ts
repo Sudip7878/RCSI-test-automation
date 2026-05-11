@@ -10,7 +10,7 @@ const COURSE_SEARCH_MAX_ATTEMPTS = 3;
 export class CsiTrainingPage extends BasePage {
   readonly setupNewDistributionButton = this.page.getByRole('button', { name: 'Setup New Distribution' });
   readonly distributionNameInput = this.page.locator('#Input_name');
-  readonly nextButton = this.page.getByRole('button', { name: 'Next' });
+  readonly nextButton = this.page.getByRole('button', { name: 'Next', exact: true });
   readonly distributeButton = this.page.getByRole('button', { name: 'Distribute' });
   readonly distributionViewRadio = this.page.getByRole('radio', { name: 'Distribution View' });
 
@@ -45,6 +45,7 @@ export class CsiTrainingPage extends BasePage {
   async openCourseDistribution() {
     await this.page.goto(`${CSI_BASE_URL}/CourseDistribution`);
     await expect(this.setupNewDistributionButton).toBeVisible({ timeout: 30_000 });
+    await this.safeSleep(3000);
   }
 
   async startNewDistribution() {
@@ -188,4 +189,46 @@ export class CsiTrainingPage extends BasePage {
     expect(downloadedPath, 'course report PDF should be written to a temp path').toBeTruthy();
     return readFileSync(downloadedPath as string);
   }
+
+  readonly managerViewRadio = this.page.getByRole('radio', { name: 'Manager View' });
+  readonly trainingStatisticBox = this.page.locator('#TrainingStatisticBox');
+
+  async openCourseDashboard() {
+    await this.page.goto(`${CSI_BASE_URL}/courseDashboard`);
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  /** TR-033: recorded 5s settle after switching to Manager View before asserting sections. */
+  async switchToManagerViewAndSettle() {
+    await expect(this.managerViewRadio).toBeVisible({ timeout: 60_000 });
+    await this.managerViewRadio.click();
+    await this.safeSleep(5000);
+  }
+
+  /** TR-033 visibility bundle (recorded-steps/Training/TR-033.txt). */
+  async expectTr033ManagerDashboardSectionsVisible() {
+    await expect(this.page.getByText('Cybersecurity Awareness Score')).toBeVisible({ timeout: 30_000 });
+    await expect(this.page.getByText('Target Goal', { exact: true })).toBeVisible();
+    await expect(this.page.getByText('Training Statistics')).toBeVisible();
+
+    const stats = this.trainingStatisticBox;
+    await expect(stats.getByText('Not Started')).toBeVisible();
+    await expect(stats.getByText('In Progress')).toBeVisible();
+    await expect(stats.getByText('Passed')).toBeVisible();
+    await expect(stats.getByText('Failed')).toBeVisible();
+    await expect(stats.getByText('Missed')).toBeVisible();
+
+    await expect(this.page.getByText('Course Distribution', { exact: true })).toBeVisible();
+    await expect(this.page.getByText('Most Active Employees')).toBeVisible();
+
+    await expect(this.page.getByRole('columnheader', { name: 'User' })).toBeVisible();
+    await expect(this.page.getByRole('columnheader', { name: 'Courses' })).toBeVisible();
+    await expect(this.page.getByRole('columnheader', { name: 'Passed' })).toBeVisible();
+    await expect(this.page.getByRole('columnheader', { name: 'Failed' })).toBeVisible();
+
+    await expect(this.page.getByText('Employee activities')).toBeVisible();
+    await expect(this.page.getByText('Users who missed course')).toBeVisible();
+    await expect(this.page.getByText('Groups you managed')).toBeVisible();
+  }
 }
+
