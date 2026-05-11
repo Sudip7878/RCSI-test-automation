@@ -103,6 +103,29 @@ export class CsiAccountManagementPage extends BasePage {
     await row.locator('i.fa-ellipsis-v').click();
   }
 
+  /**
+   * AM-050: Actions column uses `i.icon.padding-x-m.fa-ellipsis-v` (see user grid HTML).
+   * Link labels may include leading icon glyphs — match by substring.
+   */
+  async setUserInactiveViaUserListActions(email: string) {
+    await this.openUserRowActionsMenu(email);
+    await this.page.getByRole('link', { name: /Set as Inactive/i }).click();
+  }
+
+  async setUserActiveViaUserListActions(email: string) {
+    await this.openUserRowActionsMenu(email);
+    await this.page.getByRole('link', { name: /Set as Active/i }).click();
+  }
+
+  /** AM-050: Status is `td[data-header="Status"]`; wait for grid refresh after action. */
+  async expectUserListRowStatus(email: string, status: 'Active' | 'Inactive') {
+    const row = this.userTableRowForEmail(email);
+    await expect(row).toBeVisible();
+    await expect(row.locator('td[data-header="Status"]').getByText(status, { exact: true })).toBeVisible({
+      timeout: 60_000,
+    });
+  }
+
   async openChangeRoleFromActionsMenu() {
     await this.page.getByRole('link', { name: /Change role/i }).click();
   }

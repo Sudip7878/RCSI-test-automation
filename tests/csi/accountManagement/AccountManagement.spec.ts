@@ -10,6 +10,8 @@ import {
   csiIncidentReporterTestPassword,
   csiOrgTestEmail,
   csiOrgTestPassword,
+  csiOrgUserTestEmail,
+  csiOrgUserTestPassword,
   csiSystemOwnerTestEmail,
   csiSystemOwnerTestPassword,
 } from '../../../utils/csi/credentials';
@@ -159,6 +161,62 @@ test.describe('CSI · Account Management', () => {
       await csiAccountManagementPage.submitMfaRoleSelection();
       await csiAccountManagementPage.saveOrganizationDetailChanges();
       await csiAccountManagementPage.expectOrganizationChangesSaved();
+    });
+  });
+
+  test.describe('AM-050 user deactivation and reactivation', () => {
+    test.describe.configure({ timeout: 180_000 });
+
+    test.beforeEach(async ({ csiLoginPage }) => {
+      if (
+        !process.env.CSI_ORG_TEST_PASSWORD?.length ||
+        !process.env.CSI_ORG_TEST_EMAIL?.trim()?.length ||
+        !process.env.CSI_ORG_USER_TEST_PASSWORD?.length ||
+        !process.env.CSI_ORG_USER_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      const email = csiOrgTestEmail();
+      const password = csiOrgTestPassword();
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(email, password);
+      await csiLoginPage.expectOnHome();
+    });
+
+    test('AM-050', async ({ page, csiLoginPage, csiAccountManagementPage }) => {
+      const orgEmail = csiOrgTestEmail();
+      const orgPassword = csiOrgTestPassword();
+      const targetEmail = csiOrgUserTestEmail();
+      const targetPassword = csiOrgUserTestPassword();
+
+      await csiAccountManagementPage.openUserListWithSearchReady();
+      await csiAccountManagementPage.searchUserListByEmail(targetEmail);
+      await csiAccountManagementPage.expectUserGridShowsEmail(targetEmail);
+
+      await csiAccountManagementPage.setUserInactiveViaUserListActions(targetEmail);
+      await csiAccountManagementPage.expectUserListRowStatus(targetEmail, 'Inactive');
+
+      await csiLoginPage.logoutViaHeaderMenu();
+      await csiLoginPage.expectEmailStepVisible();
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(targetEmail, targetPassword);
+      await expect(page.getByText('Your account is inactive.', { exact: true })).toBeVisible({
+        timeout: 60_000,
+      });
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(orgEmail, orgPassword);
+      await csiLoginPage.expectOnHome();
+
+      await csiAccountManagementPage.openUserListWithSearchReady();
+      await csiAccountManagementPage.searchUserListByEmail(targetEmail);
+      await csiAccountManagementPage.expectUserGridShowsEmail(targetEmail);
+
+      await csiAccountManagementPage.setUserActiveViaUserListActions(targetEmail);
+      await csiAccountManagementPage.expectUserListRowStatus(targetEmail, 'Active');
     });
   });
 });
