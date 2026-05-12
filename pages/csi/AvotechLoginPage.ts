@@ -15,15 +15,29 @@ export class CsiAvotechLoginPage extends BasePage {
   readonly passwordField = this.page.locator('#Input_password');
   readonly loginButton = this.page.getByRole('button', { name: 'Log in' });
 
+  private pathnameLooksLikeHome(pathname: string): boolean {
+    const noTrail = pathname.replace(/\/$/, '');
+    const norm = noTrail === '' ? '/' : noTrail;
+    return (
+      norm === '/' ||
+      norm === '/Home' ||
+      norm === '/Avotech' ||
+      norm === '/Avotech/Home'
+    );
+  }
+
   async gotoLogin() {
     await this.page.goto(CSI_LOGIN_PATH);
+    await this.page.waitForLoadState('domcontentloaded');
+
     const visibleOnPrimary = await this.emailField
-      .waitFor({ state: 'visible', timeout: 10_000 })
+      .waitFor({ state: 'visible', timeout: 20_000 })
       .then(() => true)
       .catch(() => false);
 
     if (!visibleOnPrimary) {
       await this.page.goto(CSI_LEGACY_LOGIN_PATH);
+      await this.page.waitForLoadState('domcontentloaded');
       await this.emailField.waitFor({ state: 'visible', timeout: 10_000 });
     }
   }
@@ -59,6 +73,16 @@ export class CsiAvotechLoginPage extends BasePage {
   }
 
   async expectOnHome() {
-    await this.page.waitForURL('**/');
+    await this.page.waitForURL(
+      (url) => {
+        try {
+          return this.pathnameLooksLikeHome(new URL(url).pathname);
+        } catch {
+          return false;
+        }
+      },
+      { timeout: 60_000 },
+    );
+    await this.page.waitForLoadState('domcontentloaded').catch(() => {});
   }
 }

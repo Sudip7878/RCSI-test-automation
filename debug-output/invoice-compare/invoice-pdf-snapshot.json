@@ -1,0 +1,75 @@
+{
+  "generatedAt": "2026-05-11T19:05:38.770Z",
+  "pdfTextLength": 902,
+  "semanticTokens": [
+    "AT2605010",
+    "HK$120,000.00",
+    "HK$100.00",
+    "HK$10,000.0",
+    "HK$60,000.",
+    "$120,000.00",
+    "$0.00",
+    "$100.00",
+    "$10,000.0",
+    "$60,000.",
+    "752-025718-883",
+    "finance@heyavo.com",
+    "info@avotech.com"
+  ],
+  "intersectionFields": {
+    "INVOICE": [
+      "AT2605010"
+    ],
+    "Issued": [
+      "11 May, 2026"
+    ],
+    "Due": [
+      "10 Jun, 2026"
+    ],
+    "Billed To": [
+      "Test Org72"
+    ],
+    "From": [
+      "7/F, 118 Connaught Road West, Sai Ying Pun, Hong Kong",
+      "Avo Tech Limited"
+    ],
+    "Subtotal": [
+      "HK$120,000.00"
+    ],
+    "Tax (0%)": [
+      "$0.00"
+    ],
+    "Total": [
+      "HK$120,000.00"
+    ],
+    "Amount Due": [
+      "HK$120,000.00"
+    ],
+    "License for E-Learning Platform Module (User Monthly Subscription)": [
+      "100",
+      "HK$100.00",
+      "HK$10,000.00",
+      "6",
+      "HK$60,000.00"
+    ],
+    "License for Phishing Simulation Module (User Monthly Subscription)": [
+      "100",
+      "HK$100.00",
+      "HK$10,000.00",
+      "6",
+      "HK$60,000.00"
+    ],
+    "Name": [
+      "Avo Tech Limited"
+    ],
+    "Bank": [
+      "Hang Seng Bank (Branch Code: 024)"
+    ],
+    "Account Number": [
+      "752-025718-883"
+    ],
+    "Swift": [
+      "HASEHKHH"
+    ]
+  }
+}
