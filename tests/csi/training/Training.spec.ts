@@ -5,12 +5,7 @@ import {
   csiTestEmail,
   csiTestPassword,
 } from '../../../utils/csi/credentials';
-import {
-  csiDistributionUserSearchToken,
-  csiTrainingFirstCourseName,
-  csiTrainingSecondCourseName,
-  csiUniqueDistributionName,
-} from '../../../utils/csi/trainingTestData';
+import { csiDistributionUserSearchToken, csiUniqueDistributionName } from '../../../utils/csi/trainingTestData';
 
 test.describe('CSI · Training', () => {
   test.describe.configure({ timeout: 180_000 });
@@ -36,11 +31,19 @@ test.describe('CSI · Training', () => {
         const distributionName = csiUniqueDistributionName();
         const userSearchToken = csiDistributionUserSearchToken(loginEmail);
 
+        const myCourseTitles = await csiTrainingPage.openMyCourseAndCollectRegisteredCourseTitles();
+        const excludedForFirst = new Set(myCourseTitles);
+
         await csiTrainingPage.openCourseDistribution();
         await csiTrainingPage.startNewDistribution();
         await csiTrainingPage.fillDistributionName(distributionName);
-        await csiTrainingPage.selectCourseByVirtualSelectSearch(csiTrainingFirstCourseName(), 0);
-        await csiTrainingPage.selectCourseByVirtualSelectSearch(csiTrainingSecondCourseName(), 1);
+
+        const firstSelectedCourse = await csiTrainingPage.selectFirstVisibleCourseOptionNotIn(
+          excludedForFirst,
+          0,
+        );
+        const excludedForSecond = new Set([...myCourseTitles, firstSelectedCourse]);
+        await csiTrainingPage.selectFirstVisibleCourseOptionNotIn(excludedForSecond, 1);
         await csiTrainingPage.goToNextWizardStep();
         await csiTrainingPage.pickTodayDistributionStartDate();
         await csiTrainingPage.searchUsersAndSelectRowByEmail(loginEmail, userSearchToken);

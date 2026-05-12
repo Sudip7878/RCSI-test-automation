@@ -1,10 +1,10 @@
 import { readFileSync } from 'node:fs';
 
-import { expect } from '@playwright/test';
+import { expect, type Locator } from '@playwright/test';
 import { CSI_BASE_URL } from '../../config/csi';
 import { BasePage } from '../BasePage';
 
-/** VirtualSelect: up to 3 opens of the search field if options never render. */
+/** VirtualSelect: initial open + up to 2 retries if options do not render (TR-001). */
 const COURSE_SEARCH_MAX_ATTEMPTS = 3;
 
 export class CsiTrainingPage extends BasePage {
@@ -94,6 +94,117 @@ export class CsiTrainingPage extends BasePage {
     }
 
     throw new Error(`Course list did not show option: ${courseName}`);
+  }
+
+  private static readonly myCourseCardTitleSelector =
+    '.ThemeGrid_Width8 span.bold.OSFillParent[style*="font-size: 20px"], .ThemeGrid_Width8 span.bold.OSFillParent[style*="font-size:20px"]';
+
+  /** Visible course titles under manager + self-registered lists for the active My Course tab. */
+  private async readVisibleMyCourseCardTitlesFromDom(): Promise<string[]> {
+    return await this.page.$$eval(
+      '#MyCourseList_distribution [data-block="Training.MyCourseBlock"], #MyCourseList_self [data-block="Training.MyCourseBlock"]',
+      (blocks, sel) => {
+        const out: string[] = [];
+        for (const block of blocks) {
+          let el = block.querySelector(sel);
+          if (!el) {
+            el = block.querySelector('.ThemeGrid_Width8 span.bold.OSFillParent');
+          }
+          const t = el?.textContent?.replace(/\s+/g, ' ').trim();
+          if (t) {
+            out.push(t);
+          }
+        }
+        return out;
+      },
+      CsiTrainingPage.myCourseCardTitleSelector,
+    );
+  }
+
+  /** TR-001: each status tab — settle before click, after click, then scrape cards (same page). */
+  private async activateMyCourseStatusTabAndReadTitles(tabLink: Locator): Promise<string[]> {
+    await this.safeSleep(3000);
+    await expect(tabLink).toBeVisible({ timeout: 15_000 });
+    await tabLink.click();
+    await this.safeSleep(5000);
+    return this.readVisibleMyCourseCardTitlesFromDom();
+  }
+
+  /**
+   * TR-001: `/myCourse`, then Ongoing → Passed → Missed → Failed; union visible titles from each tab.
+   */
+  async openMyCourseAndCollectRegisteredCourseTitles(): Promise<string[]> {
+    await this.page.goto(`${CSI_BASE_URL}/myCourse`);
+    await this.page.waitForLoadState('domcontentloaded');
+    // Breadcrumb also exposes "My Course" (plain span); page title uses `span.bold`.
+    await expect(this.page.locator('span.bold', { hasText: /^My Course$/ })).toBeVisible({
+      timeout: 60_000,
+    });
+
+    const aggregated = new Set<string>();
+    const statusTabLinks: Locator[] = [
+      this.page.getByRole('link', { name: 'Ongoing', exact: true }),
+      this.page.getByRole('link', { name: 'Passed', exact: true }),
+      // Accessible name often includes a trailing help icon (e.g. `Missed `).
+      this.page.getByRole('link', { name: /^Missed\b/ }).first(),
+      this.page.getByRole('link', { name: 'Failed', exact: true }),
+    ];
+
+    for (const link of statusTabLinks) {
+      const batch = await this.activateMyCourseStatusTabAndReadTitles(link);
+      for (const t of batch) {
+        const s = t.trim();
+        if (s) {
+          aggregated.add(s);
+        }
+      }
+    }
+
+    return [...aggregated];
+  }
+
+  /**
+   * TR-001 V2: pick the first visible VirtualSelect option in list order that is not in `excluded`
+   * (not by fixed index). Closes dropdown and retries opening up to {@link COURSE_SEARCH_MAX_ATTEMPTS} times.
+   */
+  async selectFirstVisibleCourseOptionNotIn(
+    excluded: ReadonlySet<string>,
+    courseSlotIndex: number,
+  ): Promise<string> {
+    await this.waitForCourseSelectionStepReady();
+
+    const searchTriggers = this.page.getByText('Search...', { exact: true });
+    const trigger =
+      courseSlotIndex === 0 ? searchTriggers.first() : searchTriggers.last();
+
+    for (let openAttempt = 0; openAttempt < COURSE_SEARCH_MAX_ATTEMPTS; openAttempt += 1) {
+      await expect(trigger).toBeVisible({ timeout: 15_000 });
+      await trigger.click();
+      await this.safeSleep(300);
+
+      const options = this.page.getByRole('option');
+      const count = await options.count();
+
+      for (let i = 0; i < count; i += 1) {
+        const opt = options.nth(i);
+        if (!(await opt.isVisible().catch(() => false))) {
+          continue;
+        }
+        const name = (await opt.textContent())?.replace(/\s+/g, ' ').trim() ?? '';
+        if (!name || excluded.has(name)) {
+          continue;
+        }
+        await opt.click();
+        return name;
+      }
+
+      await this.page.keyboard.press('Escape').catch(() => {});
+      await this.safeSleep(200);
+    }
+
+    throw new Error(
+      `No VirtualSelect option found outside excluded set for slot ${courseSlotIndex}: ${[...excluded].join(', ')}`,
+    );
   }
 
   async goToNextWizardStep() {
