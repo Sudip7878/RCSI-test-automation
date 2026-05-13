@@ -14,3 +14,13 @@ export function csiPolicyUniqueSuffix(): string {
   const worker = (process.env.TEST_WORKER_INDEX ?? '0').replace(/\D/g, '') || '0';
   return `${stamp}${worker}`;
 }
+
+/** PM-026: replace the last whitespace-separated token (suffix) with `newSuffix`. */
+export function replacePolicyTitleLastToken(fullTitle: string, newSuffix: string): string {
+  const parts = fullTitle.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) {
+    return newSuffix;
+  }
+  parts[parts.length - 1] = newSuffix;
+  return parts.join(' ');
+}

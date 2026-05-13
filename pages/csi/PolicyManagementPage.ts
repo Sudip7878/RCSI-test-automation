@@ -346,6 +346,132 @@ export class CsiPolicyManagementPage extends BasePage {
     await expect(this.page.getByText('Approval Sent')).toBeVisible({ timeout: 60_000 });
   }
 
+  private viewPoliciesTable(): Locator {
+    return this.page.locator('table.table[role="grid"]');
+  }
+
+  private publishedPolicyRowByTitle(policyTitle: string): Locator {
+    return this.viewPoliciesTable().locator('tbody tr.table-row').filter({ hasText: policyTitle.trim() }).first();
+  }
+
+  /** PM-026: View Policies screen (OutSystems `/Avotech/ViewPolicies`). */
+  async gotoAvotechViewPolicies() {
+    await this.page.goto(`${CSI_BASE_URL}/Avotech/ViewPolicies`);
+    await this.page.waitForLoadState('domcontentloaded');
+    await expect(this.viewPoliciesTable()).toBeVisible({ timeout: 60_000 });
+  }
+
+  /** Tab label includes a dynamic count, e.g. `Published Policies (52)`. */
+  async openPublishedPoliciesTab() {
+    const tab = this.page.getByRole('tab', { name: /Published Policies\s*\(\d+\)/ });
+    await expect(tab).toBeVisible({ timeout: 60_000 });
+    await tab.click();
+  }
+
+  /** PM-026: allow the published-policy grid to populate after tab switch. */
+  async waitPublishedPoliciesGridSettled() {
+    await this.safeSleep(3000);
+  }
+
+  async sortViewPoliciesByVersionColumn() {
+    const grid = this.viewPoliciesTable();
+    await grid.getByRole('columnheader', { name: 'Version' }).click();
+    await this.safeSleep(500);
+  }
+
+  /**
+   * PM-026: first row (top → bottom) with an `Update Version 1` control on Published Policies.
+   * Requires at least one published policy still on version 1 with a pending update in the tenant.
+   */
+  async clickFirstPublishedRowUpdateVersionOne() {
+    const grid = this.viewPoliciesTable();
+    const link = grid.getByRole('link').filter({ hasText: /Update Version\s*1/i }).first();
+    await expect(link).toBeVisible({ timeout: 60_000 });
+    await link.click();
+  }
+
+  async clickPolicyTitleBreadcrumbLink() {
+    const link = this.page.locator('#policyTitle').getByRole('link');
+    await expect(link).toBeVisible({ timeout: 60_000 });
+    await link.click();
+  }
+
+  async clickPolicyUpdateWizardNextFirst() {
+    const next = this.page.getByRole('button', { name: 'Next' }).first();
+    await expect(next).toBeVisible({ timeout: 60_000 });
+    await next.click();
+  }
+
+  async clickPolicyUpdateWizardNextExact() {
+    await this.safeSleep(3000);
+    const next = this.page.getByRole('button', { name: 'Next', exact: true });
+    await expect(next).toBeVisible({ timeout: 60_000 });
+    await next.click();
+  }
+
+  async clickSubmitForReReview() {
+    const btn = this.page.getByRole('button', { name: 'Submit for Re-Review' });
+    await expect(btn).toBeVisible({ timeout: 60_000 });
+    await btn.click();
+  }
+
+  async ensureMajorUpdateRadioChecked() {
+    const radio = this.page.getByRole('radio', { name: 'Major Update' });
+    await expect(radio).toBeVisible({ timeout: 30_000 });
+    await radio.check();
+  }
+
+  async clickSubmitAfterReReviewMajorUpdate() {
+    const submit = this.page.getByRole('button', { name: 'Submit', exact: true });
+    await expect(submit).toBeVisible({ timeout: 30_000 });
+    await submit.click();
+  }
+
+  async expectPolicyUpdatedToast() {
+    await expect(this.page.getByText('Policy Updated')).toBeVisible({ timeout: 120_000 });
+  }
+
+  /** View Policies grid search (same control name as MyPolicies). */
+  async searchViewPoliciesGrid(query: string) {
+    const search = this.page.getByRole('searchbox', { name: 'Search policies' });
+    await expect(search).toBeVisible({ timeout: 30_000 });
+    await search.fill(query);
+    await this.page.getByRole('button', { name: 'Search' }).first().click();
+    await expect(this.viewPoliciesTable()).toBeVisible({ timeout: 30_000 });
+  }
+
+  async openReviewLinkForRowWithPolicyTitle(policyTitle: string) {
+    const row = this.publishedPolicyRowByTitle(policyTitle);
+    await expect(row).toBeVisible({ timeout: 30_000 });
+    await row.getByRole('link', { name: 'Review' }).click();
+  }
+
+  /**
+   * PM-026: after Approve and Publish, a second Publish step appears before the Approval Sent toast
+   * (differs from {@link approveAndPublishExpectApprovalSent} used by PM-010).
+   */
+  async approvePublishThenSecondPublishExpectApprovalSent() {
+    const approve = this.page.getByRole('button', { name: 'Approve and Publish' });
+    await expect(approve).toBeVisible({ timeout: 60_000 });
+    await approve.click();
+    const publish = this.page.getByRole('button', { name: 'Publish' });
+    await expect(publish).toBeVisible({ timeout: 60_000 });
+    await publish.click();
+    await expect(this.page.getByText('Approval Sent')).toBeVisible({ timeout: 60_000 });
+  }
+
+  async expectPolicyTitleVisibleInPublishedGrid(policyTitle: string) {
+    await expect(this.publishedPolicyRowByTitle(policyTitle)).toBeVisible({ timeout: 30_000 });
+  }
+
+  /** Version column is the 3rd column (Date, Policy, Version). */
+  async expectPublishedRowVersionColumnIs(policyTitle: string, versionText: string) {
+    const row = this.publishedPolicyRowByTitle(policyTitle);
+    await expect(row).toBeVisible({ timeout: 30_000 });
+    const versionCell = row.locator('td').nth(2);
+    await expect(versionCell).toContainText(versionText, { timeout: 15_000 });
+  }
+
   buildEditedDocxPath(downloadPath: string, uniqueSuffix: string): string {
     const parsed = path.parse(downloadPath);
     return path.join(parsed.dir, `${parsed.name}_${uniqueSuffix}${parsed.ext || '.docx'}`);

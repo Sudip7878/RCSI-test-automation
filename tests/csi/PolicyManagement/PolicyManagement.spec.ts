@@ -7,6 +7,7 @@ import {
 import {
   csiPolicyDistributionDueInDays,
   csiPolicyUniqueSuffix,
+  replacePolicyTitleLastToken,
 } from '../../../utils/csi/policyManagementTestData';
 import { prependLineToDocx } from '../../../utils/csi/policyDocxPrepend';
 import { csiDistributionUserSearchToken } from '../../../utils/csi/trainingTestData';
@@ -122,6 +123,75 @@ test.describe('CSI · Policy Management', () => {
       await csiPolicyManagementPage.searchMyPoliciesByPolicySuffix(unique);
       await csiPolicyManagementPage.clickViewOnFirstMyPoliciesAcknowledgementCard();
       await csiPolicyManagementPage.completePolicyAcknowledgementExpectSuccess();
+    });
+  });
+
+  /**
+   * PM-024: same published-policy major-update wizard as PM-026 through `Policy Updated` (no review / approve / version-2).
+   * Needs `Update Version 1` on Published Policies (see {@link CsiPolicyManagementPage.clickFirstPublishedRowUpdateVersionOne}).
+   */
+  test.describe('PM-024 submit major policy update', () => {
+    test('PM-024', async ({ csiPolicyManagementPage }) => {
+      const newSuffix = csiPolicyUniqueSuffix();
+
+      await csiPolicyManagementPage.gotoAvotechViewPolicies();
+      await csiPolicyManagementPage.openPublishedPoliciesTab();
+      await csiPolicyManagementPage.waitPublishedPoliciesGridSettled();
+      await csiPolicyManagementPage.sortViewPoliciesByVersionColumn();
+      await csiPolicyManagementPage.clickFirstPublishedRowUpdateVersionOne();
+
+      await csiPolicyManagementPage.clickPolicyTitleBreadcrumbLink();
+      const previousFull = (await csiPolicyManagementPage.policyTitleInput.inputValue()).trim();
+      const newFullTitle = replacePolicyTitleLastToken(previousFull, newSuffix);
+      await csiPolicyManagementPage.policyTitleInput.fill(newFullTitle);
+      await csiPolicyManagementPage.clickPolicyTitleBreadcrumbLink();
+      await csiPolicyManagementPage.clickPolicyUpdateWizardNextFirst();
+      await csiPolicyManagementPage.clickPolicyUpdateWizardNextExact();
+
+      await csiPolicyManagementPage.clickSubmitForReReview();
+      await csiPolicyManagementPage.ensureMajorUpdateRadioChecked();
+      await csiPolicyManagementPage.clickSubmitAfterReReviewMajorUpdate();
+      await csiPolicyManagementPage.expectPolicyUpdatedToast();
+    });
+  });
+
+  /**
+   * PM-026: published policy version-1 update → re-review → approve/publish → version 2.
+   * Needs a tenant row with `Update Version 1` on Published Policies (see `clickFirstPublishedRowUpdateVersionOne`).
+   */
+  test.describe('PM-026 policy update approval from Published Policies', () => {
+    test('PM-026', async ({ csiPolicyManagementPage }) => {
+      const newSuffix = csiPolicyUniqueSuffix();
+
+      await csiPolicyManagementPage.gotoAvotechViewPolicies();
+      await csiPolicyManagementPage.openPublishedPoliciesTab();
+      await csiPolicyManagementPage.waitPublishedPoliciesGridSettled();
+      await csiPolicyManagementPage.sortViewPoliciesByVersionColumn();
+      await csiPolicyManagementPage.clickFirstPublishedRowUpdateVersionOne();
+
+      await csiPolicyManagementPage.clickPolicyTitleBreadcrumbLink();
+      const previousFull = (await csiPolicyManagementPage.policyTitleInput.inputValue()).trim();
+      const newFullTitle = replacePolicyTitleLastToken(previousFull, newSuffix);
+      await csiPolicyManagementPage.policyTitleInput.fill(newFullTitle);
+      await csiPolicyManagementPage.clickPolicyTitleBreadcrumbLink();
+      await csiPolicyManagementPage.clickPolicyUpdateWizardNextFirst();
+      await csiPolicyManagementPage.clickPolicyUpdateWizardNextExact();
+
+      await csiPolicyManagementPage.clickSubmitForReReview();
+      await csiPolicyManagementPage.ensureMajorUpdateRadioChecked();
+      await csiPolicyManagementPage.clickSubmitAfterReReviewMajorUpdate();
+      await csiPolicyManagementPage.expectPolicyUpdatedToast();
+
+      await csiPolicyManagementPage.searchViewPoliciesGrid(newFullTitle);
+      await csiPolicyManagementPage.expectPolicyTitleVisibleInPublishedGrid(newFullTitle);
+      await csiPolicyManagementPage.openReviewLinkForRowWithPolicyTitle(newFullTitle);
+
+      await csiPolicyManagementPage.approvePublishThenSecondPublishExpectApprovalSent();
+
+      await csiPolicyManagementPage.searchViewPoliciesGrid(newFullTitle);
+      await csiPolicyManagementPage.expectPolicyTitleVisibleInPublishedGrid(newFullTitle);
+      await csiPolicyManagementPage.sortViewPoliciesByVersionColumn();
+      await csiPolicyManagementPage.expectPublishedRowVersionColumnIs(newFullTitle, '2');
     });
   });
 });
