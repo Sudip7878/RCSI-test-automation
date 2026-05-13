@@ -16,6 +16,8 @@ export class CsiPolicyManagementPage extends BasePage {
   readonly userSearchInput = this.page.locator('#b29-b1-Input_search');
   readonly userSearchButton = this.page.getByRole('button', { name: 'Search' }).first();
   readonly submitForReviewButton = this.page.getByRole('button', { name: 'Submit for Review' });
+  /** PM-016: shown beside Submit for Review on the final wizard step when publishing without review. */
+  readonly publishPolicyWizardButton = this.page.getByRole('button', { name: 'Publish' });
   readonly acknowledgementDropdown = this.page.locator('#Acknowledgement_Dropdown');
 
   private async clickTomorrowInOpenDatepicker() {
@@ -58,7 +60,7 @@ export class CsiPolicyManagementPage extends BasePage {
     const idInputs = this.page.locator('#FileName_Input');
     if ((await idInputs.count()) > 0) {
       const first = idInputs.first();
-      const isFile = await first.evaluate((el) => (el as { type: string }).type === 'file');
+      const isFile = await first.evaluate((el) => (el as unknown as HTMLInputElement).type === 'file');
       if (isFile) {
         return first;
       }
@@ -164,6 +166,13 @@ export class CsiPolicyManagementPage extends BasePage {
     await this.clickTomorrowInOpenDatepicker();
   }
 
+  /** PM-016: immediate distribution instead of scheduled start (replaces {@link pickTomorrowAcknowledgementStartDate}). */
+  async checkDistributePolicyNowRadio() {
+    await this.page
+      .getByRole('radio', { name: 'I want to distribute this Policy now' })
+      .check({ timeout: 15_000 });
+  }
+
   async fillAcknowledgementDurationAndDue(dueInDays: number) {
     await this.page.locator('#Dropdown_Duration').selectOption({ label: 'Days' });
     const dueIn = this.page.locator('#Input_DueDateIn');
@@ -199,13 +208,99 @@ export class CsiPolicyManagementPage extends BasePage {
     await this.clickWizardPrimaryNext();
   }
 
+  /**
+   * PM-016: same grid search/select as {@link searchIndividualsAndSelectLoginUser} but kept separate so PM-001
+   * stays unchanged and this path can diverge if the acknowledger selection rules change.
+   */
+  async searchIndividualsAndSelectAcknowledgerUser(acknowledgerEmail: string, searchToken: string) {
+    await expect(this.userSearchInput).toBeVisible({ timeout: 30_000 });
+    await this.userSearchInput.click();
+    await this.userSearchInput.fill(searchToken);
+    await this.userSearchButton.click();
+
+    const row = this.userRowByEmail(acknowledgerEmail);
+    await expect(row).toBeVisible({ timeout: 30_000 });
+    const checkbox = row.locator('input[type="checkbox"].checkbox').first();
+    await expect(checkbox).toBeVisible();
+    await checkbox.check();
+
+    await this.clickWizardPrimaryNext();
+  }
+
+  private async safeSleep(ms: number) {
+    await new Promise<void>((resolve) => {
+      setTimeout(resolve, ms);
+    });
+  }
+
+  async gotoMyPolicies() {
+    await this.page.goto(`${CSI_BASE_URL}/MyPolicies`);
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  /** Tab label includes a dynamic count, e.g. `To be Acknowledged (1)`. */
+  async openToBeAcknowledgedTab() {
+    const tab = this.page.getByText(/To be Acknowledged\s*\(\d+\)/);
+    await expect(tab).toBeVisible({ timeout: 60_000 });
+    await tab.click();
+  }
+
+  /** PM-016: allow policy cards to render after switching to the pending-acknowledgement list. */
+  async waitForAcknowledgementPolicyCardsAfterTab() {
+    await this.safeSleep(3000);
+  }
+
+  /** PM-016: filter MyPolicies list by substring (same value appended to policy title in the wizard). */
+  async searchMyPoliciesByPolicySuffix(suffix: string) {
+    const search = this.page.getByRole('searchbox', { name: 'Search policies' });
+    await expect(search).toBeVisible({ timeout: 30_000 });
+    await search.click();
+    await search.fill(suffix);
+    await this.page.getByRole('button', { name: 'Search' }).click();
+  }
+
+  async clickViewOnFirstMyPoliciesAcknowledgementCard() {
+    const firstCard = this.page.locator('div.list div.card').first();
+    await expect(firstCard).toBeVisible({ timeout: 60_000 });
+    const view = firstCard.getByRole('button', { name: 'View' });
+    await expect(view).toBeVisible({ timeout: 30_000 });
+    await view.click();
+  }
+
+  async completePolicyAcknowledgementExpectSuccess() {
+    const acknowledgePolicy = this.page.getByRole('button', { name: 'Acknowledge Policy' });
+    await expect(acknowledgePolicy).toBeVisible({ timeout: 60_000 });
+    await acknowledgePolicy.click();
+
+    await this.safeSleep(3000);
+    const acknowledge = this.page.getByRole('button', { name: 'Acknowledge' });
+    await expect(acknowledge).toBeVisible({ timeout: 30_000 });
+    await acknowledge.click();
+
+    await expect(this.page.getByText('Acknowledgment has been made')).toBeVisible({ timeout: 60_000 });
+  }
+
   async submitForReview() {
     await expect(this.submitForReviewButton).toBeVisible({ timeout: 60_000 });
     await this.submitForReviewButton.click();
   }
 
+  /** PM-016: use Publish instead of {@link submitForReview} when the UI offers both on the same step. */
+  async publishPolicyFromWizard() {
+    await expect(this.submitForReviewButton).toBeVisible({ timeout: 60_000 });
+    await expect(this.publishPolicyWizardButton).toBeVisible({ timeout: 15_000 });
+    await this.publishPolicyWizardButton.click();
+  }
+
   async expectPolicyCreated() {
     await expect(this.page.getByText('Policy Created', { exact: true })).toBeVisible({ timeout: 120_000 });
+  }
+
+  /** PM-016: success toast after {@link publishPolicyFromWizard}. */
+  async expectPolicyPublished() {
+    await expect(this.page.getByText('Policy is created successfully.', { exact: true })).toBeVisible({
+      timeout: 120_000,
+    });
   }
 
   async expectOnViewPoliciesWithPendingPolicy(policyTitle: string) {
