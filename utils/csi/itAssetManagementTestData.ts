@@ -3,6 +3,13 @@ import { utcDateBasedNumber } from '../dateUtils';
 export const csiItAssetManufacturer = 'Acer' as const;
 export const csiItAssetOperatingSystem = 'Windows' as const;
 export const csiItAssetState = 'Disposed' as const;
+
+/** IA-020: asset state labels as shown in listbox / view (match UI option text). */
+export const csiItAssetStateLabelInStore = 'In Store' as const;
+export const csiItAssetStateLabelInUse = 'In Use' as const;
+export const csiItAssetStateLabelInRepair = 'In Repair' as const;
+export const csiItAssetStateLabelDisposed = 'Disposed' as const;
+export const csiItAssetStateLabelExpired = 'Expired' as const;
 export const csiItAssetSupplier = 'ABC Computer Company' as const;
 export const csiItAssetCurrency = 'HKD' as const;
 
@@ -37,4 +44,30 @@ export function csiItAssetDisplayName(uniqueNumeric: string): string {
 
 export function csiItAssetSerialFromModelNumber(modelNumber: string): string {
   return modelNumber.split('').reverse().join('');
+}
+
+/** IA-016: replace trailing digits with `uniqueNumeric`; if none, append ` uniqueNumeric`. */
+export function csiItAssetIa016EditedDisplayName(original: string, uniqueNumeric: string): string {
+  const t = original.trim();
+  const m = /^(.*?)(\d+)$/.exec(t);
+  if (m?.[1] != null && m[2] != null) {
+    return `${m[1]}${uniqueNumeric}`;
+  }
+  if (t.length === 0) {
+    return uniqueNumeric;
+  }
+  return `${t} ${uniqueNumeric}`;
+}
+
+/** IA-016: increment integer OS version; empty or non-numeric → `"1"`. */
+export function csiItAssetIncrementOsVersionString(current: string): string {
+  const t = String(current ?? '').trim();
+  if (t.length === 0) {
+    return '1';
+  }
+  const n = Number.parseInt(t, 10);
+  if (Number.isFinite(n)) {
+    return String(n + 1);
+  }
+  return '1';
 }

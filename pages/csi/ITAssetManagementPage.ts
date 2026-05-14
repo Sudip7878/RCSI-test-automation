@@ -16,16 +16,10 @@ function escapeRegExp(s: string) {
 }
 
 export class CsiItAssetManagementPage extends BasePage {
-  readonly itAssetManagementNav = this.page.getByText('IT Asset Management', { exact: true });
-  readonly officeNav = this.page.getByText('Office', { exact: true });
-  readonly clientMachineLink = this.page.getByRole('link', { name: 'Client Machine' });
   readonly addAssetButton = this.page.getByRole('button', { name: 'Add Asset' });
   readonly saveButton = this.page.getByRole('button', { name: 'Save' });
   readonly assetNameInput = this.page.locator('[id*="Input_assetsName"]').first();
-  readonly desktopComputersCategory = this.page
-    .locator('div.cat-btn')
-    .filter({ hasText: 'Desktop Computers' })
-    .first();
+  readonly desktopComputersCategory = this.page.getByText('Desktop Computers', { exact: true }).first();
 
   /** Date widgets: stable `_16` / `_17` id suffix; `-b10-b2-Input` or legacy `InputWithIconWrapper`. */
   private readonly acquisitionDateWrapper = this.page.locator(
@@ -39,13 +33,9 @@ export class CsiItAssetManagementPage extends BasePage {
     .locator('div.input-with-icon-input')
     .filter({ has: this.page.locator('#Input_purchaseDate') });
 
+  /** Same destination as hub → IT Asset → Office → Client Machine; avoids menu transitions blocking clicks. */
   async openClientMachineList() {
-    await this.waitForElement(this.itAssetManagementNav);
-    await this.itAssetManagementNav.click();
-    await expect(this.officeNav).toBeVisible({ timeout: 15_000 });
-    await this.officeNav.click();
-    await expect(this.clientMachineLink).toBeVisible({ timeout: 15_000 });
-    await this.clientMachineLink.click();
+    await this.gotoItAssetManagementClientMachineDesktopListUrl();
     await expect(this.addAssetButton).toBeVisible({ timeout: 60_000 });
   }
 
@@ -193,6 +183,14 @@ export class CsiItAssetManagementPage extends BasePage {
     return this.page.locator('.datagrid-autogenerate .datagrid-runtime').first();
   }
 
+  /**
+   * IA-016 desktop list: HTML shows `datagrid-runtime` without a `.datagrid-autogenerate` ancestor
+   * (recorded-steps/ITAssetManagement/IA-016.txt). Do not use for IA-001 grid assertions.
+   */
+  private clientMachineGridRuntimeIa016() {
+    return this.page.locator('.datagrid-runtime').first();
+  }
+
   private async setGridScrollLeft(scrollRoot: Locator, scrollLeft: number) {
     await scrollRoot.evaluate((el, x) => {
       el.scrollLeft = x;
@@ -261,13 +259,14 @@ export class CsiItAssetManagementPage extends BasePage {
     return await cell.isVisible().catch(() => false);
   }
 
-  /** IA-001: sort by Acquisition Date (horizontal scroll), assert asset name in `wj-part=cells`; retry sort once. */
-  async expectAssetVisibleInGridAfterAcquisitionSort(assetName: string) {
-    await expect(this.page.locator('.datagrid-autogenerate, [id*="datagrid_autogenerate"]')).toBeVisible({
-      timeout: 60_000,
-    });
-
-    const runtime = this.clientMachineGridRuntime();
+  /**
+   * Horizontal scroll to Acquisition Date header, click to sort (twice if needed), then scroll until Asset Name
+   * cell matches `assetName`. Shared by IA-001 (`clientMachineGridRuntime`) and IA-025 desktop list (`clientMachineGridRuntimeIa016`).
+   */
+  private async expectAssetNameCellVisibleInRuntimeGridAfterAcquisitionSort(
+    runtime: Locator,
+    assetName: string,
+  ): Promise<Locator> {
     await expect(runtime).toBeVisible({ timeout: 60_000 });
 
     const scrollRoot = runtime.locator('div[wj-part="root"]').first();
@@ -285,12 +284,22 @@ export class CsiItAssetManagementPage extends BasePage {
     await clickAcquisitionSort();
     if (await this.scrollToRevealAssetNameCell(scrollRoot, cell)) {
       await expect(cell).toBeVisible();
-      return;
+      return cell;
     }
 
     await clickAcquisitionSort();
     await this.scrollToRevealAssetNameCell(scrollRoot, cell);
     await expect(cell).toBeVisible({ timeout: 30_000 });
+    return cell;
+  }
+
+  /** IA-001: sort by Acquisition Date (horizontal scroll), assert asset name in `wj-part=cells`; retry sort once. */
+  async expectAssetVisibleInGridAfterAcquisitionSort(assetName: string) {
+    await expect(this.page.locator('.datagrid-autogenerate, [id*="datagrid_autogenerate"]')).toBeVisible({
+      timeout: 60_000,
+    });
+
+    await this.expectAssetNameCellVisibleInRuntimeGridAfterAcquisitionSort(this.clientMachineGridRuntime(), assetName);
   }
 
   /** IA-003: Client Machine bulk path (`categoryId=1` / `subCategoryId=1` desktop). */
@@ -509,5 +518,432 @@ export class CsiItAssetManagementPage extends BasePage {
       { timeout: 120_000 },
     );
     await expect(this.page.getByText(remark, { exact: true })).toBeVisible({ timeout: 60_000 });
+  }
+
+  /** IA-016: Client Machine desktop list (`categoryId=1` & `subCategoryId=1`). */
+  async gotoItAssetManagementClientMachineDesktopListUrl() {
+    await this.page.goto(`${CSI_BASE_URL}/ITAssetManagement?categoryId=1&subCategoryId=1`);
+    await this.page.waitForLoadState('domcontentloaded');
+    await expect(this.desktopComputersCategory).toBeVisible({ timeout: 60_000 });
+  }
+
+  /** IA-016: ensure category is active and runtime grid is present (Wijmo under `.datagrid-runtime`). */
+  async clickDesktopComputersExpectClientMachineGrid() {
+    await this.desktopComputersCategory.click();
+    await expect(this.clientMachineGridRuntimeIa016()).toBeVisible({ timeout: 60_000 });
+  }
+
+  /** IA-016: first `Edit` in grid body (`wj-cell-maker` per IA-016.txt); avoid row `filter` + runtime-wide `has`. */
+  async clickEditOnFirstClientMachineAssetRow() {
+    const runtime = this.clientMachineGridRuntimeIa016();
+    await expect(runtime).toBeVisible({ timeout: 60_000 });
+    const cells = runtime.locator('[wj-part="cells"]').first();
+    await expect(cells).toBeAttached({ timeout: 30_000 });
+    const editBtn = cells.locator('button.wj-cell-maker').filter({ hasText: /^Edit$/ }).first();
+    await expect(editBtn).toBeVisible({ timeout: 60_000 });
+    await editBtn.click();
+  }
+
+  /** IA-016: edit screen — `Asset Name:` label then name input (IDs vary by screen). */
+  async expectItAssetEditFormReady() {
+    const label = this.page.getByText('Asset Name:', { exact: true });
+    await expect(label).toBeVisible({ timeout: 60_000 });
+    await label.click();
+    await expect(this.assetNameInput).toBeVisible({ timeout: 30_000 });
+  }
+
+  async readItAssetEditFormAssetName(): Promise<string> {
+    return (await this.assetNameInput.inputValue()).trim();
+  }
+
+  async readItAssetEditFormOsVersion(): Promise<string> {
+    return (await this.page.getByRole('textbox', { name: 'Enter OS version' }).inputValue()).trim();
+  }
+
+  async fillItAssetEditFormAssetName(displayName: string) {
+    await this.assetNameInput.click();
+    await this.assetNameInput.fill(displayName);
+  }
+
+  async fillItAssetEditFormOsVersion(osVersion: string) {
+    const osVersionInput = this.page.getByRole('textbox', { name: 'Enter OS version' });
+    await osVersionInput.click();
+    await osVersionInput.fill(osVersion);
+  }
+
+  /** IA-016: horizontal scroll only — do not click OS Version header. */
+  private async scrollToRevealColumnHeaderInChcells(
+    runtime: Locator,
+    scrollRoot: Locator,
+    columnText: string,
+  ): Promise<Locator> {
+    const header = runtime.locator('[wj-part="chcells"]').getByText(columnText, { exact: true }).first();
+    await expect(scrollRoot).toBeAttached({ timeout: 30_000 });
+    const max = await this.gridMaxScrollLeft(scrollRoot);
+    const step = 280;
+    for (let x = 0; x <= max + step; x += step) {
+      await this.setGridScrollLeft(scrollRoot, Math.min(x, max));
+      if (await header.isVisible().catch(() => false)) {
+        await header.scrollIntoViewIfNeeded();
+        return header;
+      }
+    }
+    await this.setGridScrollLeft(scrollRoot, max);
+    await header.scrollIntoViewIfNeeded().catch(() => {});
+    return header;
+  }
+
+  /** IA-016: asset name cell visible after horizontal scroll (no Acquisition sort). */
+  async expectClientMachineGridCellVisibleExact(exactCellText: string) {
+    const runtime = this.clientMachineGridRuntimeIa016();
+    await expect(runtime).toBeVisible({ timeout: 60_000 });
+    const scrollRoot = runtime.locator('div[wj-part="root"]').first();
+    await expect(scrollRoot).toBeAttached({ timeout: 30_000 });
+    const namePattern = new RegExp(`^\\s*${escapeRegExp(exactCellText)}\\s*$`);
+    const cell = runtime.locator('[wj-part="cells"]').getByRole('gridcell').filter({ hasText: namePattern }).first();
+    await this.scrollToRevealAssetNameCell(scrollRoot, cell);
+    await expect(cell).toBeVisible({ timeout: 30_000 });
+  }
+
+  /**
+   * IA-016: row for `assetNameExact` must show `osVersionExact` in a gridcell (scroll grid; do not click OS header).
+   * Tries column label "OS Version", then "Operating System (OS)" for scroll alignment.
+   */
+  async expectClientMachineGridRowShowsOsVersionForAsset(assetNameExact: string, osVersionExact: string) {
+    const runtime = this.clientMachineGridRuntimeIa016();
+    await expect(runtime).toBeVisible({ timeout: 60_000 });
+    const scrollRoot = runtime.locator('div[wj-part="root"]').first();
+    const namePattern = new RegExp(`^\\s*${escapeRegExp(assetNameExact)}\\s*$`);
+    const nameCell = runtime.locator('[wj-part="cells"]').getByRole('gridcell').filter({ hasText: namePattern }).first();
+    await this.scrollToRevealAssetNameCell(scrollRoot, nameCell);
+    await expect(nameCell).toBeVisible({ timeout: 30_000 });
+
+    const row = nameCell.locator('xpath=./ancestor::div[contains(@class,"wj-row")][1]');
+    const osCell = row.getByRole('gridcell', { name: osVersionExact, exact: true });
+
+    for (const columnLabel of ['OS Version', 'Operating System (OS)']) {
+      await this.scrollToRevealColumnHeaderInChcells(runtime, scrollRoot, columnLabel).catch(() => {});
+      const max = await this.gridMaxScrollLeft(scrollRoot);
+      for (let x = 0; x <= max + 280; x += 280) {
+        await this.setGridScrollLeft(scrollRoot, Math.min(x, max));
+        if (await osCell.isVisible().catch(() => false)) {
+          await expect(osCell).toBeVisible();
+          return;
+        }
+      }
+    }
+    await expect(osCell).toBeVisible({ timeout: 30_000 });
+  }
+
+  /**
+   * IA-025: after save on desktop list — find row by `assetNameExact` using Acquisition Date sort + horizontal scroll
+   * (same as IA-001-style helper on this grid), then assert `osVersionExact` in that row (IA-016 OS scroll pattern).
+   */
+  async expectClientMachineGridRowShowsOsVersionForAssetAfterAcquisitionSortIa025(
+    assetNameExact: string,
+    osVersionExact: string,
+  ): Promise<void> {
+    const runtime = this.clientMachineGridRuntimeIa016();
+    const nameCell = await this.expectAssetNameCellVisibleInRuntimeGridAfterAcquisitionSort(runtime, assetNameExact);
+    const scrollRoot = runtime.locator('div[wj-part="root"]').first();
+    await expect(nameCell).toBeVisible({ timeout: 30_000 });
+
+    const row = nameCell.locator('xpath=./ancestor::div[contains(@class,"wj-row")][1]');
+    const osCell = row.getByRole('gridcell', { name: osVersionExact, exact: true });
+
+    for (const columnLabel of ['OS Version', 'Operating System (OS)']) {
+      await this.scrollToRevealColumnHeaderInChcells(runtime, scrollRoot, columnLabel).catch(() => {});
+      const max = await this.gridMaxScrollLeft(scrollRoot);
+      for (let x = 0; x <= max + 280; x += 280) {
+        await this.setGridScrollLeft(scrollRoot, Math.min(x, max));
+        if (await osCell.isVisible().catch(() => false)) {
+          await expect(osCell).toBeVisible();
+          return;
+        }
+      }
+    }
+    await expect(osCell).toBeVisible({ timeout: 30_000 });
+  }
+
+  /**
+   * IA-025: same acquisition-date sort + horizontal scroll + name visibility as IA-001, on the desktop list
+   * Wijmo grid (`clientMachineGridRuntimeIa016`), then return the name cell for Edit/View.
+   */
+  private async ia025ScrollToAssetNameCellInDesktopListGrid(assetDisplayName: string): Promise<Locator> {
+    return this.expectAssetNameCellVisibleInRuntimeGridAfterAcquisitionSort(
+      this.clientMachineGridRuntimeIa016(),
+      assetDisplayName,
+    );
+  }
+
+  /** IA-025: `Edit` on the row whose Asset Name cell matches `assetDisplayName`. */
+  async clickEditOnClientMachineGridRowByAssetNameIa025(assetDisplayName: string): Promise<void> {
+    const nameCell = await this.ia025ScrollToAssetNameCellInDesktopListGrid(assetDisplayName);
+    const row = nameCell.locator('xpath=./ancestor::div[contains(@class,"wj-row")][1]');
+    const editBtn = row.locator('button.wj-cell-maker').filter({ hasText: /^Edit$/ });
+    await expect(editBtn).toBeVisible({ timeout: 15_000 });
+    await editBtn.click();
+  }
+
+  /** IA-025: `View` on the row whose Asset Name cell matches `assetDisplayName`. */
+  async clickViewOnClientMachineGridRowByAssetNameIa025(assetDisplayName: string): Promise<void> {
+    const nameCell = await this.ia025ScrollToAssetNameCellInDesktopListGrid(assetDisplayName);
+    const row = nameCell.locator('xpath=./ancestor::div[contains(@class,"wj-row")][1]');
+    const viewBtn = row.locator('button.wj-cell-maker').filter({ hasText: /^View$/ });
+    await expect(viewBtn).toBeVisible({ timeout: 15_000 });
+    await viewBtn.click();
+  }
+
+  /**
+   * IA-025: assign User on asset edit — open VirtualSelect (`UserDropdown` or `User` + `.vscomp-toggle-button`),
+   * pick first `option`, return trimmed label for view assertion.
+   */
+  async selectFirstUserOnItAssetEditFormIa025(): Promise<string> {
+    const byVendorId = this.page.locator('[id*="UserDropdown"] .vscomp-toggle-button').first();
+    const byLabel = this.page
+      .locator('div[data-block="ITassets.inputFields"]')
+      .filter({ has: this.page.getByText('User', { exact: true }) })
+      .locator('.vscomp-toggle-button')
+      .first();
+    const toggle =
+      (await byVendorId.isVisible().catch(() => false)) ? byVendorId : byLabel;
+    await expect(toggle).toBeVisible({ timeout: 30_000 });
+    // VirtualSelect options can hydrate after edit form paint; brief wait avoids empty/flickering list.
+    await this.page.waitForTimeout(3000);
+    await toggle.click();
+    const options = this.page.getByRole('option');
+    await expect(options.first()).toBeVisible({ timeout: 15_000 });
+    const placeholder = /^(select|choose|please|--|…|\.{3})$/i;
+    const n = await options.count();
+    for (let i = 0; i < n; i++) {
+      const opt = options.nth(i);
+      const label = (await opt.innerText()).replace(/\s+/g, ' ').trim();
+      if (label.length > 0 && !placeholder.test(label)) {
+        await opt.click();
+        return label;
+      }
+    }
+    throw new Error('IA-025: no non-placeholder option found in User dropdown');
+  }
+
+  /** IA-025: after `View`, assert assigned user (or any saved label) is shown on the read-only view. */
+  async expectItAssetViewShowsTextIa025(expected: string): Promise<void> {
+    const norm = expected.trim();
+    await expect(this.page.getByText(norm, { exact: false }).first()).toBeVisible({ timeout: 60_000 });
+  }
+
+  /** Create form: open Asset State, pick option by label, fill location (not fixed {@link csiItAssetState}). */
+  async fillAssetStateAndLocationUsingStateOption(params: { location: string; stateOptionName: string }) {
+    await this.page.getByText('Select asset state', { exact: true }).click();
+    await this.page.getByRole('option', { name: params.stateOptionName, exact: true }).click();
+    const loc = this.page.getByRole('textbox', { name: 'Enter asset location' });
+    await loc.click();
+    await loc.fill(params.location);
+  }
+
+  /** Next page control — first grid’s pagination block (angle icon). */
+  private autogeneratePaginationNextButton(): Locator {
+    return this.page
+      .locator('.datagrid-pagination-controller')
+      .first()
+      .locator('[data-block="Pagination.ButtonNextPage"]')
+      .getByRole('button')
+      .first();
+  }
+
+  private autogeneratePaginationPreviousButton(): Locator {
+    return this.page
+      .locator('.datagrid-pagination-controller')
+      .first()
+      .locator('[data-block="Pagination.ButtonPreviousPage"]')
+      .getByRole('button')
+      .first();
+  }
+
+  /**
+   * Rightmost page index in autogenerate `Pagination.ButtonList` (e.g. … 4 → 4).
+   * From page 1, at most `lastPage − 1` Next clicks; uses `getByRole('button')` on the strip.
+   */
+  private async readMaxNextClicksFromAutogeneratePagination(): Promise<number> {
+    const list = this.page
+      .locator('.datagrid-pagination-controller')
+      .first()
+      .locator('[data-block="Pagination.ButtonList"] .datagrid-pagination-button-list');
+    if (!(await list.isVisible().catch(() => false))) {
+      return 0;
+    }
+    const buttons = list.getByRole('button');
+    const n = await buttons.count();
+    if (n === 0) {
+      return 0;
+    }
+    const lastLabel = (await buttons.nth(n - 1).innerText()).trim();
+    const lastPage = parseInt(lastLabel, 10);
+    if (!Number.isFinite(lastPage) || lastPage < 1) {
+      return 5;
+    }
+    return Math.max(0, lastPage - 1);
+  }
+
+  /** Walk Previous until first page (optional when grid can open on a later page). */
+  private async goToFirstAutogenerateGridPageViaPrevious(): Promise<void> {
+    const prev = this.autogeneratePaginationPreviousButton();
+    for (let i = 0; i < 40; i++) {
+      if (!(await prev.isVisible().catch(() => false))) {
+        return;
+      }
+      if (await prev.isDisabled().catch(() => true)) {
+        return;
+      }
+      await prev.click();
+      await this.page.waitForTimeout(300);
+    }
+  }
+
+  /** Single Acquisition Date header click with Wijmo-safe retries (sort). */
+  private async clickWijmoAcquisitionDateHeaderForSort(runtime: Locator, scrollRoot: Locator): Promise<void> {
+    await this.scrollToRevealAcquisitionDateHeader(runtime, scrollRoot);
+    await this.page.waitForTimeout(400);
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const header = runtime
+        .locator('[wj-part="chcells"]')
+        .getByText('Acquisition Date', { exact: true })
+        .first();
+      if (!(await header.isVisible().catch(() => false))) {
+        await this.scrollToRevealAcquisitionDateHeader(runtime, scrollRoot);
+        await this.page.waitForTimeout(300);
+        continue;
+      }
+      await header.scrollIntoViewIfNeeded();
+      try {
+        await header.click({ timeout: 10_000 });
+        await this.page.waitForTimeout(250);
+        return;
+      } catch {
+        await this.page.waitForTimeout(500);
+      }
+    }
+    const headerLast = runtime
+      .locator('[wj-part="chcells"]')
+      .getByText('Acquisition Date', { exact: true })
+      .first();
+    await headerLast.scrollIntoViewIfNeeded();
+    await headerLast.click({ force: true, timeout: 10_000 });
+    await this.page.waitForTimeout(250);
+  }
+
+  /** Horizontal scroll in grid root until name `cell` is visible (no Acquisition click). */
+  private async scrollAutogenerateGridHorizontallyToRevealNameCell(scrollRoot: Locator, cell: Locator): Promise<boolean> {
+    if (await this.scrollToRevealAssetNameCell(scrollRoot, cell)) {
+      return await cell.isVisible().catch(() => false);
+    }
+    return await cell.isVisible().catch(() => false);
+  }
+
+  /**
+   * Client machine autogenerate grid: find name `gridcell` — page 1 uses two Acquisition Date sorts
+   * (each followed by horizontal scroll); then Next up to `maxNextClicks` from pagination (`lastPage − 1`);
+   * later pages use horizontal scroll only.
+   */
+  private async findClientMachineAutogenerateGridCellByAssetName(assetName: string): Promise<Locator> {
+    await expect(this.page.locator('.datagrid-autogenerate, [id*="datagrid_autogenerate"]')).toBeVisible({
+      timeout: 5_000,
+    });
+    // Grid assumed on page 1 when loaded; re-enable: await this.goToFirstAutogenerateGridPageViaPrevious();
+
+    const runtimeForPaging = this.clientMachineGridRuntime();
+    await expect(runtimeForPaging).toBeVisible({ timeout: 60_000 });
+    const maxNextClicks = await this.readMaxNextClicksFromAutogeneratePagination();
+
+    let nextClicks = 0;
+    let useAcquisitionTwoPasses = true;
+
+    while (true) {
+      const runtime = this.clientMachineGridRuntime();
+      await expect(runtime).toBeVisible({ timeout: 60_000 });
+      const scrollRoot = runtime.locator('div[wj-part="root"]').first();
+      await expect(scrollRoot).toBeAttached({ timeout: 30_000 });
+      const namePattern = new RegExp(`^\\s*${escapeRegExp(assetName)}\\s*$`);
+      const cell = runtime.locator('[wj-part="cells"]').getByRole('gridcell').filter({ hasText: namePattern }).first();
+
+      if (useAcquisitionTwoPasses) {
+        await this.clickWijmoAcquisitionDateHeaderForSort(runtime, scrollRoot);
+        if (await this.scrollAutogenerateGridHorizontallyToRevealNameCell(scrollRoot, cell)) {
+          return cell;
+        }
+        await this.clickWijmoAcquisitionDateHeaderForSort(runtime, scrollRoot);
+        if (await this.scrollAutogenerateGridHorizontallyToRevealNameCell(scrollRoot, cell)) {
+          return cell;
+        }
+      } else {
+        if (await this.scrollAutogenerateGridHorizontallyToRevealNameCell(scrollRoot, cell)) {
+          return cell;
+        }
+      }
+
+      if (nextClicks >= maxNextClicks) {
+        break;
+      }
+      const next = this.autogeneratePaginationNextButton();
+      const visible = await next.isVisible().catch(() => false);
+      const disabled = visible ? await next.isDisabled().catch(() => true) : true;
+      if (!visible || disabled) {
+        break;
+      }
+      await next.click();
+      await this.page.waitForTimeout(600);
+      nextClicks += 1;
+      useAcquisitionTwoPasses = false;
+    }
+
+    throw new Error(
+      `Client machine autogenerate grid: asset "${assetName}" not found after two Acquisition sorts + scrolls on page 1 and up to ${maxNextClicks} Next click(s) (scroll-only on later pages; cap from pagination last page − 1)`,
+    );
+  }
+
+  /** Assert the asset name cell exists (same resolution path as View). */
+  async expectClientMachineAutogenerateGridShowsAssetName(assetName: string): Promise<void> {
+    const cell = await this.findClientMachineAutogenerateGridCellByAssetName(assetName);
+    await expect(cell).toBeVisible({ timeout: 10_000 });
+  }
+
+  /** Click row View on the client machine autogenerate grid for `assetDisplayName`. */
+  async clickViewOnClientMachineAutogenerateGridRowByAssetName(assetDisplayName: string): Promise<void> {
+    const nameCell = await this.findClientMachineAutogenerateGridCellByAssetName(assetDisplayName);
+    const row = nameCell.locator('xpath=./ancestor::div[contains(@class,"wj-row")][1]');
+    const viewBtn = row.locator('button.wj-cell-maker').filter({ hasText: /^View$/ });
+    await expect(viewBtn).toBeVisible({ timeout: 15_000 });
+    await viewBtn.click();
+  }
+
+  /** Read-only IT asset view: Asset State in `ITassets.displayFields` shows `stateText`. */
+  async expectItAssetDetailViewShowsAssetState(stateText: string): Promise<void> {
+    const section = this.page
+      .locator('[data-block="ITassets.displayFields"]')
+      .filter({ has: this.page.getByText('Asset State', { exact: true }) })
+      .first();
+    await expect(section.getByText(stateText, { exact: true }).first()).toBeVisible({ timeout: 45_000 });
+  }
+
+  /** IT asset read-only screen — Edit (toolbar, not grid row Edit). */
+  async clickEditOnItAssetViewPage(): Promise<void> {
+    const edit = this.page.getByRole('button', { name: 'Edit', exact: true }).first();
+    await expect(edit).toBeVisible({ timeout: 30_000 });
+    await edit.click();
+  }
+
+  /** IT asset edit form: set Asset State to `stateName` (VirtualSelect / listbox option label). */
+  async selectAssetStateOnItAssetEditForm(stateName: string): Promise<void> {
+    const byPlaceholder = this.page.getByText('Select asset state', { exact: true });
+    if (await byPlaceholder.isVisible().catch(() => false)) {
+      await byPlaceholder.click();
+    } else {
+      const block = this.page
+        .locator('div[data-block="ITassets.inputFields"]')
+        .filter({ has: this.page.getByText('Asset State', { exact: true }) })
+        .first();
+      await block.locator('.vscomp-toggle-button').first().click();
+    }
+    await this.page.getByRole('option', { name: stateName, exact: true }).click();
   }
 }
