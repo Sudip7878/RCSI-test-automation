@@ -3,6 +3,13 @@ import { utcDateBasedNumber } from '../dateUtils';
 export const csiItAssetManufacturer = 'Acer' as const;
 export const csiItAssetOperatingSystem = 'Windows' as const;
 export const csiItAssetState = 'Disposed' as const;
+
+/** IA-020: asset state labels as shown in listbox / view (match UI option text). */
+export const csiItAssetStateLabelInStore = 'In Store' as const;
+export const csiItAssetStateLabelInUse = 'In Use' as const;
+export const csiItAssetStateLabelInRepair = 'In Repair' as const;
+export const csiItAssetStateLabelDisposed = 'Disposed' as const;
+export const csiItAssetStateLabelExpired = 'Expired' as const;
 export const csiItAssetSupplier = 'ABC Computer Company' as const;
 export const csiItAssetCurrency = 'HKD' as const;
 
