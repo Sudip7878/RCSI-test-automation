@@ -31,6 +31,24 @@ export function csiOrgTestPassword(): string {
   return p;
 }
 
+/** `CSI_ORG_USER_TEST_EMAIL` — org-scoped user for AM-050 (deactivate / inactive login / reactivate). */
+export function csiOrgUserTestEmail(): string {
+  const e = process.env.CSI_ORG_USER_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_ORG_USER_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** `CSI_ORG_USER_TEST_PASSWORD` — paired with {@link csiOrgUserTestEmail}. */
+export function csiOrgUserTestPassword(): string {
+  const p = process.env.CSI_ORG_USER_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_ORG_USER_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
 /** `CSI_PHISING_ADMIN_TEST_EMAIL` — admin used for Phising test creation. */
 export function csiPhisingAdminTestEmail(): string {
   const e = process.env.CSI_PHISING_ADMIN_TEST_EMAIL?.trim();
@@ -79,6 +97,24 @@ export function csiSystemOwnerTestPassword(): string {
   const p = process.env.CSI_SYSTEM_OWNER_TEST_PASSWORD;
   if (p == null || p.length === 0) {
     throw new Error('Set CSI_SYSTEM_OWNER_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
+/** SB-056: restricted hub user (Training / Phishing / Account Management only). */
+export function csiTrainingPhisingSysOwnerTestEmail(): string {
+  const e = process.env.CSI_TRAINING_PHISING_SYS_OWNER_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_TRAINING_PHISING_SYS_OWNER_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiTrainingPhisingSysOwnerTestEmail}. */
+export function csiTrainingPhisingSysOwnerTestPassword(): string {
+  const p = process.env.CSI_TRAINING_PHISING_SYS_OWNER_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_TRAINING_PHISING_SYS_OWNER_TEST_PASSWORD in the environment (see .env.example).');
   }
   return p;
 }

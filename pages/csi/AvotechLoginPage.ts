@@ -18,11 +18,20 @@ export class CsiAvotechLoginPage extends BasePage {
   private pathnameLooksLikeHome(pathname: string): boolean {
     const noTrail = pathname.replace(/\/$/, '');
     const norm = noTrail === '' ? '/' : noTrail;
-    return norm === '/' || norm === '/Home' || norm === '/Avotech/Home';
+    return (
+      norm === '/' ||
+      norm === '/Home' ||
+      norm === '/Avotech' ||
+      norm === '/Avotech/Home'
+    );
   }
 
   private isAtHomePath(): boolean {
-    return this.pathnameLooksLikeHome(new URL(this.page.url()).pathname);
+    try {
+      return this.pathnameLooksLikeHome(new URL(this.page.url()).pathname);
+    } catch {
+      return false;
+    }
   }
 
   async gotoLogin() {
@@ -33,7 +42,7 @@ export class CsiAvotechLoginPage extends BasePage {
     }
 
     const visibleOnPrimary = await this.emailField
-      .waitFor({ state: 'visible', timeout: 10_000 })
+      .waitFor({ state: 'visible', timeout: 20_000 })
       .then(() => true)
       .catch(() => false);
 
@@ -110,6 +119,7 @@ export class CsiAvotechLoginPage extends BasePage {
   }
 
   async expectEmailStepVisible() {
-    await expect(this.emailField).toBeVisible({ timeout: 30_000 });
+    await expect(this.emailField).toBeVisible({ timeout: 60_000 });
+    await this.page.waitForLoadState('domcontentloaded').catch(() => {});
   }
 }

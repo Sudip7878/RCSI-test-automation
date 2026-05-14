@@ -662,4 +662,50 @@ export class CsiSalesAndBillingPage extends BasePage {
     expect(path, 'browser should materialize download to a temp path').toBeTruthy();
     return readFileSync(path as string);
   }
+
+  /** SB-056: hub modules this role must not see (recorded-steps/Sales&Billing/SB-056.txt). */
+  private readonly sb056RestrictedHubLabels = [
+    'Policy Management',
+    'IT Asset Management',
+    'Security Assessment',
+    'Sales & Billing',
+    'Avo Management',
+    'Incident Response',
+  ] as const;
+
+  /** OutSystems menu block id uses `AccountManagment` spelling in the DOM. */
+  readonly sb056AccountManagementMenu = this.page.locator('#b3-AccountManagment');
+
+  async expectSb056TrainingAndPhishingNavVisible() {
+    await expect(this.page.getByText('Training', { exact: true })).toBeVisible({ timeout: 30_000 });
+    await expect(this.page.getByText('Phishing', { exact: true })).toBeVisible({ timeout: 30_000 });
+  }
+
+  /** Recorded order: Training → Phishing → Account Management (under `#b3-AccountManagment`). */
+  async navigateSb056TrainingPhishingThenAccountManagement() {
+    await this.page.getByText('Training', { exact: true }).click();
+    await this.safeSleep(400);
+    await this.page.getByText('Phishing', { exact: true }).click();
+    await this.safeSleep(400);
+    await this.sb056AccountManagementMenu.getByText('Account Management', { exact: true }).click();
+    await this.page.waitForLoadState('domcontentloaded').catch(() => {});
+    await this.safeSleep(800);
+  }
+
+  /**
+   * If a label has no nodes, the module is absent. If nodes exist (e.g. SSR), every match must be hidden
+   * so we do not treat off-screen duplicates as a pass when one copy is still visible.
+   */
+  async expectSb056RestrictedHubModulesNotVisible() {
+    for (const label of this.sb056RestrictedHubLabels) {
+      const loc = this.page.getByText(label, { exact: true });
+      const count = await loc.count();
+      if (count === 0) {
+        continue;
+      }
+      for (let i = 0; i < count; i += 1) {
+        await expect(loc.nth(i)).toBeHidden();
+      }
+    }
+  }
 }

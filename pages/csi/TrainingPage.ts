@@ -1,14 +1,16 @@
-import { expect } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+
+import { expect, type Locator } from '@playwright/test';
 import { CSI_BASE_URL } from '../../config/csi';
 import { BasePage } from '../BasePage';
 
-/** VirtualSelect: up to 3 opens of the search field if options never render. */
+/** VirtualSelect: initial open + up to 2 retries if options do not render (TR-001). */
 const COURSE_SEARCH_MAX_ATTEMPTS = 3;
 
 export class CsiTrainingPage extends BasePage {
   readonly setupNewDistributionButton = this.page.getByRole('button', { name: 'Setup New Distribution' });
   readonly distributionNameInput = this.page.locator('#Input_name');
-  readonly nextButton = this.page.getByRole('button', { name: 'Next' });
+  readonly nextButton = this.page.getByRole('button', { name: 'Next', exact: true });
   readonly distributeButton = this.page.getByRole('button', { name: 'Distribute' });
   readonly distributionViewRadio = this.page.getByRole('radio', { name: 'Distribution View' });
 
@@ -43,6 +45,7 @@ export class CsiTrainingPage extends BasePage {
   async openCourseDistribution() {
     await this.page.goto(`${CSI_BASE_URL}/CourseDistribution`);
     await expect(this.setupNewDistributionButton).toBeVisible({ timeout: 30_000 });
+    await this.safeSleep(3000);
   }
 
   async startNewDistribution() {
@@ -91,6 +94,117 @@ export class CsiTrainingPage extends BasePage {
     }
 
     throw new Error(`Course list did not show option: ${courseName}`);
+  }
+
+  private static readonly myCourseCardTitleSelector =
+    '.ThemeGrid_Width8 span.bold.OSFillParent[style*="font-size: 20px"], .ThemeGrid_Width8 span.bold.OSFillParent[style*="font-size:20px"]';
+
+  /** Visible course titles under manager + self-registered lists for the active My Course tab. */
+  private async readVisibleMyCourseCardTitlesFromDom(): Promise<string[]> {
+    return await this.page.$$eval(
+      '#MyCourseList_distribution [data-block="Training.MyCourseBlock"], #MyCourseList_self [data-block="Training.MyCourseBlock"]',
+      (blocks, sel) => {
+        const out: string[] = [];
+        for (const block of blocks) {
+          let el = block.querySelector(sel);
+          if (!el) {
+            el = block.querySelector('.ThemeGrid_Width8 span.bold.OSFillParent');
+          }
+          const t = el?.textContent?.replace(/\s+/g, ' ').trim();
+          if (t) {
+            out.push(t);
+          }
+        }
+        return out;
+      },
+      CsiTrainingPage.myCourseCardTitleSelector,
+    );
+  }
+
+  /** TR-001: each status tab — settle before click, after click, then scrape cards (same page). */
+  private async activateMyCourseStatusTabAndReadTitles(tabLink: Locator): Promise<string[]> {
+    await this.safeSleep(3000);
+    await expect(tabLink).toBeVisible({ timeout: 15_000 });
+    await tabLink.click();
+    await this.safeSleep(5000);
+    return this.readVisibleMyCourseCardTitlesFromDom();
+  }
+
+  /**
+   * TR-001: `/myCourse`, then Ongoing → Passed → Missed → Failed; union visible titles from each tab.
+   */
+  async openMyCourseAndCollectRegisteredCourseTitles(): Promise<string[]> {
+    await this.page.goto(`${CSI_BASE_URL}/myCourse`);
+    await this.page.waitForLoadState('domcontentloaded');
+    // Breadcrumb also exposes "My Course" (plain span); page title uses `span.bold`.
+    await expect(this.page.locator('span.bold', { hasText: /^My Course$/ })).toBeVisible({
+      timeout: 60_000,
+    });
+
+    const aggregated = new Set<string>();
+    const statusTabLinks: Locator[] = [
+      this.page.getByRole('link', { name: 'Ongoing', exact: true }),
+      this.page.getByRole('link', { name: 'Passed', exact: true }),
+      // Accessible name often includes a trailing help icon (e.g. `Missed `).
+      this.page.getByRole('link', { name: /^Missed\b/ }).first(),
+      this.page.getByRole('link', { name: 'Failed', exact: true }),
+    ];
+
+    for (const link of statusTabLinks) {
+      const batch = await this.activateMyCourseStatusTabAndReadTitles(link);
+      for (const t of batch) {
+        const s = t.trim();
+        if (s) {
+          aggregated.add(s);
+        }
+      }
+    }
+
+    return [...aggregated];
+  }
+
+  /**
+   * TR-001 V2: pick the first visible VirtualSelect option in list order that is not in `excluded`
+   * (not by fixed index). Closes dropdown and retries opening up to {@link COURSE_SEARCH_MAX_ATTEMPTS} times.
+   */
+  async selectFirstVisibleCourseOptionNotIn(
+    excluded: ReadonlySet<string>,
+    courseSlotIndex: number,
+  ): Promise<string> {
+    await this.waitForCourseSelectionStepReady();
+
+    const searchTriggers = this.page.getByText('Search...', { exact: true });
+    const trigger =
+      courseSlotIndex === 0 ? searchTriggers.first() : searchTriggers.last();
+
+    for (let openAttempt = 0; openAttempt < COURSE_SEARCH_MAX_ATTEMPTS; openAttempt += 1) {
+      await expect(trigger).toBeVisible({ timeout: 15_000 });
+      await trigger.click();
+      await this.safeSleep(300);
+
+      const options = this.page.getByRole('option');
+      const count = await options.count();
+
+      for (let i = 0; i < count; i += 1) {
+        const opt = options.nth(i);
+        if (!(await opt.isVisible().catch(() => false))) {
+          continue;
+        }
+        const name = (await opt.textContent())?.replace(/\s+/g, ' ').trim() ?? '';
+        if (!name || excluded.has(name)) {
+          continue;
+        }
+        await opt.click();
+        return name;
+      }
+
+      await this.page.keyboard.press('Escape').catch(() => {});
+      await this.safeSleep(200);
+    }
+
+    throw new Error(
+      `No VirtualSelect option found outside excluded set for slot ${courseSlotIndex}: ${[...excluded].join(', ')}`,
+    );
   }
 
   async goToNextWizardStep() {
@@ -161,4 +275,71 @@ export class CsiTrainingPage extends BasePage {
       timeout: 30_000,
     });
   }
+
+  readonly exportCourseReportPdfButton = this.page.getByRole('button', { name: 'Export Page to PDF' });
+
+  async openCourseReport() {
+    await this.page.goto(`${CSI_BASE_URL}/CourseReport`);
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  /**
+   * TR-025: wait until the export control is visible, then enabled (report data finished loading).
+   */
+  async expectCourseReportExportReady() {
+    await expect(this.exportCourseReportPdfButton).toBeVisible({ timeout: 60_000 });
+    await expect(this.exportCourseReportPdfButton).toBeEnabled({ timeout: 120_000 });
+  }
+
+  async downloadCourseReportPdf(): Promise<Buffer> {
+    await this.expectCourseReportExportReady();
+    const downloadPromise = this.page.waitForEvent('download', { timeout: 120_000 });
+    await this.exportCourseReportPdfButton.click();
+    const download = await downloadPromise;
+    const downloadedPath = await download.path();
+    expect(downloadedPath, 'course report PDF should be written to a temp path').toBeTruthy();
+    return readFileSync(downloadedPath as string);
+  }
+
+  readonly managerViewRadio = this.page.getByRole('radio', { name: 'Manager View' });
+  readonly trainingStatisticBox = this.page.locator('#TrainingStatisticBox');
+
+  async openCourseDashboard() {
+    await this.page.goto(`${CSI_BASE_URL}/courseDashboard`);
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  /** TR-033: recorded 5s settle after switching to Manager View before asserting sections. */
+  async switchToManagerViewAndSettle() {
+    await expect(this.managerViewRadio).toBeVisible({ timeout: 60_000 });
+    await this.managerViewRadio.click();
+    await this.safeSleep(5000);
+  }
+
+  /** TR-033 visibility bundle (recorded-steps/Training/TR-033.txt). */
+  async expectTr033ManagerDashboardSectionsVisible() {
+    await expect(this.page.getByText('Cybersecurity Awareness Score')).toBeVisible({ timeout: 30_000 });
+    await expect(this.page.getByText('Target Goal', { exact: true })).toBeVisible();
+    await expect(this.page.getByText('Training Statistics')).toBeVisible();
+
+    const stats = this.trainingStatisticBox;
+    await expect(stats.getByText('Not Started')).toBeVisible();
+    await expect(stats.getByText('In Progress')).toBeVisible();
+    await expect(stats.getByText('Passed')).toBeVisible();
+    await expect(stats.getByText('Failed')).toBeVisible();
+    await expect(stats.getByText('Missed')).toBeVisible();
+
+    await expect(this.page.getByText('Course Distribution', { exact: true })).toBeVisible();
+    await expect(this.page.getByText('Most Active Employees')).toBeVisible();
+
+    await expect(this.page.getByRole('columnheader', { name: 'User' })).toBeVisible();
+    await expect(this.page.getByRole('columnheader', { name: 'Courses' })).toBeVisible();
+    await expect(this.page.getByRole('columnheader', { name: 'Passed' })).toBeVisible();
+    await expect(this.page.getByRole('columnheader', { name: 'Failed' })).toBeVisible();
+
+    await expect(this.page.getByText('Employee activities')).toBeVisible();
+    await expect(this.page.getByText('Users who missed course')).toBeVisible();
+    await expect(this.page.getByText('Groups you managed')).toBeVisible();
+  }
 }
+

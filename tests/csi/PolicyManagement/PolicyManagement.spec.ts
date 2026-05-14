@@ -1,8 +1,14 @@
 import * as os from 'os';
 import { test } from '../../../fixtures/csi/testSetup';
-import { csiTestEmail, csiTestPassword } from '../../../utils/csi/credentials';
-import { utcDateBasedNumber } from '../../../utils/dateUtils';
-import { csiPolicyDistributionDueInDays } from '../../../utils/csi/policyManagementTestData';
+import {
+  csiTestEmail,
+  csiTestPassword,
+} from '../../../utils/csi/credentials';
+import {
+  csiPolicyDistributionDueInDays,
+  csiPolicyUniqueSuffix,
+  replacePolicyTitleLastToken,
+} from '../../../utils/csi/policyManagementTestData';
 import { prependLineToDocx } from '../../../utils/csi/policyDocxPrepend';
 import { csiDistributionUserSearchToken } from '../../../utils/csi/trainingTestData';
 
@@ -27,7 +33,7 @@ test.describe('CSI · Policy Management', () => {
     test('PM-001', async ({
       csiPolicyManagementPage,
     }) => {
-      const unique = utcDateBasedNumber();
+      const unique = csiPolicyUniqueSuffix();
       const loginEmail = csiTestEmail();
       const searchToken = csiDistributionUserSearchToken(loginEmail);
       const dueInDays = csiPolicyDistributionDueInDays();
@@ -69,6 +75,123 @@ test.describe('CSI · Policy Management', () => {
       await csiPolicyManagementPage.openViewPolicies();
       await csiPolicyManagementPage.openReviewForFirstPendingForApproval();
       await csiPolicyManagementPage.approveAndPublishExpectApprovalSent();
+    });
+  });
+
+  /**
+   * PM-016: Owner = Super Admin; acknowledger = `CSI_TEST_EMAIL` via {@link csiTestEmail} (same as root beforeEach).
+   * Distribute-now, then MyPolicies → To be Acknowledged → search by suffix → acknowledge.
+   */
+  test.describe('PM-016 distribute-now policy and acknowledger completes acknowledgement from MyPolicies', () => {
+    test('PM-016', async ({ csiPolicyManagementPage }) => {
+      const unique = csiPolicyUniqueSuffix();
+      const acknowledgerEmail = csiTestEmail();
+      const acknowledgerSearchToken = csiDistributionUserSearchToken(acknowledgerEmail);
+      const dueInDays = csiPolicyDistributionDueInDays();
+
+      await csiPolicyManagementPage.openPolicyTemplateLibrary();
+      await csiPolicyManagementPage.cloneFirstPolicyTemplate();
+      await csiPolicyManagementPage.appendUniqueSuffixToPolicyTitle(unique);
+
+      await csiPolicyManagementPage.fillPolicyReferenceNumber(unique);
+      await csiPolicyManagementPage.selectOwnerSuperAdmin();
+      const downloadPath = await csiPolicyManagementPage.downloadTemplateTo(os.tmpdir());
+
+      const editedPath = csiPolicyManagementPage.buildEditedDocxPath(downloadPath, unique);
+      await prependLineToDocx({ sourcePath: downloadPath, destPath: editedPath, line: unique });
+
+      await csiPolicyManagementPage.uploadEditedDocx(editedPath);
+      await csiPolicyManagementPage.expectDocxUploaded();
+      await csiPolicyManagementPage.goToNextWizardStep();
+
+      await csiPolicyManagementPage.waitForAcknowledgementSection();
+      await csiPolicyManagementPage.selectAcknowledgementTypeCompulsory();
+      await csiPolicyManagementPage.checkDistributePolicyNowRadio();
+      await csiPolicyManagementPage.fillAcknowledgementDurationAndDue(dueInDays);
+      await csiPolicyManagementPage.selectReviewNotRequiredNo();
+      await csiPolicyManagementPage.fillReviewDueInDays(dueInDays);
+      await csiPolicyManagementPage.searchIndividualsAndSelectAcknowledgerUser(
+        acknowledgerEmail,
+        acknowledgerSearchToken,
+      );
+      await csiPolicyManagementPage.publishPolicyFromWizard();
+      await csiPolicyManagementPage.expectPolicyPublished();
+
+      await csiPolicyManagementPage.gotoMyPolicies();
+      await csiPolicyManagementPage.openToBeAcknowledgedTab();
+      await csiPolicyManagementPage.waitForAcknowledgementPolicyCardsAfterTab();
+      await csiPolicyManagementPage.searchMyPoliciesByPolicySuffix(unique);
+      await csiPolicyManagementPage.clickViewOnFirstMyPoliciesAcknowledgementCard();
+      await csiPolicyManagementPage.completePolicyAcknowledgementExpectSuccess();
+    });
+  });
+
+  /**
+   * PM-024: same published-policy major-update wizard as PM-026 through `Policy Updated` (no review / approve / version-2).
+   * Needs `Update Version 1` on Published Policies (see {@link CsiPolicyManagementPage.clickFirstPublishedRowUpdateVersionOne}).
+   */
+  test.describe('PM-024 submit major policy update', () => {
+    test('PM-024', async ({ csiPolicyManagementPage }) => {
+      const newSuffix = csiPolicyUniqueSuffix();
+
+      await csiPolicyManagementPage.gotoAvotechViewPolicies();
+      await csiPolicyManagementPage.openPublishedPoliciesTab();
+      await csiPolicyManagementPage.waitPublishedPoliciesGridSettled();
+      await csiPolicyManagementPage.sortViewPoliciesByVersionColumn();
+      await csiPolicyManagementPage.clickFirstPublishedRowUpdateVersionOne();
+
+      await csiPolicyManagementPage.clickPolicyTitleBreadcrumbLink();
+      const previousFull = (await csiPolicyManagementPage.policyTitleInput.inputValue()).trim();
+      const newFullTitle = replacePolicyTitleLastToken(previousFull, newSuffix);
+      await csiPolicyManagementPage.policyTitleInput.fill(newFullTitle);
+      await csiPolicyManagementPage.clickPolicyTitleBreadcrumbLink();
+      await csiPolicyManagementPage.clickPolicyUpdateWizardNextFirst();
+      await csiPolicyManagementPage.clickPolicyUpdateWizardNextExact();
+
+      await csiPolicyManagementPage.clickSubmitForReReview();
+      await csiPolicyManagementPage.ensureMajorUpdateRadioChecked();
+      await csiPolicyManagementPage.clickSubmitAfterReReviewMajorUpdate();
+      await csiPolicyManagementPage.expectPolicyUpdatedToast();
+    });
+  });
+
+  /**
+   * PM-026: published policy version-1 update → re-review → approve/publish → version 2.
+   * Needs a tenant row with `Update Version 1` on Published Policies (see `clickFirstPublishedRowUpdateVersionOne`).
+   */
+  test.describe('PM-026 policy update approval from Published Policies', () => {
+    test('PM-026', async ({ csiPolicyManagementPage }) => {
+      const newSuffix = csiPolicyUniqueSuffix();
+
+      await csiPolicyManagementPage.gotoAvotechViewPolicies();
+      await csiPolicyManagementPage.openPublishedPoliciesTab();
+      await csiPolicyManagementPage.waitPublishedPoliciesGridSettled();
+      await csiPolicyManagementPage.sortViewPoliciesByVersionColumn();
+      await csiPolicyManagementPage.clickFirstPublishedRowUpdateVersionOne();
+
+      await csiPolicyManagementPage.clickPolicyTitleBreadcrumbLink();
+      const previousFull = (await csiPolicyManagementPage.policyTitleInput.inputValue()).trim();
+      const newFullTitle = replacePolicyTitleLastToken(previousFull, newSuffix);
+      await csiPolicyManagementPage.policyTitleInput.fill(newFullTitle);
+      await csiPolicyManagementPage.clickPolicyTitleBreadcrumbLink();
+      await csiPolicyManagementPage.clickPolicyUpdateWizardNextFirst();
+      await csiPolicyManagementPage.clickPolicyUpdateWizardNextExact();
+
+      await csiPolicyManagementPage.clickSubmitForReReview();
+      await csiPolicyManagementPage.ensureMajorUpdateRadioChecked();
+      await csiPolicyManagementPage.clickSubmitAfterReReviewMajorUpdate();
+      await csiPolicyManagementPage.expectPolicyUpdatedToast();
+
+      await csiPolicyManagementPage.searchViewPoliciesGrid(newFullTitle);
+      await csiPolicyManagementPage.expectPolicyTitleVisibleInPublishedGrid(newFullTitle);
+      await csiPolicyManagementPage.openReviewLinkForRowWithPolicyTitle(newFullTitle);
+
+      await csiPolicyManagementPage.approvePublishThenSecondPublishExpectApprovalSent();
+
+      await csiPolicyManagementPage.searchViewPoliciesGrid(newFullTitle);
+      await csiPolicyManagementPage.expectPolicyTitleVisibleInPublishedGrid(newFullTitle);
+      await csiPolicyManagementPage.sortViewPoliciesByVersionColumn();
+      await csiPolicyManagementPage.expectPublishedRowVersionColumnIs(newFullTitle, '2');
     });
   });
 });

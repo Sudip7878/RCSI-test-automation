@@ -1,5 +1,7 @@
 /// <reference lib="dom" />
 import { expect, type Locator } from '@playwright/test';
+import * as path from 'path';
+import { CSI_BASE_URL } from '../../config/csi';
 import {
   csiItAssetCurrency,
   csiItAssetManufacturer,
@@ -32,6 +34,10 @@ export class CsiItAssetManagementPage extends BasePage {
   private readonly warrantyDateWrapper = this.page.locator(
     'div.input-with-icon-input[id*="_17-b10-b2-Input"], [id*="_17-b10-b2-InputWithIconWrapper"]',
   );
+  /** IA-011: Purchase Date uses `#Input_purchaseDate` inside flatpickr (see IA-011.txt). */
+  private readonly purchaseOrderDateWrapper = this.page
+    .locator('div.input-with-icon-input')
+    .filter({ has: this.page.locator('#Input_purchaseDate') });
 
   async openClientMachineList() {
     await this.waitForElement(this.itAssetManagementNav);
@@ -285,5 +291,223 @@ export class CsiItAssetManagementPage extends BasePage {
     await clickAcquisitionSort();
     await this.scrollToRevealAssetNameCell(scrollRoot, cell);
     await expect(cell).toBeVisible({ timeout: 30_000 });
+  }
+
+  /** IA-003: Client Machine bulk path (`categoryId=1` / `subCategoryId=1` desktop). */
+  async gotoItAssetManagementClientMachineBulkUrl() {
+    await this.page.goto(`${CSI_BASE_URL}/ITAssetManagement?categoryId=1&subCategoryId=1`);
+    await this.page.waitForLoadState('domcontentloaded');
+    await expect(this.page.getByRole('button', { name: 'Bulk Upload Asset' })).toBeVisible({ timeout: 60_000 });
+  }
+
+  async startBulkUploadAsset() {
+    await this.page.getByText('Desktop Computers').click();
+    await this.page.waitForTimeout(3000);
+    await this.page.getByRole('button', { name: 'Bulk Upload Asset' }).click();
+    await expect(this.page.getByRole('button', { name: 'Download Template' })).toBeVisible({ timeout: 60_000 });
+  }
+
+  /** Persists download under `targetDir` with a safe filename; returns absolute path. */
+  async downloadBulkAssetTemplateTo(targetDir: string): Promise<string> {
+    const downloadPromise = this.page.waitForEvent('download', { timeout: 120_000 });
+    await this.page.getByRole('button', { name: 'Download Template' }).click();
+    const download = await downloadPromise;
+    const rawName = download.suggestedFilename() || 'bulk-template.xlsx';
+    const safeBase = path.basename(rawName.replace(/[/\\]/g, '_'));
+    const downloadPath = path.join(targetDir, safeBase);
+    await download.saveAs(downloadPath);
+    return downloadPath;
+  }
+
+  async uploadBulkCompletedTemplate(absolutePath: string) {
+    await this.page.getByText('Upload completed template').click();
+    const fileInput = this.page.locator('input[type="file"]').first();
+    await expect(fileInput).toBeAttached({ timeout: 15_000 });
+    await fileInput.setInputFiles(absolutePath);
+  }
+
+  async expectBulkTemplateUploadedToast() {
+    await expect(this.page.getByText('File uploaded successfully!')).toBeVisible({ timeout: 120_000 });
+  }
+
+  async clickBulkUploadContinueWhenEnabled() {
+    const cont = this.page.getByRole('button', { name: 'Continue' });
+    await expect(cont).toBeEnabled({ timeout: 120_000 });
+    await cont.click();
+  }
+
+  private bulkAssetButtonByName(assetDisplayName: string): Locator {
+    return this.page
+      .locator('div.field-warning.field-button, div.field-selected.field-button')
+      .filter({ has: this.page.getByText(assetDisplayName, { exact: true }) })
+      .first();
+  }
+
+  async clickBulkAssetRowByName(assetDisplayName: string) {
+    const btn = this.bulkAssetButtonByName(assetDisplayName);
+    await expect(btn).toBeVisible({ timeout: 60_000 });
+    await btn.click();
+  }
+
+  async expectBulkAssetRowStatus(assetDisplayName: string, status: 'Missing Fields' | 'OK') {
+    const btn = this.bulkAssetButtonByName(assetDisplayName);
+    await expect(btn.getByText(status, { exact: true })).toBeVisible({ timeout: 90_000 });
+  }
+
+  async clickFirstMissingFieldsTag() {
+    const mf = this.page.getByText('Missing Fields', { exact: true }).first();
+    await expect(mf).toBeVisible({ timeout: 30_000 });
+    await mf.click();
+  }
+
+  async fillBulkAssetPurchaseCostAndSave(purchaseCost: string) {
+    const cost = this.page.getByPlaceholder('Purchase Cost');
+    await expect(cost).toBeVisible({ timeout: 60_000 });
+    await cost.click();
+    await cost.fill(purchaseCost);
+    const saveLink = this.page.getByRole('link', { name: /Save/i }).first();
+    await expect(saveLink).toBeVisible({ timeout: 15_000 });
+    await saveLink.click();
+  }
+
+  async importBulkAssetsAndExpectClientMachineListUrl() {
+    const importBtn = this.page.getByRole('button', { name: 'Import Assets' });
+    await expect(importBtn).toBeVisible({ timeout: 120_000 });
+    await importBtn.click();
+    await this.page.waitForURL(
+      (url) => {
+        try {
+          const u = new URL(url);
+          if (!u.pathname.includes('ITAssetManagement')) {
+            return false;
+          }
+          return u.searchParams.get('categoryId') === '1' && u.searchParams.get('subCategoryId') === '1';
+        } catch {
+          return false;
+        }
+      },
+      { timeout: 120_000 },
+    );
+  }
+
+  /** IA-011: `/ITAssetPurchaseEdit` — wait until purpose field is ready. */
+  async gotoItAssetPurchaseEditUrl() {
+    await this.page.goto(`${CSI_BASE_URL}/ITAssetPurchaseEdit`);
+    await this.page.waitForLoadState('domcontentloaded');
+    await expect(this.page.locator('#Input_purpose')).toBeVisible({ timeout: 60_000 });
+  }
+
+  async fillItAssetPurchasePurpose(purpose: string) {
+    const input = this.page.locator('#Input_purpose');
+    await input.click();
+    await input.fill(purpose);
+  }
+
+  async pickItAssetPurchaseOrderDateToday() {
+    await this.setFlatpickrDateDirectOnWrapper(this.purchaseOrderDateWrapper, new Date());
+  }
+
+  /** IA-011: Supplier Name — wait, open VirtualSelect (arrow is `::after`; use `.vscomp-toggle-button`), then option. */
+  async selectItAssetPurchaseSupplierByName(supplierName: string) {
+    const vendorRoot = this.page.locator('[id*="VendorDropdown"]').first();
+    await expect(vendorRoot).toBeVisible({ timeout: 30_000 });
+    await this.page.waitForTimeout(3000);
+    const toggle = vendorRoot.locator('.vscomp-toggle-button').first();
+    await expect(toggle).toBeVisible({ timeout: 15_000 });
+    await toggle.click();
+    const option = this.page.getByRole('option', { name: supplierName }).first();
+    await expect(option).toBeVisible({ timeout: 30_000 });
+    await option.click();
+  }
+
+  async selectPurchaseWizardQuotationTab() {
+    await this.page.getByText('Quotation', { exact: true }).click();
+  }
+
+  async selectPurchaseWizardDeliveryNotesTab() {
+    await this.page.getByText('Delivery Notes', { exact: true }).click();
+  }
+
+  async selectPurchaseWizardPurchaseInvoicesTab() {
+    await this.page.getByText('Purchase Invoices', { exact: true }).click();
+  }
+
+  /** Uploads one PDF for the active tab; asserts grid shows filename, then selects that cell (IA-011). */
+  async uploadPurchaseWizardDocument(absolutePath: string, expectedFileNameInGrid: string) {
+    await this.page.getByText('Upload your file', { exact: true }).first().click();
+    const fileInput = this.page.locator('input[type="file"]').first();
+    await expect(fileInput).toBeAttached({ timeout: 15_000 });
+    await fileInput.setInputFiles(absolutePath);
+    const cell = this.page.getByRole('gridcell', { name: expectedFileNameInGrid });
+    await expect(cell).toBeVisible({ timeout: 120_000 });
+    await cell.click();
+  }
+
+  async clickPurchaseWizardNext() {
+    const next = this.page.getByRole('button', { name: 'Next' });
+    await expect(next).toBeVisible({ timeout: 60_000 });
+    await expect(next).toBeEnabled({ timeout: 120_000 });
+    await next.click();
+  }
+
+  async clickPurchaseWizardSearchAsset() {
+    const btn = this.page.getByRole('button', { name: 'Search Asset' });
+    await expect(btn).toBeVisible({ timeout: 120_000 });
+    await btn.click();
+  }
+
+  /** First three data rows — Wijmo row selector: `input` is not tab-focusable; click the wrapping `wj-cell` (see `wj-column-selector`). */
+  async selectFirstThreePurchaseWizardAssetRows() {
+    await this.page.waitForTimeout(3000);
+    await expect(this.page.locator('[wj-part="cells"]').first()).toBeVisible({ timeout: 60_000 });
+    const rows = this.page.locator('[wj-part="cells"] div.wj-row');
+    const rowCount = await rows.count();
+    let selected = 0;
+    for (let i = 0; i < rowCount && selected < 3; i += 1) {
+      const row = rows.nth(i);
+      if ((await row.locator('[role="gridcell"]').count()) === 0) {
+        continue;
+      }
+      if ((await row.locator('[role="columnheader"]').count()) > 0) {
+        continue;
+      }
+      const checkboxCells = row.locator('div.wj-cell:has(input[type="checkbox"])');
+      const n = await checkboxCells.count();
+      if (n > 0) {
+        const cell = checkboxCells.first();
+        await cell.scrollIntoViewIfNeeded();
+        await cell.click();
+      } else {
+        await row.locator('[role="gridcell"]').first().scrollIntoViewIfNeeded();
+        await row.locator('[role="gridcell"]').first().click();
+      }
+      selected += 1;
+    }
+    if (selected !== 3) {
+      throw new Error(`IA-011: expected 3 asset rows with checkboxes; only ${selected} matched.`);
+    }
+  }
+
+  async clickPurchaseWizardCreate() {
+    const create = this.page.getByRole('button', { name: 'Create' });
+    await expect(create).toBeVisible({ timeout: 120_000 });
+    await expect(create).toBeEnabled({ timeout: 120_000 });
+    await create.click();
+  }
+
+  /** IA-011: after Create, list route is `/ITAssetPurchase` (not `Edit`); remark visible. */
+  async expectItAssetPurchaseListWithRemark(remark: string) {
+    await this.page.waitForURL(
+      (url) => {
+        try {
+          const p = new URL(url).pathname.replace(/\/$/, '');
+          return p.includes('ITAssetPurchase') && !p.includes('ITAssetPurchaseEdit');
+        } catch {
+          return false;
+        }
+      },
+      { timeout: 120_000 },
+    );
+    await expect(this.page.getByText(remark, { exact: true })).toBeVisible({ timeout: 60_000 });
   }
 }
