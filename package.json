@@ -9,7 +9,8 @@
     "test:ui": "playwright test --ui",
     "test:browserstack": "dotenv -- browserstack-node-sdk playwright test",
     "typecheck": "tsc --noEmit",
-    "generate:itam-pdf-fixtures": "node scripts/generate-itam-pdf-fixtures.cjs"
+    "generate:itam-pdf-fixtures": "node scripts/generate-itam-pdf-fixtures.cjs",
+    "generate:incident-report-comment-pdf": "node architecture/script/generate-incident-report-comment-document-pdf.cjs"
   },
   "repository": {
     "type": "git",
