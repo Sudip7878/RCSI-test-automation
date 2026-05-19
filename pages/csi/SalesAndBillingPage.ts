@@ -4,35 +4,13 @@ import { expect, type Locator } from '@playwright/test';
 import { CSI_BASE_URL, CSI_INVOICE_LIST_PATH } from '../../config/csi';
 import { BasePage } from '../BasePage';
 
-/** OutSystems `#bNN-Input_*` ids for Add Sales Partner → email template step (fragile if module is republished). */
-const SALES_PARTNER_EMAIL_TEMPLATE_ROW_IDS = [
-  'b38',
-  'b39',
-  'b40',
-  'b41',
-  'b42',
-  'b44',
-  'b45',
-  'b47',
-  'b49',
-  'b50',
-  'b51',
-  'b52',
-  'b53',
-  'b55',
-  'b56',
-  'b58',
-] as const;
-
 export class CsiSalesAndBillingPage extends BasePage {
   readonly salesOrderLink = this.page.getByRole('link', { name: 'Sales Order' });
   readonly addSalesOrderButton = this.page.getByRole('button', { name: 'Add Sales Order' });
-  readonly salesAndBillingNav = this.page.locator('#b3-Sales_Billing2').getByText('Sales & Billing');
+  readonly salesAndBillingNav = this.page.getByText('Sales & Billing', { exact: true });
   readonly packageManagementLink = this.page.getByRole('link', { name: 'Package Management' });
   readonly addPackageButton = this.page.getByRole('button', { name: 'Add Package' });
   readonly downloadInvoiceButton = this.page.getByRole('button', { name: 'Download' });
-  /** SB-062: on invoice detail, preview block below Download. */
-  readonly invoiceTemplateDetails = this.page.locator('[data-block="Invoice.InvoiceTemplateDetails"]');
 
   readonly packageNameInput = this.page.getByRole('textbox', { name: 'Package Name*' });
   readonly packageDescriptionInput = this.page.getByRole('textbox', { name: /description/i });
@@ -40,13 +18,10 @@ export class CsiSalesAndBillingPage extends BasePage {
   readonly salesPartnerDropdown = this.page.getByText('Select Sales Partner');
   readonly avotechSalesPartnerOption = this.page.getByRole('option', { name: 'Avotech' });
 
-  readonly moduleTableRows = this.page.locator('table[role="grid"] tbody tr.table-row');
   readonly submitButton = this.page.getByRole('button', { name: 'Submit' });
   readonly continueToReviewButton = this.page.getByRole('button', { name: 'Continue to Review' });
-  /** Present when the Add Sales Order form has finished loading. */
   readonly addSalesOrderFormReady = this.page.getByText('Select Client', { exact: true });
 
-  /** No-op if `page` is already closed (avoids throwing after timeouts). */
   private async safeSleep(ms: number) {
     if (this.page.isClosed()) {
       return;
@@ -71,6 +46,87 @@ export class CsiSalesAndBillingPage extends BasePage {
   readonly salesPartnerSubdomainExampleInput = this.page.getByRole('textbox', { name: 'ex: google.com' });
   readonly nextButton = this.page.getByRole('button', { name: 'Next' });
 
+  private salesOrderFieldTrigger(triggerText: string): Locator {
+    return this.page.getByText(triggerText, { exact: true });
+  }
+
+  private async clickFirstVisibleListboxOption() {
+    const clicked = await this.page.getByRole('option').evaluateAll((options) => {
+      for (const node of options) {
+        const el = node as HTMLElement;
+        const style = window.getComputedStyle(el);
+        if (style.display === 'none' || style.visibility === 'hidden') {
+          continue;
+        }
+        const rect = el.getBoundingClientRect();
+        if (rect.width === 0 && rect.height === 0) {
+          continue;
+        }
+        el.click();
+        return true;
+      }
+      return false;
+    });
+    expect(clicked).toBe(true);
+  }
+
+  private async clickLastVisibleListboxOption() {
+    const expanded = this.page.getByRole('combobox', { expanded: true });
+    await expect(expanded).toBeVisible({ timeout: 12_000 });
+
+    const clicked = await expanded.evaluate((combo) => {
+      const panelId = combo.getAttribute('aria-controls');
+      const panel = panelId ? document.getElementById(panelId) : null;
+
+      const scrollOptions = (root: ParentNode) => {
+        const scrollArea = root.querySelector('.vscomp-options') as HTMLElement | null;
+        if (scrollArea) {
+          scrollArea.scrollTop = scrollArea.scrollHeight;
+        }
+        const options = Array.from(root.querySelectorAll('[role="option"]')) as HTMLElement[];
+        if (options.length === 0) {
+          return false;
+        }
+
+        let best: HTMLElement | null = null;
+        let bestIdx = -1;
+        for (const opt of options) {
+          const raw = opt.getAttribute('data-index');
+          const v = raw !== null ? Number.parseInt(raw, 10) : Number.NaN;
+          if (!Number.isNaN(v) && v >= bestIdx) {
+            bestIdx = v;
+            best = opt;
+          }
+        }
+        if (best) {
+          best.click();
+          return true;
+        }
+
+        for (let i = options.length - 1; i >= 0; i -= 1) {
+          const el = options[i];
+          const style = window.getComputedStyle(el);
+          if (style.display === 'none' || style.visibility === 'hidden') {
+            continue;
+          }
+          const rect = el.getBoundingClientRect();
+          if (rect.width === 0 && rect.height === 0) {
+            continue;
+          }
+          el.click();
+          return true;
+        }
+        return false;
+      };
+
+      if (panel && scrollOptions(panel)) {
+        return true;
+      }
+      return scrollOptions(document.body);
+    });
+    expect(clicked).toBe(true);
+  }
+
   async openSalesAndBilling() {
     await this.waitForElement(this.salesAndBillingNav);
     await expect(this.salesAndBillingNav).toBeVisible();
@@ -79,14 +135,10 @@ export class CsiSalesAndBillingPage extends BasePage {
 
   async openPackageManagement() {
     await this.waitForElement(this.packageManagementLink);
-    // Hub link sometimes needs another click before PackageList renders.
     await expect(this.packageManagementLink).toBeVisible();
-    // First click sometimes does not leave the hub; retry until Package Management UI is up.
     for (let attempt = 0; attempt < 3; attempt += 1) {
       await this.packageManagementLink.click({ force: true });
-      const loaded = await this.addPackageButton
-        .isVisible({ timeout: 5_000 })
-        .catch(() => false);
+      const loaded = await this.addPackageButton.isVisible({ timeout: 5_000 }).catch(() => false);
       if (loaded) {
         return;
       }
@@ -110,12 +162,10 @@ export class CsiSalesAndBillingPage extends BasePage {
     await this.waitForElement(this.addSalesOrderButton);
     await this.addSalesOrderButton.click();
     await this.page.waitForLoadState('domcontentloaded');
-    // OutSystems / VirtualSelect mount before opening dropdowns
     await this.safeSleep(2_000);
     await this.waitForElement(this.addSalesOrderFormReady, 30_000);
   }
 
-   /** Buffer between dependent Sales Order dropdown selections (default 5s). */
   async waitForSalesOrderDropdownToSettle(ms = 5000) {
     await this.safeSleep(ms);
   }
@@ -135,118 +185,16 @@ export class CsiSalesAndBillingPage extends BasePage {
     await this.avotechSalesPartnerOption.click();
   }
 
-  /** First visible `[role=option]`; VirtualSelect may leave non-visible rows attached in the DOM. */
   private async clickFirstDropdownOption() {
-    const roleOptions = this.page.getByRole('option');
-    await expect(roleOptions.first()).toBeAttached({ timeout: 12_000 });
-
-    const count = await roleOptions.count();
-    for (let i = 0; i < count; i += 1) {
-      const opt = roleOptions.nth(i);
-      if (await opt.isVisible().catch(() => false)) {
-        await opt.click();
-        return;
-      }
-    }
-
-    const vsRenderedRow = this.page.locator('[role="option"][data-visible-index="0"]');
-    if ((await vsRenderedRow.count()) > 0) {
-      await vsRenderedRow.first().click({ force: true });
-      return;
-    }
-
-    const first = roleOptions.first();
-    await first.scrollIntoViewIfNeeded().catch(() => {});
-    await first.click({ force: true });
+    await this.clickFirstVisibleListboxOption();
   }
 
-  /**
-   * Last option in an open VirtualSelect list (`aria-controls` panel, options often have `data-index`).
-   * Scrolls the options panel to the end, then prefers the highest `data-index`.
-   */
   private async clickLastDropdownOption() {
-    const expandedCombo = this.page.locator('[role="combobox"][aria-expanded="true"]').first();
-    await expect(expandedCombo).toBeVisible({ timeout: 12_000 });
-
-    const controlsId = await expandedCombo.getAttribute('aria-controls');
-    if (controlsId?.length) {
-      const dropbox = this.page.locator(`[id=${JSON.stringify(controlsId)}]`);
-      await expect(dropbox).toBeAttached({ timeout: 8_000 });
-
-      const scrollArea = dropbox.locator('.vscomp-options').first();
-      if ((await scrollArea.count()) > 0) {
-        for (let pass = 0; pass < 6; pass += 1) {
-          await scrollArea
-            .evaluate((el) => {
-              const node = el as { scrollTop: number; scrollHeight: number };
-              node.scrollTop = node.scrollHeight;
-            })
-            .catch(() => {});
-          await this.safeSleep(120);
-        }
-      }
-
-      const optionsInDropbox = dropbox.locator('[role="option"]');
-      await expect(optionsInDropbox.first()).toBeAttached({ timeout: 8_000 });
-      const n = await optionsInDropbox.count();
-      expect(n).toBeGreaterThan(0);
-
-      let bestIdx = -1;
-      let bestLoc: Locator | null = null;
-      for (let i = 0; i < n; i += 1) {
-        const opt = optionsInDropbox.nth(i);
-        const raw = await opt.getAttribute('data-index');
-        const v = raw !== null ? Number.parseInt(raw, 10) : Number.NaN;
-        if (!Number.isNaN(v) && v >= bestIdx) {
-          bestIdx = v;
-          bestLoc = opt;
-        }
-      }
-      if (bestLoc && bestIdx >= 0) {
-        await bestLoc.scrollIntoViewIfNeeded().catch(() => {});
-        await bestLoc.click({ force: true });
-        return;
-      }
-
-      for (let i = n - 1; i >= 0; i -= 1) {
-        const opt = optionsInDropbox.nth(i);
-        if (await opt.isVisible().catch(() => false)) {
-          await opt.click();
-          return;
-        }
-      }
-
-      const lastInBox = optionsInDropbox.nth(n - 1);
-      await lastInBox.scrollIntoViewIfNeeded().catch(() => {});
-      await lastInBox.click({ force: true });
-      return;
-    }
-
-    const roleOptions = this.page.getByRole('option');
-    await expect(roleOptions.first()).toBeAttached({ timeout: 8_000 });
-    const count = await roleOptions.count();
-    expect(count).toBeGreaterThan(0);
-
-    for (let i = count - 1; i >= 0; i -= 1) {
-      const opt = roleOptions.nth(i);
-      if (await opt.isVisible().catch(() => false)) {
-        await opt.click();
-        return;
-      }
-    }
-
-    const last = roleOptions.nth(count - 1);
-    await last.scrollIntoViewIfNeeded().catch(() => {});
-    await last.click({ force: true });
+    await this.clickLastVisibleListboxOption();
   }
 
-  /**
-   * Opens a dropdown by its trigger label and selects the first option.
-   * @param maxAttempts When greater than 1, retries clicking the trigger if the first option does not
-   *   become visible in time (e.g. sales order form). Use `4` for one try plus three retries.
-   */
   async selectFirstOptionByTriggerText(triggerText: string, maxAttempts = 1) {
-    const trigger = this.page.getByText(triggerText, { exact: true });
+    const trigger = this.salesOrderFieldTrigger(triggerText);
     await this.waitForElement(trigger);
 
     let lastError: unknown;
@@ -268,12 +216,8 @@ export class CsiSalesAndBillingPage extends BasePage {
     }
   }
 
-  /**
-   * Opens a dropdown by its trigger label and selects the last option in the list.
-   * @param maxAttempts Same retry semantics as {@link selectFirstOptionByTriggerText}.
-   */
   async selectLastOptionByTriggerText(triggerText: string, maxAttempts = 1) {
-    const trigger = this.page.getByText(triggerText, { exact: true });
+    const trigger = this.salesOrderFieldTrigger(triggerText);
     await this.waitForElement(trigger);
 
     let lastError: unknown;
@@ -295,55 +239,31 @@ export class CsiSalesAndBillingPage extends BasePage {
     }
   }
 
-  /** Billing partner search combobox lives under `#BillingPartner`. */
   async selectFirstBillingPartnerOption(maxAttempts = 1) {
-    const billingPartnerCombobox = this.page.locator('#BillingPartner [role="combobox"]').first();
-    await this.waitForElement(billingPartnerCombobox);
-
-    let lastError: unknown;
-
-    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-      await billingPartnerCombobox.click();
-
-      try {
-        await this.clickFirstDropdownOption();
-        return;
-      } catch (error) {
-        lastError = error;
-        if (attempt === maxAttempts - 1) {
-          throw lastError;
-        }
-        await this.page.keyboard.press('Escape').catch(() => {});
-        await this.safeSleep(500);
-      }
-    }
+    await this.selectFirstOptionByTriggerText('Select Billing Partner', maxAttempts);
   }
 
   async selectAllModulesAndSetUnitPrice(unitPrice: number) {
-    const rowCount = await this.moduleTableRows.count();
-    expect(rowCount).toBeGreaterThan(0);
-    for (let i = 0; i < rowCount; i += 1) {
-      const row = this.moduleTableRows.nth(i);
-      const checkbox = row.locator('input[type="checkbox"]');
-      const unitPriceInput = row.getByRole('spinbutton');
+    const moduleGrid = this.page.getByRole('grid');
+    const checkboxes = await moduleGrid.getByRole('checkbox').all();
+    expect(checkboxes.length).toBeGreaterThan(0);
 
-      await this.waitForElement(checkbox);
+    for (const checkbox of checkboxes) {
       await checkbox.check();
+    }
 
+    const unitPriceInputs = await moduleGrid.getByPlaceholder('Enter Unit Price').all();
+    expect(unitPriceInputs.length).toBeGreaterThan(0);
+
+    for (const unitPriceInput of unitPriceInputs) {
       await expect(unitPriceInput).toBeEnabled();
       await unitPriceInput.fill(String(unitPrice));
     }
   }
 
   private async clickTodayInOpenDatepicker() {
-    const calendar = this.page.locator('.flatpickr-calendar.open[role="dialog"]');
+    const calendar = this.page.getByRole('dialog');
     await this.waitForElement(calendar);
-
-    const todayCell = calendar.locator('.flatpickr-day.today[role="button"]').first();
-    if (await todayCell.isVisible().catch(() => false)) {
-      await todayCell.click();
-      return;
-    }
 
     const today = new Date();
     const fullDateLabel = today.toLocaleDateString('en-US', {
@@ -351,17 +271,26 @@ export class CsiSalesAndBillingPage extends BasePage {
       day: 'numeric',
       year: 'numeric',
     });
-    const labelCell = calendar.locator(`.flatpickr-day[role="button"][aria-label="${fullDateLabel}"]`);
-    await this.waitForElement(labelCell.first());
-    await labelCell.first().click();
+
+    const todayButton = calendar.getByRole('button', { name: fullDateLabel });
+    if (await todayButton.isVisible().catch(() => false)) {
+      await todayButton.click();
+      return;
+    }
+
+    const todayShort = today.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+    const shortButton = calendar.getByRole('button', { name: todayShort });
+    await this.waitForElement(shortButton);
+    await shortButton.click();
   }
 
   async pickTodaySalesStartDate(maxAttempts = 1) {
-    const dateCombobox = this.page
-      .locator('div')
-      .filter({ has: this.page.getByText('Effective Start Date', { exact: true }) })
-      .getByRole('combobox', { name: 'Select a date' })
-      .first();
+    await this.safeSleep(3000);
+    const dateCombobox = this.page.getByRole('combobox', { name: 'Select a date' });
     await this.waitForElement(dateCombobox);
 
     let lastError: unknown;
@@ -383,7 +312,7 @@ export class CsiSalesAndBillingPage extends BasePage {
   }
 
   async fillSalesOrderDuration(duration: number) {
-    const durationInput = this.page.locator('#Input_DurationName');
+    const durationInput = this.page.getByLabel('Duration');
     await this.waitForElement(durationInput);
     await durationInput.fill(String(duration));
   }
@@ -393,17 +322,18 @@ export class CsiSalesAndBillingPage extends BasePage {
   }
 
   async selectAllSalesOrderModulesAndSetUnits(unitCount: number) {
-    const rowCount = await this.moduleTableRows.count();
-    expect(rowCount).toBeGreaterThan(0);
+    const moduleGrid = this.page.getByRole('grid');
+    const checkboxes = await moduleGrid.getByRole('checkbox').all();
+    expect(checkboxes.length).toBeGreaterThan(0);
 
-    for (let i = 0; i < rowCount; i += 1) {
-      const row = this.moduleTableRows.nth(i);
-      const checkbox = row.locator('input[type="checkbox"]');
-      const unitsInput = row.getByPlaceholder('Enter Number of Units');
-
-      await this.waitForElement(checkbox);
+    for (const checkbox of checkboxes) {
       await checkbox.check();
+    }
 
+    const unitsInputs = await moduleGrid.getByPlaceholder('Enter Number of Units').all();
+    expect(unitsInputs.length).toBeGreaterThan(0);
+
+    for (const unitsInput of unitsInputs) {
       await expect(unitsInput).toBeEnabled();
       await unitsInput.fill(String(unitCount));
     }
@@ -426,11 +356,7 @@ export class CsiSalesAndBillingPage extends BasePage {
   }
 
   async expectSalesOrderCreated() {
-    const successMessage = this.page
-      .locator('div')
-      .filter({ hasText: 'You have successfully added' })
-      .first();
-    await this.waitForElement(successMessage, 60_000);
+    await expect(this.page.getByText(/You have successfully added/i)).toBeVisible({ timeout: 60_000 });
     await this.page.waitForURL(/\/SalesOrderList/, { timeout: 60000 });
   }
 
@@ -487,21 +413,18 @@ export class CsiSalesAndBillingPage extends BasePage {
   }
 
   async fillSalesPartnerEmailTemplateStep(uniqueSuffix: string) {
-    const firstCategory = this.page.locator(`#${SALES_PARTNER_EMAIL_TEMPLATE_ROW_IDS[0]}-Input_Category`);
-    await expect(firstCategory).toBeVisible({ timeout: 30_000 });
+    const categoryInputs = await this.page.getByPlaceholder('Category').all();
+    expect(categoryInputs.length).toBeGreaterThan(0);
 
     const categoryValue = `test-category-${uniqueSuffix}`;
     const templateIdValue = `test-temp-id-${uniqueSuffix}`;
 
-    for (const rowId of SALES_PARTNER_EMAIL_TEMPLATE_ROW_IDS) {
-      const categoryInput = this.page.locator(`#${rowId}-Input_Category`);
-      await expect(categoryInput).toBeVisible();
+    for (const categoryInput of categoryInputs) {
       await categoryInput.click();
       await categoryInput.fill(categoryValue);
     }
-    for (const rowId of SALES_PARTNER_EMAIL_TEMPLATE_ROW_IDS) {
-      const templateIdInput = this.page.locator(`#${rowId}-Input_TemplateId`);
-      await expect(templateIdInput).toBeVisible();
+
+    for (const templateIdInput of await this.page.getByPlaceholder('Template Id').all()) {
       await templateIdInput.click();
       await templateIdInput.fill(templateIdValue);
     }
@@ -525,32 +448,57 @@ export class CsiSalesAndBillingPage extends BasePage {
     });
   }
 
-  /** SB-062: first data row in the invoice grid. */
+  private invoiceListGrid() {
+    return this.page.getByRole('grid').filter({
+      has: this.page.getByRole('columnheader', { name: /Invoice No/i }),
+    });
+  }
+
   async openFirstInvoiceViewDetails() {
-    const firstRow = this.page.locator('table[role="grid"] tbody tr.table-row').first();
-    await expect(firstRow).toBeVisible({ timeout: 60_000 });
-    await firstRow.getByRole('link', { name: 'View Details' }).click();
+    await this.safeSleep(3000);
+    await expect(this.page.getByRole('columnheader', { name: /Invoice No/i })).toBeVisible({
+      timeout: 60_000,
+    });
+    const grid = this.invoiceListGrid();
+    let viewDetailsActions = await grid.getByText('View Details', { exact: true }).all();
+    if (viewDetailsActions.length === 0) {
+      viewDetailsActions = await this.page.getByText('View Details', { exact: true }).all();
+    }
+    expect(viewDetailsActions.length).toBeGreaterThan(0);
+    await viewDetailsActions[0].click();
+  }
+
+  private invoicePreviewHeading() {
+    return this.page.getByText('INVOICE', { exact: true });
   }
 
   async expectInvoiceDetailPreviewReady() {
     await expect(this.downloadInvoiceButton).toBeVisible({ timeout: 60_000 });
-    await expect(this.invoiceTemplateDetails).toBeVisible({ timeout: 60_000 });
-    // SB-062: template/async bindings settle before snapshot vs PDF.
+    await expect(this.invoicePreviewHeading()).toBeVisible({ timeout: 60_000 });
     await this.page.waitForTimeout(5_000);
   }
 
   async readInvoiceTemplatePreviewText(): Promise<string> {
-    await expect(this.invoiceTemplateDetails).toBeVisible();
-    return (await this.invoiceTemplateDetails.innerText()).trim();
+    await expect(this.invoicePreviewHeading()).toBeVisible();
+    return this.invoicePreviewHeading().evaluate((heading) => {
+      const root =
+        heading.closest('[data-block="Invoice.InvoiceTemplateDetails"]') ??
+        heading.closest('div') ??
+        heading.parentElement;
+      return (root as HTMLElement | null)?.innerText.trim() ?? (heading as HTMLElement).innerText.trim();
+    });
   }
 
-  /**
-   * SB-062: walks `Invoice.InvoiceTemplateDetails` DOM (labels, total rows, line items, bank lines)
-   * to build key/value pairs for PDF comparison — no invoice-specific strings hardcoded.
-   */
   async readInvoiceTemplateKeyValues(): Promise<Array<{ key: string; value: string }>> {
-    await expect(this.invoiceTemplateDetails).toBeVisible();
-    return this.invoiceTemplateDetails.evaluate((root) => {
+    await expect(this.invoicePreviewHeading()).toBeVisible();
+    return this.invoicePreviewHeading().evaluate((heading) => {
+      const root =
+        (heading.closest('[data-block="Invoice.InvoiceTemplateDetails"]') as HTMLElement | null) ??
+        (heading.parentElement as HTMLElement | null);
+      if (!root) {
+        return [];
+      }
+
       const rows: { key: string; value: string }[] = [];
       const seen = new Set<string>();
       const inner = (el: Element) => (el as HTMLElement).innerText;
@@ -634,13 +582,13 @@ export class CsiSalesAndBillingPage extends BasePage {
         }
       });
 
-      root.querySelectorAll('.margin-bottom-base').forEach((div) => {
-        const sp = div.querySelector(':scope > span[data-expression]');
+      root.querySelectorAll('.margin-bottom-base').forEach((block) => {
+        const sp = block.querySelector(':scope > span[data-expression]');
         if (!sp) {
           return;
         }
         const val = sp.textContent?.trim() ?? '';
-        const full = inner(div).trim();
+        const full = inner(block).trim();
         if (!val || !full.includes(val)) {
           return;
         }
@@ -663,7 +611,6 @@ export class CsiSalesAndBillingPage extends BasePage {
     return readFileSync(path as string);
   }
 
-  /** SB-056: hub modules this role must not see (recorded-steps/Sales&Billing/SB-056.txt). */
   private readonly sb056RestrictedHubLabels = [
     'Policy Management',
     'IT Asset Management',
@@ -673,39 +620,53 @@ export class CsiSalesAndBillingPage extends BasePage {
     'Incident Response',
   ] as const;
 
-  /** OutSystems menu block id uses `AccountManagment` spelling in the DOM. */
-  readonly sb056AccountManagementMenu = this.page.locator('#b3-AccountManagment');
+  /** Hub sidebar group row (`Hub-Module-Menu.txt`), not submenu `a[data-link]`. */
+  private async clickHubMenuLabel(label: string) {
+    const clicked = await this.page.getByText(label, { exact: true }).evaluateAll((nodes) => {
+      for (const node of nodes) {
+        const el = node as HTMLElement;
+        if (el.closest('a')) {
+          continue;
+        }
+        const menuItem = el.closest('.menu-item') as HTMLElement | null;
+        if (menuItem) {
+          menuItem.click();
+          return true;
+        }
+      }
+      return false;
+    });
+    expect(clicked).toBe(true);
+  }
 
   async expectSb056TrainingAndPhishingNavVisible() {
     await expect(this.page.getByText('Training', { exact: true })).toBeVisible({ timeout: 30_000 });
     await expect(this.page.getByText('Phishing', { exact: true })).toBeVisible({ timeout: 30_000 });
   }
 
-  /** Recorded order: Training → Phishing → Account Management (under `#b3-AccountManagment`). */
   async navigateSb056TrainingPhishingThenAccountManagement() {
-    await this.page.getByText('Training', { exact: true }).click();
+    await this.clickHubMenuLabel('Training');
     await this.safeSleep(400);
-    await this.page.getByText('Phishing', { exact: true }).click();
+    await this.clickHubMenuLabel('Phishing');
     await this.safeSleep(400);
-    await this.sb056AccountManagementMenu.getByText('Account Management', { exact: true }).click();
+    await this.clickHubMenuLabel('Account Management');
     await this.page.waitForLoadState('domcontentloaded').catch(() => {});
     await this.safeSleep(800);
   }
 
-  /**
-   * If a label has no nodes, the module is absent. If nodes exist (e.g. SSR), every match must be hidden
-   * so we do not treat off-screen duplicates as a pass when one copy is still visible.
-   */
   async expectSb056RestrictedHubModulesNotVisible() {
     for (const label of this.sb056RestrictedHubLabels) {
-      const loc = this.page.getByText(label, { exact: true });
-      const count = await loc.count();
-      if (count === 0) {
-        continue;
-      }
-      for (let i = 0; i < count; i += 1) {
-        await expect(loc.nth(i)).toBeHidden();
-      }
+      const visibleCount = await this.page.getByText(label, { exact: true }).evaluateAll((nodes) => {
+        return nodes.filter((node) => {
+          const el = node as HTMLElement;
+          const style = window.getComputedStyle(el);
+          if (style.display === 'none' || style.visibility === 'hidden') {
+            return false;
+          }
+          return el.getClientRects().length > 0;
+        }).length;
+      });
+      expect(visibleCount).toBe(0);
     }
   }
 }
