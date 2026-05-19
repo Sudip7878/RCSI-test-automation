@@ -1,4 +1,4 @@
-import { expect } from '@playwright/test';
+import { expect, type Locator } from '@playwright/test';
 import { CSI_BASE_URL, CSI_ORGANIZATION_DETAIL_PATH } from '../../config/csi';
 import { BasePage } from '../BasePage';
 
@@ -18,6 +18,30 @@ export class CsiAccountManagementPage extends BasePage {
   readonly editOrganizationDetailsButton = this.page.getByRole('button', { name: 'Edit Details' });
   readonly changeMfaRuleButton = this.page.getByRole('button', { name: 'Change MFA Rule' });
   readonly saveOrganizationChangesButton = this.page.getByRole('button', { name: 'Save Changes' });
+
+  private roleAssignmentGrid() {
+    return this.page.getByRole('grid').filter({
+      has: this.page.getByRole('columnheader', { name: 'Role name' }),
+    });
+  }
+
+  private userListGrid() {
+    return this.page.getByRole('grid').filter({
+      has: this.page.getByRole('columnheader', { name: 'Email' }),
+    });
+  }
+
+  private userTableRowForEmail(email: string) {
+    return this.userListGrid().getByRole('row').filter({
+      has: this.page.getByRole('gridcell', { name: email }),
+    });
+  }
+
+  private mfaSetupDialog() {
+    return this.page.getByRole('dialog').filter({
+      has: this.page.getByText('Setup Multi Factor Authentication Rule'),
+    });
+  }
 
   async openUserList() {
     await this.page.goto(`${CSI_BASE_URL}/userList`);
@@ -44,24 +68,30 @@ export class CsiAccountManagementPage extends BasePage {
     await this.emailInput.fill(params.emailLocalPart);
   }
 
-  /** Role table: `td[data-header="Assign to Role"]` checkboxes; first two rows only. */
-  async checkFirstTwoRoleAssignments() {
-    const roleGrid = this.page.locator('table[role="grid"]').filter({
-      has: this.page.locator('thead th', { hasText: 'Role name' }),
+  private async checkRoleAssignmentByName(roleGrid: Locator, roleName: string) {
+    const roleCell = roleGrid.getByRole('gridcell', { name: new RegExp(`^${roleName}\\b`) });
+    await expect(roleCell).toBeVisible({ timeout: 30_000 });
+    const checked = await roleCell.evaluate((cell) => {
+      const row = cell.closest('tr');
+      const assignCell = row?.querySelector('td[data-header="Assign to Role"]');
+      const checkbox = assignCell?.querySelector('input[type="checkbox"]') as HTMLInputElement | null;
+      if (!checkbox || checkbox.disabled) {
+        return false;
+      }
+      if (!checkbox.checked) {
+        checkbox.click();
+      }
+      return true;
     });
+    expect(checked).toBe(true);
+  }
+
+  async checkFirstTwoRoleAssignments() {
+    const roleGrid = this.roleAssignmentGrid();
     await expect(roleGrid).toBeVisible({ timeout: 30_000 });
 
-    const rows = roleGrid.locator('tbody tr.table-row');
-    const rowCount = await rows.count();
-    expect(rowCount).toBeGreaterThanOrEqual(2);
-
-    for (let i = 0; i < 2; i += 1) {
-      const checkbox = rows
-        .nth(i)
-        .locator('td[data-header="Assign to Role"] input[type="checkbox"]');
-      await expect(checkbox).toBeVisible();
-      await checkbox.check();
-    }
+    await this.checkRoleAssignmentByName(roleGrid, 'Admin');
+    await this.checkRoleAssignmentByName(roleGrid, 'Manager');
   }
 
   async submitCreateNewUser() {
@@ -79,71 +109,74 @@ export class CsiAccountManagementPage extends BasePage {
     await expect(this.userNameSearchBox).toBeVisible({ timeout: 30_000 });
   }
 
+  /** Clears Status/Role VirtualSelect filters so inactive users are not hidden from the grid. */
+  private async clearUserListFilters() {
+    const filterComboboxes = await this.page.getByRole('combobox', { name: 'Select an option' }).all();
+    for (const combobox of filterComboboxes.slice(0, 2)) {
+      const clearButton = combobox.getByRole('button', { name: 'Clear button' });
+      if (await clearButton.isVisible({ timeout: 2_000 }).catch(() => false)) {
+        await clearButton.click();
+      }
+    }
+  }
+
   /** IR-001: user list search box — full email (not first-name token). */
   async searchUserListByEmail(email: string) {
+    await this.clearUserListFilters();
     await this.userNameSearchBox.click();
     await this.userNameSearchBox.fill(email.trim());
     await this.userSearchButton.click();
+    await expect(this.userSearchButton).toBeEnabled({ timeout: 30_000 });
   }
 
   async expectUserGridShowsEmail(email: string) {
-    await expect(this.page.getByRole('gridcell', { name: email })).toBeVisible({ timeout: 60_000 });
+    const emailCell = this.userListGrid().getByRole('gridcell', { name: email });
+    await expect(emailCell).toBeVisible({ timeout: 60_000 });
   }
 
-  userTableRowForEmail(email: string) {
-    return this.page.locator('tr.table-row').filter({
-      has: this.page.getByRole('gridcell', { name: email }),
-    });
-  }
-
-  /** Actions column ellipsis for the row that matches `email` in the user grid. */
   async openUserRowActionsMenu(email: string) {
     const row = this.userTableRowForEmail(email);
     await expect(row).toBeVisible();
-    await row.locator('i.fa-ellipsis-v').click();
+    const gridcells = await row.getByRole('gridcell').all();
+    expect(gridcells.length).toBeGreaterThan(0);
+    await gridcells[gridcells.length - 1].click();
   }
 
-  /**
-   * AM-050: Actions column uses `i.icon.padding-x-m.fa-ellipsis-v` (see user grid HTML).
-   * Link labels may include leading icon glyphs — match by substring.
-   */
   async setUserInactiveViaUserListActions(email: string) {
+    const row = this.userTableRowForEmail(email);
+    if (await row.getByRole('gridcell', { name: 'Inactive' }).isVisible().catch(() => false)) {
+      return;
+    }
     await this.openUserRowActionsMenu(email);
-    await this.page.getByRole('link', { name: /Set as Inactive/i }).click();
+    const inactiveLink = this.page.getByRole('link', { name: /Set as Inactive/i });
+    await expect(inactiveLink).toBeVisible({ timeout: 15_000 });
+    await inactiveLink.click();
   }
 
   async setUserActiveViaUserListActions(email: string) {
+    const row = this.userTableRowForEmail(email);
+    if (await row.getByRole('gridcell', { name: 'Active' }).isVisible().catch(() => false)) {
+      return;
+    }
     await this.openUserRowActionsMenu(email);
-    await this.page.getByRole('link', { name: /Set as Active/i }).click();
+    const activeLink = this.page.getByRole('link', { name: /Set as Active/i });
+    await expect(activeLink).toBeVisible({ timeout: 15_000 });
+    await activeLink.click();
   }
 
-  /** AM-050: Status is `td[data-header="Status"]`; wait for grid refresh after action. */
   async expectUserListRowStatus(email: string, status: 'Active' | 'Inactive') {
     const row = this.userTableRowForEmail(email);
     await expect(row).toBeVisible();
-    await expect(row.locator('td[data-header="Status"]').getByText(status, { exact: true })).toBeVisible({
-      timeout: 60_000,
-    });
+    await expect(row.getByRole('gridcell', { name: status })).toBeVisible({ timeout: 60_000 });
   }
 
   async openChangeRoleFromActionsMenu() {
     await this.page.getByRole('link', { name: /Change role/i }).click();
   }
 
-  /**
-   * IR-001: in the role grid, ensure the Incident Reporter row’s assignment checkbox is checked
-   * (idempotent if already checked).
-   */
   async ensureIncidentReporterRoleChecked() {
-    const roleRow = this.page.locator('tr.table-row').filter({
-      has: this.page.getByRole('gridcell', { name: 'Incident Reporter' }),
-    });
-    await expect(roleRow).toBeVisible({ timeout: 30_000 });
-    const checkbox = roleRow.locator('input[type="checkbox"]').first();
-    await expect(checkbox).toBeVisible();
-    if (!(await checkbox.isChecked())) {
-      await checkbox.check();
-    }
+    const roleGrid = this.roleAssignmentGrid();
+    await this.checkRoleAssignmentByName(roleGrid, 'Incident Reporter');
   }
 
   async confirmRoleChange() {
@@ -154,7 +187,6 @@ export class CsiAccountManagementPage extends BasePage {
     await expect(this.page.getByText('Record updated.')).toBeVisible({ timeout: 60_000 });
   }
 
-  /** AM-027: open "+ Add New User" then enter "Excel Upload" modal flow. */
   async startAddUsersByExcelUpload() {
     await expect(this.addNewUserButton).toBeVisible({ timeout: 30_000 });
     await this.addNewUserButton.click();
@@ -163,7 +195,6 @@ export class CsiAccountManagementPage extends BasePage {
     await expect(this.downloadTemplateButton).toBeVisible({ timeout: 30_000 });
   }
 
-  /** AM-027: download XLSX template and persist to caller-provided absolute path. */
   async downloadBulkImportTemplateTo(targetPath: string): Promise<string> {
     const downloadPromise = this.page.waitForEvent('download', { timeout: 120_000 });
     await this.downloadTemplateButton.click();
@@ -173,10 +204,10 @@ export class CsiAccountManagementPage extends BasePage {
   }
 
   async uploadCompletedTemplate(absolutePath: string) {
+    const fileChooserPromise = this.page.waitForEvent('filechooser');
     await this.page.getByText('Upload completed template').click();
-    const input = this.page.locator('input[type="file"]').last();
-    await expect(input).toBeAttached({ timeout: 15_000 });
-    await input.setInputFiles(absolutePath);
+    const fileChooser = await fileChooserPromise;
+    await fileChooser.setFiles(absolutePath);
   }
 
   async continueAfterTemplateUpload() {
@@ -185,7 +216,6 @@ export class CsiAccountManagementPage extends BasePage {
     await continueButton.click();
   }
 
-  /** AM-027: only require at least one visible `OK` status in the validation step. */
   async collectValidatedBulkUploadEmails(
     rows: ReadonlyArray<{ firstName: string; lastName: string; email: string }>,
   ): Promise<string[]> {
@@ -210,10 +240,6 @@ export class CsiAccountManagementPage extends BasePage {
     await this.openUserListWithSearchReady();
   }
 
-  /**
-   * AM-027: wait for imported users in the grid; if any are still missing, reload twice (async import),
-   * then require at least one expected email to be visible.
-   */
   async expectUserGridShowsEmails(emails: ReadonlyArray<string>) {
     expect(emails.length).toBeGreaterThan(0);
 
@@ -271,7 +297,6 @@ export class CsiAccountManagementPage extends BasePage {
     ).toBe(true);
   }
 
-  /** AM-045: organization MFA settings screen. */
   async openOrganizationDetail() {
     await this.page.goto(`${CSI_BASE_URL}${CSI_ORGANIZATION_DETAIL_PATH}`);
     await expect(this.editOrganizationDetailsButton).toBeVisible({ timeout: 60_000 });
@@ -308,25 +333,41 @@ export class CsiAccountManagementPage extends BasePage {
     await expect(radio).toBeChecked({ timeout: 10_000 });
   }
 
-  /**
-   * AM-045: MFA role list row — checkbox adjacent to role label (avoid hardcoded OutSystems checkbox ids).
-   */
   async ensureIncidentReporterMfaCheckboxChecked() {
-    const row = this.page.locator('div.vertical-align.flex-direction-row').filter({
-      has: this.page.getByText('Incident Reporter', { exact: true }),
-    });
-    await expect(row.first()).toBeVisible({ timeout: 30_000 });
-    const checkbox = row.locator('input[type="checkbox"]').first();
-    await expect(checkbox).toBeVisible();
-    if (!(await checkbox.isChecked())) {
-      await checkbox.check();
+    const dialog = this.mfaSetupDialog();
+    await expect(dialog).toBeVisible({ timeout: 30_000 });
+
+    const reporterCheckbox = dialog.getByRole('checkbox', { name: 'Incident Reporter' });
+    if (await reporterCheckbox.isVisible().catch(() => false)) {
+      if (!(await reporterCheckbox.isChecked())) {
+        await reporterCheckbox.check();
+      }
+      return;
     }
+
+    const roleLabel = dialog.getByText('Incident Reporter', { exact: true });
+    await expect(roleLabel).toBeVisible();
+    const toggled = await roleLabel.evaluate((label) => {
+      let container: HTMLElement | null = label.parentElement;
+      while (container) {
+        const checkbox = container.querySelector('input[type="checkbox"]') as HTMLInputElement | null;
+        if (checkbox) {
+          if (!checkbox.checked) {
+            checkbox.click();
+          }
+          return true;
+        }
+        container = container.parentElement;
+      }
+      return false;
+    });
+    expect(toggled).toBe(true);
   }
 
   async submitMfaRoleSelection() {
-    const submit = this.page.getByRole('button', { name: 'Submit' }).first();
-    await expect(submit).toBeVisible({ timeout: 15_000 });
-    await submit.click();
+    const dialog = this.mfaSetupDialog();
+    await expect(dialog).toBeVisible({ timeout: 15_000 });
+    await dialog.getByRole('button', { name: 'Submit' }).click();
   }
 
   async saveOrganizationDetailChanges() {
