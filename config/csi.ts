@@ -21,6 +21,8 @@ export const CSI_PACKAGE_LIST_PATH = '/PackageList' as const;
 export const CSI_INCIDENT_REPORT_DASHBOARD_PATH = '/IncidentReportDashboard' as const;
 export const CSI_INVOICE_LIST_PATH = '/InvoiceList' as const;
 export const CSI_ORGANIZATION_DETAIL_PATH = '/OrganizationDetail' as const;
+export const CSI_ATTACK_SURFACE_PATH = '/AttackSurface' as const;
+export const CSI_REQUEST_HISTORY_PATH = '/RequestHistory' as const;
 
 function toUrl(url: string | URL): URL {
   return url instanceof URL ? url : new URL(url);

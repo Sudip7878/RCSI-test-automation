@@ -101,6 +101,24 @@ export function csiSystemOwnerTestPassword(): string {
   return p;
 }
 
+/** SR-005: Attack Surface admin (Request New Report). */
+export function csiSecurityReportAdminTestEmail(): string {
+  const e = process.env.CSI_SECURITY_REPORT_ADMIN_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_SECURITY_REPORT_ADMIN_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiSecurityReportAdminTestEmail}. */
+export function csiSecurityReportAdminTestPassword(): string {
+  const p = process.env.CSI_SECURITY_REPORT_ADMIN_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_SECURITY_REPORT_ADMIN_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
 /** SB-056: restricted hub user (Training / Phishing / Account Management only). */
 export function csiTrainingPhisingSysOwnerTestEmail(): string {
   const e = process.env.CSI_TRAINING_PHISING_SYS_OWNER_TEST_EMAIL?.trim();
