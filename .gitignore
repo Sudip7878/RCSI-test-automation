@@ -9,6 +9,7 @@ node_modules/
 /playwright/.auth/
 /recorded-steps/
 /architecture/
+/refactor-selector
 
 # SB-062 optional invoice compare debug dumps (see writeInvoiceCompareDebugJsonFiles)
 /debug-output/

@@ -4,15 +4,16 @@ import { BasePage } from '../BasePage';
 
 /**
  * RCSI CSI Avotech OutSystems login (email step → password step).
+ * Selectors: role/text only — see `refactor-selector/Auth/Login-Form.txt`.
  */
 export class CsiAvotechLoginPage extends BasePage {
   constructor(page: Page) {
     super(page);
   }
 
-  readonly emailField = this.page.locator('#Input_email');
+  readonly emailField = this.page.getByRole('textbox', { name: 'Enter your email' });
   readonly nextButton = this.page.getByRole('button', { name: 'Next' });
-  readonly passwordField = this.page.locator('#Input_password');
+  readonly passwordField = this.page.getByRole('textbox', { name: 'Enter your password' });
   readonly loginButton = this.page.getByRole('button', { name: 'Log in' });
 
   private pathnameLooksLikeHome(pathname: string): boolean {
@@ -61,6 +62,10 @@ export class CsiAvotechLoginPage extends BasePage {
   }
 
   async goToPasswordStep() {
+    const nextVisible = await this.nextButton.isVisible({ timeout: 2_000 }).catch(() => false);
+    if (!nextVisible) {
+      return;
+    }
     await this.waitForElement(this.nextButton);
     await this.nextButton.click();
   }
@@ -103,19 +108,17 @@ export class CsiAvotechLoginPage extends BasePage {
     );
   }
 
-  /**
-   * User menu under `#b2-LoginInfo` → `Common.UserInfo` / `.user-info-top` (IR-001).
-   * Do not use the first `.popover-top` in the header — that targets notifications or cart.
-   */
   async openHeaderAccountMenu() {
-    const trigger = this.page.locator('#b2-LoginInfo .user-info-top .popover-top').first();
-    await expect(trigger).toBeVisible({ timeout: 15_000 });
-    await trigger.click();
+    const userMenuTrigger = this.page.getByText(/^Hi,\s/i);
+    await expect(userMenuTrigger).toBeVisible({ timeout: 15_000 });
+    await userMenuTrigger.click();
   }
 
   async logoutViaHeaderMenu() {
     await this.openHeaderAccountMenu();
-    await this.page.getByRole('link', { name: /Logout/i }).click();
+    const logoutLink = this.page.getByRole('link', { name: /Logout/i });
+    await expect(logoutLink).toBeVisible({ timeout: 15_000 });
+    await logoutLink.click();
   }
 
   async expectEmailStepVisible() {
