@@ -2,6 +2,10 @@ import { readFileSync } from 'node:fs';
 
 import { expect, type Locator } from '@playwright/test';
 import { CSI_BASE_URL } from '../../config/csi';
+import {
+  csiTrainingFirstCourseName,
+  csiTrainingSecondCourseName,
+} from '../../utils/csi/trainingTestData';
 import { BasePage } from '../BasePage';
 
 /** VirtualSelect: initial open + up to 2 retries if options do not render (TR-001). */
@@ -9,7 +13,6 @@ const COURSE_SEARCH_MAX_ATTEMPTS = 3;
 
 export class CsiTrainingPage extends BasePage {
   readonly setupNewDistributionButton = this.page.getByRole('button', { name: 'Setup New Distribution' });
-  readonly distributionNameInput = this.page.locator('#Input_name');
   readonly nextButton = this.page.getByRole('button', { name: 'Next', exact: true });
   readonly distributeButton = this.page.getByRole('button', { name: 'Distribute' });
   readonly distributionViewRadio = this.page.getByRole('radio', { name: 'Distribution View' });
@@ -21,15 +24,84 @@ export class CsiTrainingPage extends BasePage {
     await this.page.waitForTimeout(ms).catch(() => {});
   }
 
-  private async clickTodayInOpenDatepicker() {
-    const calendar = this.page.locator('.flatpickr-calendar.open[role="dialog"]');
-    await expect(calendar).toBeVisible({ timeout: 15_000 });
+  private courseDistributionGrid() {
+    return this.page.getByRole('grid').filter({
+      has: this.page.getByRole('columnheader', { name: 'Course Name' }),
+    });
+  }
 
-    const todayCell = calendar.locator('.flatpickr-day.today[role="button"]').first();
-    if (await todayCell.isVisible().catch(() => false)) {
-      await todayCell.click();
-      return;
+  private targetUserGrid() {
+    return this.page.getByRole('grid').filter({
+      has: this.page.getByRole('columnheader', { name: 'Email' }),
+    });
+  }
+
+  private targetUserRowByEmail(email: string) {
+    return this.targetUserGrid().getByRole('row').filter({
+      has: this.page.getByRole('gridcell', { name: email }),
+    });
+  }
+
+  private distributionStartDateCombobox() {
+    return this.page.getByRole('combobox', { name: 'Select a date' });
+  }
+
+  private async openCourseSearchCombobox(courseSlotIndex: number): Promise<Locator> {
+    const searchComboboxes = this.page
+      .getByRole('combobox', { name: 'Select an option' })
+      .filter({ has: this.page.getByText('Search...', { exact: true }) });
+    const triggers = await searchComboboxes.all();
+    if (triggers.length === 0) {
+      throw new Error('Course search combobox not found.');
     }
+    const trigger = courseSlotIndex === 0 ? triggers[0] : triggers[triggers.length - 1];
+    await expect(trigger).toBeVisible({ timeout: 15_000 });
+    await trigger.click();
+    await this.safeSleep(500);
+    return trigger;
+  }
+
+  private async fillTextboxNearLabel(labelText: string, value: string) {
+    const label = this.page.getByText(labelText, { exact: true });
+    await expect(label).toBeVisible({ timeout: 15_000 });
+    const handle = await label.evaluateHandle((labelEl) => {
+      let container: HTMLElement | null = labelEl.parentElement;
+      while (container) {
+        const input = container.querySelector(
+          'input[type="text"]:not([disabled])',
+        ) as HTMLInputElement | null;
+        if (input) {
+          return input;
+        }
+        container = container.parentElement;
+      }
+      return null;
+    });
+    const element = handle.asElement();
+    expect(element).not.toBeNull();
+    await element!.fill(value);
+    await handle.dispose();
+  }
+
+  private async expectTrainingStatisticsLegendLabel(label: string) {
+    const visible = await this.page.getByText('Training Statistics', { exact: true }).evaluate(
+      (heading, text) => {
+        const box = heading.closest('.training-stat') as HTMLElement | null;
+        if (!box) {
+          return false;
+        }
+        return Array.from(box.querySelectorAll('span')).some(
+          (span) => span.textContent?.trim() === text,
+        );
+      },
+      label,
+    );
+    expect(visible).toBe(true);
+  }
+
+  private async clickTodayInOpenDatepicker() {
+    const calendar = this.page.getByRole('dialog');
+    await expect(calendar).toBeVisible({ timeout: 15_000 });
 
     const today = new Date();
     const fullDateLabel = today.toLocaleDateString('en-US', {
@@ -37,9 +109,21 @@ export class CsiTrainingPage extends BasePage {
       day: 'numeric',
       year: 'numeric',
     });
-    const labelCell = calendar.locator(`.flatpickr-day[role="button"][aria-label="${fullDateLabel}"]`);
-    await expect(labelCell.first()).toBeVisible({ timeout: 10_000 });
-    await labelCell.first().click();
+
+    const todayButton = calendar.getByRole('button', { name: fullDateLabel });
+    if (await todayButton.isVisible().catch(() => false)) {
+      await todayButton.click();
+      return;
+    }
+
+    const todayShort = today.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+    const shortButton = calendar.getByRole('button', { name: todayShort });
+    await expect(shortButton).toBeVisible({ timeout: 10_000 });
+    await shortButton.click();
   }
 
   async openCourseDistribution() {
@@ -51,13 +135,14 @@ export class CsiTrainingPage extends BasePage {
   async startNewDistribution() {
     await expect(this.setupNewDistributionButton).toBeVisible();
     await this.setupNewDistributionButton.click();
-    await expect(this.distributionNameInput).toBeVisible({ timeout: 30_000 });
+    await expect(this.page.getByText('Distribution Rule Name', { exact: true })).toBeVisible({
+      timeout: 30_000,
+    });
   }
 
   /** 3s after fill so course VirtualSelect is not opened immediately (training flow). */
   async fillDistributionName(name: string) {
-    await this.distributionNameInput.click();
-    await this.distributionNameInput.fill(name);
+    await this.fillTextboxNearLabel('Distribution Rule Name', name);
     await this.safeSleep(3000);
   }
 
@@ -65,69 +150,223 @@ export class CsiTrainingPage extends BasePage {
   private async waitForCourseSelectionStepReady() {
     await this.page.waitForLoadState('domcontentloaded');
     await this.page.waitForLoadState('networkidle').catch(() => {});
-    await expect(this.distributionNameInput).toBeVisible({ timeout: 15_000 });
+    await expect(this.page.getByText('Distribution Rule Name', { exact: true })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(this.courseDistributionGrid()).toBeVisible({ timeout: 15_000 });
 
-    const searchTriggers = this.page.getByText('Search...', { exact: true });
-    await expect(searchTriggers.first()).toBeVisible({ timeout: 15_000 });
+    const searchComboboxes = this.page
+      .getByRole('combobox', { name: 'Select an option' })
+      .filter({ has: this.page.getByText('Search...', { exact: true }) });
+    const triggers = await searchComboboxes.all();
+    expect(triggers.length).toBeGreaterThan(0);
+    await expect(triggers[0]).toBeVisible({ timeout: 15_000 });
     await this.safeSleep(3000);
-    await expect(searchTriggers.first()).toBeVisible({ timeout: 10_000 });
+    await expect(triggers[0]).toBeVisible({ timeout: 10_000 });
   }
 
-  /** `courseSlotIndex`: 0 = first `Search...`, 1 = second slot. */
+  /** `courseSlotIndex`: 0 = first `Search...` combobox, 1 = second. */
   async selectCourseByVirtualSelectSearch(courseName: string, courseSlotIndex: number) {
     await this.waitForCourseSelectionStepReady();
 
-    const searchTriggers = this.page.getByText('Search...', { exact: true });
     for (let attempt = 0; attempt < COURSE_SEARCH_MAX_ATTEMPTS; attempt += 1) {
-      const trigger =
-        courseSlotIndex === 0 ? searchTriggers.first() : searchTriggers.last();
-      await expect(trigger).toBeVisible({ timeout: 15_000 });
-      await trigger.click();
-      await this.safeSleep(250);
+      await this.openCourseSearchCombobox(courseSlotIndex);
 
-      const option = this.page.getByRole('option', { name: courseName }).first();
-      const ready = await option.isVisible().catch(() => false);
-      if (ready) {
-        await option.click();
-        return;
+      const options = await this.page.getByRole('option', { name: courseName }).all();
+      for (const option of options) {
+        if (await option.isVisible().catch(() => false)) {
+          await option.click();
+          return;
+        }
       }
+
+      await this.page.keyboard.press('Escape').catch(() => {});
+      await this.safeSleep(200);
     }
 
     throw new Error(`Course list did not show option: ${courseName}`);
   }
 
-  private static readonly myCourseCardTitleSelector =
-    '.ThemeGrid_Width8 span.bold.OSFillParent[style*="font-size: 20px"], .ThemeGrid_Width8 span.bold.OSFillParent[style*="font-size:20px"]';
+  /** Visible course titles on the active My Course tab (distribution + self-registered lists). */
+  private async readVisibleMyCourseCardTitles(): Promise<string[]> {
+    return this.page.evaluate(() => {
+      const listRoots = [
+        document.querySelector('#MyCourseList_distribution .course-list'),
+        document.querySelector('#MyCourseList_self .course-list'),
+        document.querySelector('.list.course-list'),
+      ].filter((node): node is Element => node !== null);
 
-  /** Visible course titles under manager + self-registered lists for the active My Course tab. */
-  private async readVisibleMyCourseCardTitlesFromDom(): Promise<string[]> {
-    return await this.page.$$eval(
-      '#MyCourseList_distribution [data-block="Training.MyCourseBlock"], #MyCourseList_self [data-block="Training.MyCourseBlock"]',
-      (blocks, sel) => {
-        const out: string[] = [];
-        for (const block of blocks) {
-          let el = block.querySelector(sel);
-          if (!el) {
-            el = block.querySelector('.ThemeGrid_Width8 span.bold.OSFillParent');
-          }
-          const t = el?.textContent?.replace(/\s+/g, ' ').trim();
-          if (t) {
-            out.push(t);
+      const uniqueRoots = [...new Set(listRoots)];
+      const titles: string[] = [];
+
+      for (const list of uniqueRoots) {
+        for (const card of Array.from(list.querySelectorAll('.course-card'))) {
+          const titleSpan = card.querySelector(
+            '.ThemeGrid_Width8 span.bold.OSFillParent',
+          ) as HTMLElement | null;
+          const title = titleSpan?.textContent?.replace(/\s+/g, ' ').trim();
+          if (title) {
+            titles.push(title);
           }
         }
-        return out;
-      },
-      CsiTrainingPage.myCourseCardTitleSelector,
-    );
+      }
+
+      return [...new Set(titles)];
+    });
   }
 
-  /** TR-001: each status tab — settle before click, after click, then scrape cards (same page). */
+  private normalizeCourseTitle(value: string): string {
+    return value.replace(/\s+/g, ' ').trim();
+  }
+
+  private isCourseTitleExcluded(title: string, excluded: ReadonlySet<string>): boolean {
+    const normalized = this.normalizeCourseTitle(title).toLowerCase();
+    for (const entry of excluded) {
+      if (this.normalizeCourseTitle(entry).toLowerCase() === normalized) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private async selectFirstVisibleCourseOptionFromExpanded(
+    combobox: Locator,
+    excluded?: ReadonlySet<string>,
+  ): Promise<string | null> {
+    await expect(combobox).toHaveAttribute('aria-expanded', 'true', { timeout: 12_000 });
+    await this.safeSleep(500);
+
+    const listboxes = await this.page.getByRole('listbox').all();
+    for (let index = listboxes.length - 1; index >= 0; index -= 1) {
+      const options = await listboxes[index].getByRole('option').all();
+      for (const option of options) {
+        if (!(await option.isVisible().catch(() => false))) {
+          continue;
+        }
+        const name = this.normalizeCourseTitle((await option.textContent()) ?? '');
+        if (!name || (excluded && this.isCourseTitleExcluded(name, excluded))) {
+          continue;
+        }
+        await option.click();
+        return name;
+      }
+    }
+
+    return combobox.evaluate((combo, excludedList) => {
+      const excludedSet =
+        excludedList === null
+          ? null
+          : new Set(
+              (excludedList as string[]).map((entry) =>
+                entry.replace(/\s+/g, ' ').trim().toLowerCase(),
+              ),
+            );
+      const panelId = combo.getAttribute('aria-controls');
+      const panel = panelId ? document.getElementById(panelId) : null;
+      const roots: ParentNode[] = panel ? [panel, document.body] : [document.body];
+
+      for (const root of roots) {
+        const scrollArea = root.querySelector('.vscomp-options') as HTMLElement | null;
+        if (scrollArea) {
+          scrollArea.scrollTop = 0;
+        }
+        const options = Array.from(
+          root.querySelectorAll('[role="option"], .vscomp-option'),
+        ) as HTMLElement[];
+        for (const el of options) {
+          const style = window.getComputedStyle(el);
+          if (style.display === 'none' || style.visibility === 'hidden') {
+            continue;
+          }
+          const rect = el.getBoundingClientRect();
+          if (rect.width === 0 && rect.height === 0) {
+            continue;
+          }
+          const name = el.textContent?.replace(/\s+/g, ' ').trim() ?? '';
+          if (!name || (excludedSet && excludedSet.has(name.toLowerCase()))) {
+            continue;
+          }
+          el.click();
+          return name;
+        }
+      }
+      return null;
+    }, excluded ? [...excluded] : null);
+  }
+
+  private prestoredFallbackCourseNames(courseSlotIndex: number): string[] {
+    const first = csiTrainingFirstCourseName();
+    const second = csiTrainingSecondCourseName();
+    return courseSlotIndex === 0 ? [first, second] : [second, first];
+  }
+
+  private async trySelectCourseOptionByName(
+    courseName: string,
+    courseSlotIndex: number,
+  ): Promise<string | null> {
+    const target = this.normalizeCourseTitle(courseName).toLowerCase();
+
+    return this.selectWithCourseDropdownRetries(courseSlotIndex, async (combobox) => {
+      const options = await this.page.getByRole('option', { name: courseName }).all();
+      for (const option of options) {
+        if (await option.isVisible().catch(() => false)) {
+          await option.click();
+          return this.normalizeCourseTitle(courseName);
+        }
+      }
+
+      return combobox.evaluate((combo, wanted) => {
+        const panelId = combo.getAttribute('aria-controls');
+        const panel = panelId ? document.getElementById(panelId) : null;
+        const roots: ParentNode[] = panel ? [panel, document.body] : [document.body];
+
+        for (const root of roots) {
+          const optionNodes = Array.from(
+            root.querySelectorAll('[role="option"], .vscomp-option'),
+          ) as HTMLElement[];
+          for (const el of optionNodes) {
+            const style = window.getComputedStyle(el);
+            if (style.display === 'none' || style.visibility === 'hidden') {
+              continue;
+            }
+            const name = el.textContent?.replace(/\s+/g, ' ').trim() ?? '';
+            if (name.toLowerCase() !== wanted) {
+              continue;
+            }
+            el.click();
+            return name;
+          }
+        }
+        return null;
+      }, target);
+    });
+  }
+
+  private async selectWithCourseDropdownRetries(
+    courseSlotIndex: number,
+    pick: (combobox: Locator) => Promise<string | null>,
+  ): Promise<string | null> {
+    for (let openAttempt = 0; openAttempt < COURSE_SEARCH_MAX_ATTEMPTS; openAttempt += 1) {
+      const combobox = await this.openCourseSearchCombobox(courseSlotIndex);
+      const selected = await pick(combobox);
+      if (selected) {
+        return selected;
+      }
+
+      await this.page.keyboard.press('Escape').catch(() => {});
+      await this.safeSleep(200);
+    }
+
+    return null;
+  }
+
+  /** TR-001: each status tab — settle before click, after click, then scrape cards. */
   private async activateMyCourseStatusTabAndReadTitles(tabLink: Locator): Promise<string[]> {
     await this.safeSleep(3000);
     await expect(tabLink).toBeVisible({ timeout: 15_000 });
     await tabLink.click();
     await this.safeSleep(5000);
-    return this.readVisibleMyCourseCardTitlesFromDom();
+    return this.readVisibleMyCourseCardTitles();
   }
 
   /**
@@ -136,8 +375,7 @@ export class CsiTrainingPage extends BasePage {
   async openMyCourseAndCollectRegisteredCourseTitles(): Promise<string[]> {
     await this.page.goto(`${CSI_BASE_URL}/myCourse`);
     await this.page.waitForLoadState('domcontentloaded');
-    // Breadcrumb also exposes "My Course" (plain span); page title uses `span.bold`.
-    await expect(this.page.locator('span.bold', { hasText: /^My Course$/ })).toBeVisible({
+    await expect(this.page.getByRole('link', { name: 'Ongoing', exact: true })).toBeVisible({
       timeout: 60_000,
     });
 
@@ -145,7 +383,6 @@ export class CsiTrainingPage extends BasePage {
     const statusTabLinks: Locator[] = [
       this.page.getByRole('link', { name: 'Ongoing', exact: true }),
       this.page.getByRole('link', { name: 'Passed', exact: true }),
-      // Accessible name often includes a trailing help icon (e.g. `Missed `).
       this.page.getByRole('link', { name: /^Missed\b/ }).first(),
       this.page.getByRole('link', { name: 'Failed', exact: true }),
     ];
@@ -164,8 +401,7 @@ export class CsiTrainingPage extends BasePage {
   }
 
   /**
-   * TR-001 V2: pick the first visible VirtualSelect option in list order that is not in `excluded`
-   * (not by fixed index). Closes dropdown and retries opening up to {@link COURSE_SEARCH_MAX_ATTEMPTS} times.
+   * TR-001: prefer first visible option not in `excluded`; else pre-stored courses from training.json; else any option.
    */
   async selectFirstVisibleCourseOptionNotIn(
     excluded: ReadonlySet<string>,
@@ -173,37 +409,29 @@ export class CsiTrainingPage extends BasePage {
   ): Promise<string> {
     await this.waitForCourseSelectionStepReady();
 
-    const searchTriggers = this.page.getByText('Search...', { exact: true });
-    const trigger =
-      courseSlotIndex === 0 ? searchTriggers.first() : searchTriggers.last();
+    const preferred = await this.selectWithCourseDropdownRetries(courseSlotIndex, (combobox) =>
+      this.selectFirstVisibleCourseOptionFromExpanded(combobox, excluded),
+    );
+    if (preferred) {
+      return preferred;
+    }
 
-    for (let openAttempt = 0; openAttempt < COURSE_SEARCH_MAX_ATTEMPTS; openAttempt += 1) {
-      await expect(trigger).toBeVisible({ timeout: 15_000 });
-      await trigger.click();
-      await this.safeSleep(300);
-
-      const options = this.page.getByRole('option');
-      const count = await options.count();
-
-      for (let i = 0; i < count; i += 1) {
-        const opt = options.nth(i);
-        if (!(await opt.isVisible().catch(() => false))) {
-          continue;
-        }
-        const name = (await opt.textContent())?.replace(/\s+/g, ' ').trim() ?? '';
-        if (!name || excluded.has(name)) {
-          continue;
-        }
-        await opt.click();
-        return name;
+    for (const courseName of this.prestoredFallbackCourseNames(courseSlotIndex)) {
+      const fallback = await this.trySelectCourseOptionByName(courseName, courseSlotIndex);
+      if (fallback) {
+        return fallback;
       }
+    }
 
-      await this.page.keyboard.press('Escape').catch(() => {});
-      await this.safeSleep(200);
+    const anyCourse = await this.selectWithCourseDropdownRetries(courseSlotIndex, (combobox) =>
+      this.selectFirstVisibleCourseOptionFromExpanded(combobox),
+    );
+    if (anyCourse) {
+      return anyCourse;
     }
 
     throw new Error(
-      `No VirtualSelect option found outside excluded set for slot ${courseSlotIndex}: ${[...excluded].join(', ')}`,
+      `No VirtualSelect course option could be selected for slot ${courseSlotIndex}.`,
     );
   }
 
@@ -213,7 +441,7 @@ export class CsiTrainingPage extends BasePage {
   }
 
   async pickTodayDistributionStartDate(maxAttempts = 4) {
-    const dateCombobox = this.page.getByRole('combobox', { name: 'Select a date' }).first();
+    const dateCombobox = this.distributionStartDateCombobox();
     await expect(dateCombobox).toBeVisible({ timeout: 15_000 });
 
     let lastError: unknown;
@@ -234,29 +462,29 @@ export class CsiTrainingPage extends BasePage {
   }
 
   async searchUsersAndSelectRowByEmail(loginEmail: string, searchToken: string) {
-    const userSearchInput = this.page.locator('input[id*="Input_search"]').first();
-    await expect(userSearchInput).toBeVisible({ timeout: 15_000 });
-    await userSearchInput.click();
-    await userSearchInput.fill(searchToken);
+    const searchInput = this.page.getByRole('searchbox');
+    await expect(searchInput).toBeVisible({ timeout: 15_000 });
+    await searchInput.click();
+    await searchInput.fill(searchToken);
 
-    await this.page.getByRole('button', { name: 'Search' }).first().click();
+    const searchButtons = await this.page.getByRole('button', { name: 'Search' }).all();
+    expect(searchButtons.length).toBeGreaterThan(0);
+    await searchButtons[0].click();
 
-    const emailCell = this.page.getByRole('gridcell', { name: loginEmail });
-    await expect(emailCell).toBeVisible({ timeout: 30_000 });
-
-    const row = this.page.locator('tr.table-row').filter({ has: emailCell });
-    const rowCheckbox = row.locator('td input[type="checkbox"].checkbox').first();
-    await expect(rowCheckbox).toBeVisible();
-    await rowCheckbox.check();
+    const row = this.targetUserRowByEmail(loginEmail);
+    await expect(row).toBeVisible({ timeout: 30_000 });
+    const checkbox = row.getByRole('checkbox');
+    await expect(checkbox).toBeVisible();
+    await checkbox.check();
   }
 
   async checkOptionalNotifySwitch() {
-    const sw = this.page.locator('#Switch1').first();
-    const isVisible = await sw.isVisible({ timeout: 3_000 }).catch(() => false);
+    const notifySwitch = this.page.getByRole('checkbox', { name: /Auto-enroll new employee/i });
+    const isVisible = await notifySwitch.isVisible({ timeout: 3_000 }).catch(() => false);
     if (!isVisible) {
       return;
     }
-    await sw.check({ timeout: 3_000 }).catch(() => {});
+    await notifySwitch.check({ timeout: 3_000 }).catch(() => {});
   }
 
   async submitDistribute() {
@@ -302,7 +530,6 @@ export class CsiTrainingPage extends BasePage {
   }
 
   readonly managerViewRadio = this.page.getByRole('radio', { name: 'Manager View' });
-  readonly trainingStatisticBox = this.page.locator('#TrainingStatisticBox');
 
   async openCourseDashboard() {
     await this.page.goto(`${CSI_BASE_URL}/courseDashboard`);
@@ -320,14 +547,11 @@ export class CsiTrainingPage extends BasePage {
   async expectTr033ManagerDashboardSectionsVisible() {
     await expect(this.page.getByText('Cybersecurity Awareness Score')).toBeVisible({ timeout: 30_000 });
     await expect(this.page.getByText('Target Goal', { exact: true })).toBeVisible();
-    await expect(this.page.getByText('Training Statistics')).toBeVisible();
+    await expect(this.page.getByText('Training Statistics', { exact: true })).toBeVisible();
 
-    const stats = this.trainingStatisticBox;
-    await expect(stats.getByText('Not Started')).toBeVisible();
-    await expect(stats.getByText('In Progress')).toBeVisible();
-    await expect(stats.getByText('Passed')).toBeVisible();
-    await expect(stats.getByText('Failed')).toBeVisible();
-    await expect(stats.getByText('Missed')).toBeVisible();
+    for (const label of ['Not Started', 'In Progress', 'Passed', 'Failed', 'Missed'] as const) {
+      await this.expectTrainingStatisticsLegendLabel(label);
+    }
 
     await expect(this.page.getByText('Course Distribution', { exact: true })).toBeVisible();
     await expect(this.page.getByText('Most Active Employees')).toBeVisible();
@@ -342,4 +566,3 @@ export class CsiTrainingPage extends BasePage {
     await expect(this.page.getByText('Groups you managed')).toBeVisible();
   }
 }
-
