@@ -55,7 +55,6 @@ test.describe('CSI · Incident Report', () => {
 
   test.describe('IR-001 — assign Incident Reporter role', () => {
     test('IR-001', async ({
-      page,
       csiLoginPage,
       csiAccountManagementPage,
       csiIncidentReportPage,
@@ -96,10 +95,7 @@ test.describe('CSI · Incident Report', () => {
       await csiLoginPage.signInWithEmailAndPassword(reporterEmail, reporterPassword);
       await csiLoginPage.expectOnHome();
 
-      const incidentResponse = page.getByRole('link', { name: 'Incident Response' });
-      await incidentResponse.waitFor({ state: 'visible', timeout: 60_000 });
-      await incidentResponse.click();
-
+      await csiIncidentReportPage.openIncidentResponseFromSidebar();
       await csiIncidentReportPage.openDashboard();
     });
   });
