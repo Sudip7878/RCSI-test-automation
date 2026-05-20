@@ -1,4 +1,4 @@
-import { expect, type Locator } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { CSI_BASE_URL } from '../../config/csi';
 import { CSI_PH024_LANDING_PAGE_HOST } from '../../utils/csi/phisingTestData';
 import { BasePage } from '../BasePage';
@@ -7,11 +7,6 @@ export class CsiPhisingPage extends BasePage {
   readonly firstTemplateSelectButton = this.page.getByRole('button', { name: 'Select this attack' }).first();
   readonly nextButton = this.page.getByRole('button', { name: 'Next', exact: true });
   readonly individualsRadio = this.page.getByRole('radio', { name: 'Individuals' });
-  readonly userSearchInput = this.page.locator('#b20-b1-Input_search');
-  readonly userSearchButton = this.page.getByRole('button', { name: 'Search' }).first();
-  readonly testNameInput = this.page.getByRole('textbox', { name: 'Example: HSBC Phishing Test' });
-  readonly startDateCombobox = this.page.getByRole('combobox', { name: 'Select a date.' }).first();
-  readonly durationLabel = this.page.getByText('Duration', { exact: true });
   readonly distributeButton = this.page.getByRole('button', { name: 'Distribute' });
 
   private async safeSleep(ms: number) {
@@ -21,22 +16,53 @@ export class CsiPhisingPage extends BasePage {
     await this.page.waitForTimeout(ms).catch(() => {});
   }
 
-  private async clickFirstVisibleVscompOption() {
-    const options = this.page.getByRole('option');
-    await expect(options.first()).toBeAttached({ timeout: 15_000 });
-    const count = await options.count();
-    for (let i = 0; i < count; i += 1) {
-      const opt = options.nth(i);
-      if (await opt.isVisible().catch(() => false)) {
-        await opt.click();
-        return;
+  private targetUserGrid() {
+    return this.page.getByRole('grid').filter({
+      has: this.page.getByRole('columnheader', { name: 'Email' }),
+    });
+  }
+
+  private targetUserRowByEmail(email: string) {
+    return this.targetUserGrid().getByRole('row').filter({
+      has: this.page.getByRole('gridcell', { name: email }),
+    });
+  }
+
+  private campaignScheduleDateCombobox() {
+    return this.page.getByRole('combobox', { name: 'Select a date.' });
+  }
+
+  private async clickFirstVisibleListboxOption() {
+    const expanded = this.page.getByRole('combobox', { expanded: true });
+    await expect(expanded).toBeVisible({ timeout: 12_000 });
+
+    const clicked = await expanded.evaluate((combo) => {
+      const panelId = combo.getAttribute('aria-controls');
+      const panel = panelId ? document.getElementById(panelId) : null;
+      const roots: ParentNode[] = panel ? [panel, document.body] : [document.body];
+
+      for (const root of roots) {
+        const options = Array.from(root.querySelectorAll('[role="option"]')) as HTMLElement[];
+        for (const el of options) {
+          const style = window.getComputedStyle(el);
+          if (style.display === 'none' || style.visibility === 'hidden') {
+            continue;
+          }
+          const rect = el.getBoundingClientRect();
+          if (rect.width === 0 && rect.height === 0) {
+            continue;
+          }
+          el.click();
+          return true;
+        }
       }
-    }
-    throw new Error('PH-024: no visible VirtualSelect option.');
+      return false;
+    });
+    expect(clicked).toBe(true);
   }
 
   private async clickTomorrowInOpenDatepicker() {
-    const calendar = this.page.locator('.flatpickr-calendar.open[role="dialog"]');
+    const calendar = this.page.getByRole('dialog');
     await expect(calendar).toBeVisible({ timeout: 15_000 });
 
     const tomorrow = new Date();
@@ -47,51 +73,116 @@ export class CsiPhisingPage extends BasePage {
       year: 'numeric',
     });
 
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      const labelCell = calendar
-        .locator(`.flatpickr-day[role="button"][aria-label="${fullDateLabel}"]`)
-        .first();
-      if (await labelCell.isVisible().catch(() => false)) {
-        await labelCell.click();
-        return;
-      }
-
-      const nextMonthButton = calendar.locator('.flatpickr-next-month').first();
-      const canGoNext = await nextMonthButton.isVisible().catch(() => false);
-      if (!canGoNext) {
-        break;
-      }
-      await nextMonthButton.click();
-    }
-
-    throw new Error(`Could not find tomorrow date cell in date picker: ${fullDateLabel}`);
-  }
-
-  private async selectDurationPreferringDay() {
-    await expect(this.durationLabel).toBeVisible({ timeout: 15_000 });
-    await this.durationLabel.click();
-
-    const dayOption = this.page.getByRole('option', { name: /^day$/i }).first();
-    if (await dayOption.isVisible().catch(() => false)) {
-      await dayOption.click();
+    const tomorrowButton = calendar.getByRole('button', { name: fullDateLabel });
+    if (await tomorrowButton.isVisible().catch(() => false)) {
+      await tomorrowButton.click();
       return;
     }
 
-    const options = this.page.getByRole('option');
-    const count = await options.count();
-    for (let i = 0; i < count; i += 1) {
-      const option = options.nth(i);
+    const tomorrowShort = tomorrow.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+    const shortButton = calendar.getByRole('button', { name: tomorrowShort });
+    await expect(shortButton).toBeVisible({ timeout: 15_000 });
+    await shortButton.click();
+  }
+
+  private async selectDurationPreferringDay() {
+    const durationTrigger = this.page.getByText('Duration', { exact: true });
+    await expect(durationTrigger).toBeVisible({ timeout: 15_000 });
+    await durationTrigger.click();
+
+    const dayOptions = await this.page.getByRole('option', { name: /^day$/i }).all();
+    for (const option of dayOptions) {
       if (await option.isVisible().catch(() => false)) {
         await option.click();
         return;
       }
     }
 
-    throw new Error('Duration options were not visible.');
+    await this.clickFirstVisibleListboxOption();
   }
 
-  private userRowByEmail(email: string): Locator {
-    return this.page.locator('tr.table-row').filter({ has: this.page.getByRole('gridcell', { name: email }) });
+  private async openVirtualSelectByDisplayValue(displayValue: string) {
+    const combobox = this.page.getByRole('combobox', { name: 'Select an option' }).filter({
+      has: this.page.getByText(displayValue, { exact: true }),
+    });
+    await expect(combobox).toBeVisible({ timeout: 15_000 });
+    await combobox.click();
+    await this.safeSleep(250);
+  }
+
+  private async openCourseComboboxNearSection(sectionLabel: 'Link click action' | 'Landing page action') {
+    const sectionHeading = this.page.getByText(sectionLabel, { exact: true });
+    await expect(sectionHeading).toBeVisible({ timeout: 15_000 });
+    const opened = await sectionHeading.evaluate((heading) => {
+      let container: HTMLElement | null = heading.parentElement;
+      while (container) {
+        const combobox = container.querySelector('[role="combobox"]') as HTMLElement | null;
+        if (combobox) {
+          const toggle =
+            (combobox.querySelector('.vscomp-toggle-button') as HTMLElement | null) ?? combobox;
+          toggle.click();
+          return true;
+        }
+        container = container.parentElement;
+      }
+      return false;
+    });
+    expect(opened).toBe(true);
+    await this.safeSleep(250);
+  }
+
+  private async fillTextboxNearLabel(labelText: string, value: string, exactLabel = false) {
+    const label = this.page.getByText(labelText, { exact: exactLabel });
+    await expect(label).toBeVisible({ timeout: 15_000 });
+    const handle = await label.evaluateHandle((labelEl) => {
+      let container: HTMLElement | null = labelEl.parentElement;
+      while (container) {
+        const input = container.querySelector(
+          'input[type="text"]:not([disabled]), input[type="search"]:not([disabled]), textarea:not([disabled])',
+        );
+        if (input) {
+          return input;
+        }
+        container = container.parentElement;
+      }
+      return null;
+    });
+    const element = handle.asElement();
+    expect(element).not.toBeNull();
+    await element!.fill(value);
+    await handle.dispose();
+  }
+
+  private async fillPh024RichTextParagraph(text: string) {
+    const deadline = Date.now() + 15_000;
+    while (Date.now() < deadline) {
+      for (const frame of this.page.frames()) {
+        const paragraphs = await frame.getByRole('paragraph').all();
+        if (paragraphs.length === 0) {
+          continue;
+        }
+        await paragraphs[0].click();
+        const editor = frame.getByLabel(/Rich Text Area/i);
+        if ((await editor.count()) > 0) {
+          await editor.fill(text);
+          return;
+        }
+      }
+      await this.safeSleep(500);
+    }
+    throw new Error('PH-024: rich text editor frame not found.');
+  }
+
+  private async selectPh024SendingEmailDomain(domain: string) {
+    const domainCombobox = this.page
+      .getByRole('combobox')
+      .filter({ has: this.page.getByRole('option', { name: domain }) });
+    await expect(domainCombobox).toBeVisible({ timeout: 15_000 });
+    await domainCombobox.selectOption({ label: domain });
   }
 
   async openPhisingTestCreation() {
@@ -109,29 +200,36 @@ export class CsiPhisingPage extends BasePage {
     await expect(this.individualsRadio).toBeVisible({ timeout: 30_000 });
     await this.individualsRadio.click();
 
-    await expect(this.userSearchInput).toBeVisible({ timeout: 15_000 });
-    await this.userSearchInput.click();
-    await this.userSearchInput.fill(searchToken);
-    await this.userSearchButton.click();
+    const searchInput = this.page.getByRole('searchbox');
+    await expect(searchInput).toBeVisible({ timeout: 15_000 });
+    await searchInput.click();
+    await searchInput.fill(searchToken);
 
-    const row = this.userRowByEmail(loginEmail);
+    const searchButtons = await this.page.getByRole('button', { name: 'Search' }).all();
+    expect(searchButtons.length).toBeGreaterThan(0);
+    await searchButtons[0].click();
+
+    const row = this.targetUserRowByEmail(loginEmail);
     await expect(row).toBeVisible({ timeout: 30_000 });
-
-    const rowCheckbox = row.locator('input[type="checkbox"].checkbox').first();
-    await expect(rowCheckbox).toBeVisible();
-    await rowCheckbox.check();
+    const checkbox = row.getByRole('checkbox');
+    await expect(checkbox).toBeVisible();
+    await checkbox.check();
 
     await expect(this.nextButton).toBeVisible({ timeout: 15_000 });
     await this.nextButton.click();
   }
 
   async fillPhisingTestDetailsAndContinue(testName: string) {
-    await expect(this.testNameInput).toBeVisible({ timeout: 30_000 });
-    await this.testNameInput.click();
-    await this.testNameInput.fill(testName);
+    const testNameInput = this.page.getByRole('textbox', {
+      name: /Example: HSBC Phishing Test/i,
+    });
+    await expect(testNameInput).toBeVisible({ timeout: 30_000 });
+    await testNameInput.click();
+    await testNameInput.fill(testName);
 
-    await expect(this.startDateCombobox).toBeVisible({ timeout: 15_000 });
-    await this.startDateCombobox.click();
+    const dateCombobox = this.campaignScheduleDateCombobox();
+    await expect(dateCombobox).toBeVisible({ timeout: 15_000 });
+    await dateCombobox.click();
     await this.clickTomorrowInOpenDatepicker();
 
     await this.selectDurationPreferringDay();
@@ -157,7 +255,6 @@ export class CsiPhisingPage extends BasePage {
     await this.page.waitForLoadState('domcontentloaded');
   }
 
-  /** PH-020: dashboard widgets and grids (recorded-steps/Phising/PH-020.txt). */
   async expectPh020PhishingDashboardSectionsVisible() {
     await expect(this.page.getByText('Phishing Resistance Score')).toBeVisible({ timeout: 60_000 });
     await expect(this.page.getByText('Organization performance')).toBeVisible();
@@ -194,17 +291,6 @@ export class CsiPhisingPage extends BasePage {
     });
   }
 
-  private async openPh024DropdownByDataBlock(widget: string) {
-    const root = this.page.locator(`[data-block="${widget}"]`).first();
-    await expect(root).toBeVisible({ timeout: 15_000 });
-    await root.locator('.vscomp-toggle-button').first().click();
-    await this.safeSleep(250);
-  }
-
-  /**
-   * PH-024: new template wizard through Publish. `uniqueSuffix` from {@link csiPh024UniqueSuffix}.
-   * Location / category / language / both course dropdowns: first visible option only (recorded-steps/Phising/PH-024.txt).
-   */
   async createAndPublishPh024EmailTemplate(params: {
     uniqueSuffix: string;
     landingPageHost?: string;
@@ -218,15 +304,11 @@ export class CsiPhisingPage extends BasePage {
     await this.page.getByRole('textbox', { name: /Email Subject/ }).fill(`TestSubject${s}`);
     await this.page.getByRole('checkbox', { name: /Template content/ }).check();
 
-    await this.page.locator('#Input_sender_email').fill(`test${s}`);
+    await this.fillTextboxNearLabel('Actual Sending Email', `test${s}`);
+    await this.selectPh024SendingEmailDomain('avotech.com');
     await this.page.getByRole('textbox', { name: /Reply-to email/ }).fill(`test${s}@test.com`);
 
-    const rte = this.page.locator('iframe[title="Rich Text Area"]').first().contentFrame();
-    const editable = rte.locator('[contenteditable="true"]').first();
-    await editable.click({ timeout: 15_000 }).catch(async () => {
-      await rte.getByRole('paragraph').first().click();
-    });
-    await editable.fill(`Test Paragraph ${s}`);
+    await this.fillPh024RichTextParagraph(`Test Paragraph ${s}`);
 
     await this.page.getByText('Phishing Landing Page', { exact: true }).click();
     const landingUrlField = this.page.getByRole('textbox', { name: /^https:\/\// });
@@ -238,39 +320,34 @@ export class CsiPhisingPage extends BasePage {
     const savePreview = this.page.getByRole('button', { name: 'Save & Preview' });
     await expect(savePreview).toBeVisible({ timeout: 30_000 });
     await savePreview.click();
+    await this.safeSleep(3000);
 
     await expect(this.nextButton).toBeVisible({ timeout: 30_000 });
     await this.nextButton.click();
+    await expect(this.page.getByText('Type of Template')).toBeVisible({ timeout: 60_000 });
 
-    const titleInput = this.page.locator('#Input_name2');
-    await expect(titleInput).toBeVisible({ timeout: 30_000 });
-    await titleInput.fill(`Title${s}`);
+    await this.fillTextboxNearLabel('Title', `Title${s}`, true);
     await this.safeSleep(3000);
 
-    // Let Location / Category / Language VirtualSelects mount before opening.
-    await this.safeSleep(3000);
-    await this.openPh024DropdownByDataBlock('Search.DropDown_Location');
-    await this.clickFirstVisibleVscompOption();
+    await this.openVirtualSelectByDisplayValue('Location');
+    await this.clickFirstVisibleListboxOption();
 
-    await this.openPh024DropdownByDataBlock('Search.DropDown_PhishingCategroy');
-    await this.clickFirstVisibleVscompOption();
+    await this.openVirtualSelectByDisplayValue('Category');
+    await this.clickFirstVisibleListboxOption();
 
-    await this.openPh024DropdownByDataBlock('Search.DropDown_Language');
-    await this.clickFirstVisibleVscompOption();
+    await this.openVirtualSelectByDisplayValue('Language');
+    await this.clickFirstVisibleListboxOption();
 
-    await this.page.locator('#TextArea_description').fill(`Description ${s}`);
+    await this.fillTextboxNearLabel('Description', `Description ${s}`, true);
 
     await expect(this.nextButton).toBeVisible({ timeout: 15_000 });
     await this.nextButton.click();
 
-    const courseToggles = this.page.locator('[data-block="Search.DropDown_Course"] .vscomp-toggle-button');
-    await expect(courseToggles.first()).toBeVisible({ timeout: 30_000 });
-    // Let Link click action + Landing page course dropdowns finish mounting.
     await this.safeSleep(3000);
-    await courseToggles.nth(0).click();
-    await this.clickFirstVisibleVscompOption();
-    await courseToggles.nth(1).click();
-    await this.clickFirstVisibleVscompOption();
+    await this.openCourseComboboxNearSection('Link click action');
+    await this.clickFirstVisibleListboxOption();
+    await this.openCourseComboboxNearSection('Landing page action');
+    await this.clickFirstVisibleListboxOption();
 
     await expect(this.nextButton).toBeVisible({ timeout: 15_000 });
     await this.nextButton.click();
