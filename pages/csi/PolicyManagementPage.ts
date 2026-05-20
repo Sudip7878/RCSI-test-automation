@@ -8,20 +8,109 @@ export class CsiPolicyManagementPage extends BasePage {
   readonly referenceNumberInput = this.page.getByRole('textbox', { name: 'Reference Number*' });
   readonly ownerSelect = this.page.getByLabel('Owner');
   readonly downloadTemplateButton = this.page.getByRole('button', { name: /Download and modify template/i });
-  /** Wizard footer: `justify-content-space-between` row → `button[type=button].btn-primary` with label Next. */
-  readonly nextButton = this.page
-    .locator('div.display-flex.justify-content-space-between > div.display-flex')
-    .locator('button[type="button"].btn-primary')
-    .filter({ hasText: 'Next' });
-  readonly userSearchInput = this.page.locator('#b29-b1-Input_search');
-  readonly userSearchButton = this.page.getByRole('button', { name: 'Search' }).first();
+  readonly wizardNextButton = this.page.getByRole('button', { name: 'Next', exact: true });
   readonly submitForReviewButton = this.page.getByRole('button', { name: 'Submit for Review' });
   /** PM-016: shown beside Submit for Review on the final wizard step when publishing without review. */
   readonly publishPolicyWizardButton = this.page.getByRole('button', { name: 'Publish' });
-  readonly acknowledgementDropdown = this.page.locator('#Acknowledgement_Dropdown');
+
+  private async safeSleep(ms: number) {
+    await new Promise<void>((resolve) => {
+      setTimeout(resolve, ms);
+    });
+  }
+
+  private policyRecipientsGrid() {
+    return this.page.getByRole('grid').filter({
+      has: this.page.getByRole('columnheader', { name: 'Email' }),
+    });
+  }
+
+  private viewPoliciesGrid() {
+    return this.page.getByRole('grid').filter({
+      has: this.page.getByRole('columnheader', { name: 'Policy' }),
+    });
+  }
+
+  private policyRowByTitle(policyTitle: string): Locator {
+    return this.viewPoliciesGrid().getByRole('row').filter({
+      has: this.page.getByRole('gridcell', { name: policyTitle }),
+    });
+  }
+
+  private recipientRowByEmail(email: string): Locator {
+    return this.policyRecipientsGrid().getByRole('row').filter({
+      has: this.page.getByRole('gridcell', { name: email }),
+    });
+  }
+
+  private async fillTextboxNearLabel(labelText: string, value: string, exactLabel = false) {
+    const label = this.page.getByText(labelText, { exact: exactLabel });
+    await expect(label).toBeVisible({ timeout: 15_000 });
+    const handle = await label.evaluateHandle((labelEl) => {
+      let container: HTMLElement | null = labelEl.parentElement;
+      while (container) {
+        const input = container.querySelector(
+          'input[type="text"]:not([disabled]), input[type="search"]:not([disabled]), textarea:not([disabled])',
+        );
+        if (input) {
+          return input;
+        }
+        container = container.parentElement;
+      }
+      return null;
+    });
+    const element = handle.asElement();
+    expect(element).not.toBeNull();
+    await element!.fill(value);
+    await handle.dispose();
+  }
+
+  private async fillNumberNearLabel(labelText: string, value: string) {
+    const label = this.page.getByText(labelText);
+    await expect(label).toBeVisible({ timeout: 15_000 });
+    const handle = await label.evaluateHandle((labelEl) => {
+      let container: HTMLElement | null = labelEl.parentElement;
+      while (container) {
+        const input = container.querySelector(
+          'input[type="number"]:not([disabled])',
+        ) as HTMLInputElement | null;
+        if (input) {
+          return input;
+        }
+        container = container.parentElement;
+      }
+      return null;
+    });
+    const element = handle.asElement();
+    expect(element).not.toBeNull();
+    await element!.fill(value);
+    await handle.dispose();
+  }
+
+  private async selectNativeDropdownNearText(anchorText: string, optionLabel: string) {
+    const anchor = this.page.getByText(anchorText);
+    await expect(anchor).toBeVisible({ timeout: 15_000 });
+    const selected = await anchor.evaluate((anchorEl, label) => {
+      let container: HTMLElement | null = anchorEl.parentElement;
+      while (container) {
+        const select = container.querySelector('select:not([disabled])') as HTMLSelectElement | null;
+        if (select) {
+          const option = Array.from(select.options).find((opt) => opt.textContent?.trim() === label);
+          if (option) {
+            select.value = option.value;
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+            return true;
+          }
+        }
+        container = container.parentElement;
+      }
+      return false;
+    }, optionLabel);
+    expect(selected).toBe(true);
+  }
 
   private async clickTomorrowInOpenDatepicker() {
-    const calendar = this.page.locator('.flatpickr-calendar.open[role="dialog"]');
+    const calendar = this.page.getByRole('dialog');
     await expect(calendar).toBeVisible({ timeout: 15_000 });
 
     const tomorrow = new Date();
@@ -33,17 +122,15 @@ export class CsiPolicyManagementPage extends BasePage {
     });
 
     for (let attempt = 0; attempt < 3; attempt += 1) {
-      const labelCell = calendar
-        .locator(`.flatpickr-day[role="button"][aria-label="${fullDateLabel}"]`)
-        .first();
+      const labelCell = calendar.getByRole('button', { name: fullDateLabel });
       if (await labelCell.isVisible().catch(() => false)) {
         await labelCell.click();
         return;
       }
 
-      const nextMonthButton = calendar.locator('.flatpickr-next-month').first();
-      if (await nextMonthButton.isVisible().catch(() => false)) {
-        await nextMonthButton.click();
+      const nextMonth = calendar.getByRole('button', { name: /next month/i });
+      if (await nextMonth.isVisible().catch(() => false)) {
+        await nextMonth.click();
       } else {
         break;
       }
@@ -52,43 +139,65 @@ export class CsiPolicyManagementPage extends BasePage {
     throw new Error(`Could not select tomorrow in date picker: ${fullDateLabel}`);
   }
 
-  private userRowByEmail(email: string): Locator {
-    return this.page.locator('tr.table-row').filter({ has: this.page.getByRole('gridcell', { name: email }) });
+  private async policyFileInputHandle() {
+    const anchor = this.page.getByText('Create Your Own Policy', { exact: true });
+    await expect(anchor).toBeVisible({ timeout: 15_000 });
+    return anchor.evaluateHandle((anchorEl) => {
+      let container: HTMLElement | null = anchorEl.parentElement;
+      while (container) {
+        const input = container.querySelector('input[type="file"]') as HTMLInputElement | null;
+        if (input) {
+          return input;
+        }
+        container = container.parentElement;
+      }
+      return null;
+    });
   }
 
-  private async policyFileInput(): Promise<Locator> {
-    const idInputs = this.page.locator('#FileName_Input');
-    if ((await idInputs.count()) > 0) {
-      const first = idInputs.first();
-      const isFile = await first.evaluate((el) => (el as unknown as HTMLInputElement).type === 'file');
-      if (isFile) {
-        return first;
+  private async clickRecipientsSearchButton() {
+    const part2 = this.page.getByText('Part 2', { exact: true });
+    await expect(part2).toBeVisible({ timeout: 15_000 });
+    const clicked = await part2.evaluate((el) => {
+      let node: HTMLElement | null = el as HTMLElement;
+      while (node) {
+        const button = Array.from(node.querySelectorAll('button')).find(
+          (btn) => btn.textContent?.trim() === 'Search',
+        );
+        if (button) {
+          button.click();
+          return true;
+        }
+        node = node.parentElement;
       }
+      return false;
+    });
+    expect(clicked).toBe(true);
+  }
+
+  private async clickWizardPrimaryNext() {
+    const buttons = await this.wizardNextButton.all();
+    const btn = buttons[buttons.length - 1] ?? this.wizardNextButton;
+    await btn.scrollIntoViewIfNeeded();
+    try {
+      await btn.click({ timeout: 10_000 });
+    } catch {
+      await btn.click({ force: true });
     }
-    return this.page.locator('input[type="file"]').first();
   }
 
   async openPolicyTemplateLibrary() {
     await this.page.goto(`${CSI_BASE_URL}/PolicyTemplateLibrary`);
     await this.page.waitForLoadState('domcontentloaded');
-    await expect(this.page.locator('.list .card').first()).toBeVisible({ timeout: 60_000 });
+    await expect(this.page.getByRole('button', { name: 'Preview' }).first()).toBeVisible({ timeout: 60_000 });
   }
 
   async cloneFirstPolicyTemplate() {
-    const firstCard = this.page.locator('.list .card').first();
-    await expect(firstCard).toBeVisible({ timeout: 30_000 });
+    const actionsMenus = await this.page.getByRole('menuitem', { name: 'Actions' }).all();
+    expect(actionsMenus.length).toBeGreaterThan(0);
+    await actionsMenus[0].click();
 
-    const actionsHeader = firstCard.locator('.osui-submenu__header').filter({ hasText: 'Actions' });
-    await expect(actionsHeader).toBeVisible({ timeout: 15_000 });
-    await actionsHeader.click();
-
-    const cloneByButtonRole = firstCard.getByRole('button', { name: /Clone Template/i });
-    const cloneByHref = firstCard
-      .locator('a[href*="CreateNewPolicy"]')
-      .filter({ hasText: /Clone\s+Template/i })
-      .first();
-    const clone = cloneByButtonRole.or(cloneByHref);
-
+    const clone = this.page.getByRole('button', { name: /Clone Template/i });
     await expect(clone).toBeVisible({ timeout: 20_000 });
     await clone.click();
 
@@ -127,23 +236,15 @@ export class CsiPolicyManagementPage extends BasePage {
   }
 
   async uploadEditedDocx(absolutePath: string) {
-    const fileInput = await this.policyFileInput();
-    await expect(fileInput).toBeAttached({ timeout: 15_000 });
-    await fileInput.setInputFiles(absolutePath);
+    const handle = await this.policyFileInputHandle();
+    const element = handle.asElement();
+    expect(element).not.toBeNull();
+    await element!.setInputFiles(absolutePath);
+    await handle.dispose();
   }
 
   async expectDocxUploaded() {
     await expect(this.page.getByText('Uploaded', { exact: true })).toBeVisible({ timeout: 60_000 });
-  }
-
-  private async clickWizardPrimaryNext() {
-    const btn = this.nextButton.last();
-    await btn.scrollIntoViewIfNeeded();
-    try {
-      await btn.click({ timeout: 10_000 });
-    } catch {
-      await btn.click({ force: true });
-    }
   }
 
   async goToNextWizardStep() {
@@ -151,12 +252,11 @@ export class CsiPolicyManagementPage extends BasePage {
   }
 
   async waitForAcknowledgementSection() {
-    await expect(this.acknowledgementDropdown).toBeVisible({ timeout: 60_000 });
+    await expect(this.page.getByLabel(/Acknowledgement Type/i)).toBeVisible({ timeout: 60_000 });
   }
 
   async selectAcknowledgementTypeCompulsory() {
-    await expect(this.acknowledgementDropdown).toBeVisible({ timeout: 15_000 });
-    await this.acknowledgementDropdown.selectOption({ label: 'Compulsory' });
+    await this.page.getByLabel(/Acknowledgement Type/i).selectOption({ label: 'Compulsory' });
   }
 
   async pickTomorrowAcknowledgementStartDate() {
@@ -174,11 +274,8 @@ export class CsiPolicyManagementPage extends BasePage {
   }
 
   async fillAcknowledgementDurationAndDue(dueInDays: number) {
-    await this.page.locator('#Dropdown_Duration').selectOption({ label: 'Days' });
-    const dueIn = this.page.locator('#Input_DueDateIn');
-    await expect(dueIn).toBeVisible({ timeout: 10_000 });
-    await dueIn.click();
-    await dueIn.fill(String(dueInDays));
+    await this.selectNativeDropdownNearText('(iii) Select the Due Date of the Policy.', 'Days');
+    await this.fillNumberNearLabel('(iii) Select the Due Date of the Policy.', String(dueInDays));
   }
 
   async selectReviewNotRequiredNo() {
@@ -186,24 +283,18 @@ export class CsiPolicyManagementPage extends BasePage {
   }
 
   async fillReviewDueInDays(dueInDays: number) {
-    await this.page.locator('#Dropdown5_reviewduein').selectOption({ label: 'Days' });
-    const review = this.page.locator('#Input_Review');
-    await expect(review).toBeVisible({ timeout: 10_000 });
-    await review.click();
-    await review.fill(String(dueInDays));
+    await this.selectNativeDropdownNearText('How often would you like to Re-review this policy?', 'Days');
+    await this.fillNumberNearLabel('How often would you like to Re-review this policy?', String(dueInDays));
   }
 
   async searchIndividualsAndSelectLoginUser(loginEmail: string, searchToken: string) {
-    await expect(this.userSearchInput).toBeVisible({ timeout: 30_000 });
-    await this.userSearchInput.click();
-    await this.userSearchInput.fill(searchToken);
-    await this.userSearchButton.click();
+    await expect(this.page.getByText('Recipients:', { exact: true })).toBeVisible({ timeout: 30_000 });
+    await this.fillTextboxNearLabel('Recipients:', searchToken);
+    await this.clickRecipientsSearchButton();
 
-    const row = this.userRowByEmail(loginEmail);
+    const row = this.recipientRowByEmail(loginEmail);
     await expect(row).toBeVisible({ timeout: 30_000 });
-    const checkbox = row.locator('input[type="checkbox"].checkbox').first();
-    await expect(checkbox).toBeVisible();
-    await checkbox.check();
+    await row.getByRole('checkbox').check();
 
     await this.clickWizardPrimaryNext();
   }
@@ -213,24 +304,15 @@ export class CsiPolicyManagementPage extends BasePage {
    * stays unchanged and this path can diverge if the acknowledger selection rules change.
    */
   async searchIndividualsAndSelectAcknowledgerUser(acknowledgerEmail: string, searchToken: string) {
-    await expect(this.userSearchInput).toBeVisible({ timeout: 30_000 });
-    await this.userSearchInput.click();
-    await this.userSearchInput.fill(searchToken);
-    await this.userSearchButton.click();
+    await expect(this.page.getByText('Recipients:', { exact: true })).toBeVisible({ timeout: 30_000 });
+    await this.fillTextboxNearLabel('Recipients:', searchToken);
+    await this.clickRecipientsSearchButton();
 
-    const row = this.userRowByEmail(acknowledgerEmail);
+    const row = this.recipientRowByEmail(acknowledgerEmail);
     await expect(row).toBeVisible({ timeout: 30_000 });
-    const checkbox = row.locator('input[type="checkbox"].checkbox').first();
-    await expect(checkbox).toBeVisible();
-    await checkbox.check();
+    await row.getByRole('checkbox').check();
 
     await this.clickWizardPrimaryNext();
-  }
-
-  private async safeSleep(ms: number) {
-    await new Promise<void>((resolve) => {
-      setTimeout(resolve, ms);
-    });
   }
 
   async gotoMyPolicies() {
@@ -260,11 +342,9 @@ export class CsiPolicyManagementPage extends BasePage {
   }
 
   async clickViewOnFirstMyPoliciesAcknowledgementCard() {
-    const firstCard = this.page.locator('div.list div.card').first();
-    await expect(firstCard).toBeVisible({ timeout: 60_000 });
-    const view = firstCard.getByRole('button', { name: 'View' });
-    await expect(view).toBeVisible({ timeout: 30_000 });
-    await view.click();
+    const viewButtons = await this.page.getByRole('button', { name: 'View' }).all();
+    expect(viewButtons.length).toBeGreaterThan(0);
+    await viewButtons[0].click();
   }
 
   async completePolicyAcknowledgementExpectSuccess() {
@@ -305,9 +385,8 @@ export class CsiPolicyManagementPage extends BasePage {
 
   async expectOnViewPoliciesWithPendingPolicy(policyTitle: string) {
     await this.page.waitForURL(/\/ViewPolicies/i, { timeout: 120_000 });
-    const titleCell = this.page.getByRole('gridcell', { name: policyTitle });
-    await expect(titleCell).toBeVisible({ timeout: 60_000 });
-    const row = this.page.locator('tr.table-row').filter({ has: titleCell });
+    const row = this.policyRowByTitle(policyTitle);
+    await expect(row).toBeVisible({ timeout: 60_000 });
     await expect(row.getByRole('gridcell', { name: /Pending For Approval/i })).toBeVisible({
       timeout: 30_000,
     });
@@ -316,18 +395,16 @@ export class CsiPolicyManagementPage extends BasePage {
   async openViewPolicies() {
     await this.page.goto(`${CSI_BASE_URL}/ViewPolicies`);
     await this.page.waitForLoadState('domcontentloaded');
-    await expect(this.page.locator('table.table[role="grid"]')).toBeVisible({ timeout: 60_000 });
+    await expect(this.viewPoliciesGrid()).toBeVisible({ timeout: 60_000 });
   }
 
-  /** PM-010: walk `tbody tr.table-row` top-down; first ● Pending For Approval → status cell + Review link. */
+  /** PM-010: walk policy rows top-down; first ● Pending For Approval → status cell + Review link. */
   async openReviewForFirstPendingForApproval() {
-    const grid = this.page.locator('table.table[role="grid"]');
+    const grid = this.viewPoliciesGrid();
     await expect(grid).toBeVisible({ timeout: 60_000 });
     const pendingLabel = '● Pending For Approval';
-    const rows = grid.locator('tbody tr.table-row');
-    const n = await rows.count();
-    for (let i = 0; i < n; i += 1) {
-      const row = rows.nth(i);
+    const rows = await grid.getByRole('row').all();
+    for (const row of rows) {
       const statusCell = row.getByRole('gridcell', { name: pendingLabel });
       if ((await statusCell.count()) === 0) {
         continue;
@@ -346,19 +423,11 @@ export class CsiPolicyManagementPage extends BasePage {
     await expect(this.page.getByText('Approval Sent')).toBeVisible({ timeout: 60_000 });
   }
 
-  private viewPoliciesTable(): Locator {
-    return this.page.locator('table.table[role="grid"]');
-  }
-
-  private publishedPolicyRowByTitle(policyTitle: string): Locator {
-    return this.viewPoliciesTable().locator('tbody tr.table-row').filter({ hasText: policyTitle.trim() }).first();
-  }
-
   /** PM-026: View Policies screen (OutSystems `/Avotech/ViewPolicies`). */
   async gotoAvotechViewPolicies() {
     await this.page.goto(`${CSI_BASE_URL}/Avotech/ViewPolicies`);
     await this.page.waitForLoadState('domcontentloaded');
-    await expect(this.viewPoliciesTable()).toBeVisible({ timeout: 60_000 });
+    await expect(this.viewPoliciesGrid()).toBeVisible({ timeout: 60_000 });
   }
 
   /** Tab label includes a dynamic count, e.g. `Published Policies (52)`. */
@@ -374,7 +443,7 @@ export class CsiPolicyManagementPage extends BasePage {
   }
 
   async sortViewPoliciesByVersionColumn() {
-    const grid = this.viewPoliciesTable();
+    const grid = this.viewPoliciesGrid();
     await grid.getByRole('columnheader', { name: 'Version' }).click();
     await this.safeSleep(500);
   }
@@ -384,29 +453,39 @@ export class CsiPolicyManagementPage extends BasePage {
    * Requires at least one published policy still on version 1 with a pending update in the tenant.
    */
   async clickFirstPublishedRowUpdateVersionOne() {
-    const grid = this.viewPoliciesTable();
-    const link = grid.getByRole('link').filter({ hasText: /Update Version\s*1/i }).first();
+    const grid = this.viewPoliciesGrid();
+    const link = grid.getByRole('link', { name: /Update Version\s*1/i }).first();
     await expect(link).toBeVisible({ timeout: 60_000 });
     await link.click();
   }
 
   async clickPolicyTitleBreadcrumbLink() {
-    const link = this.page.locator('#policyTitle').getByRole('link');
-    await expect(link).toBeVisible({ timeout: 60_000 });
-    await link.click();
+    const label = this.page.getByText('Policy Title', { exact: true });
+    await expect(label).toBeVisible({ timeout: 60_000 });
+    const clicked = await label.evaluate((el) => {
+      const box =
+        (el.closest('.template-info-box') as HTMLElement | null) ??
+        (el.closest('[id="policyTitle"]') as HTMLElement | null);
+      const link = box?.querySelector('a[data-link]') as HTMLElement | null;
+      if (link) {
+        link.click();
+        return true;
+      }
+      return false;
+    });
+    expect(clicked).toBe(true);
   }
 
   async clickPolicyUpdateWizardNextFirst() {
-    const next = this.page.getByRole('button', { name: 'Next' }).first();
-    await expect(next).toBeVisible({ timeout: 60_000 });
-    await next.click();
+    const nextButtons = await this.page.getByRole('button', { name: 'Next' }).all();
+    expect(nextButtons.length).toBeGreaterThan(0);
+    await nextButtons[0].click();
   }
 
   async clickPolicyUpdateWizardNextExact() {
     await this.safeSleep(3000);
-    const next = this.page.getByRole('button', { name: 'Next', exact: true });
-    await expect(next).toBeVisible({ timeout: 60_000 });
-    await next.click();
+    await expect(this.wizardNextButton).toBeVisible({ timeout: 60_000 });
+    await this.wizardNextButton.click();
   }
 
   async clickSubmitForReReview() {
@@ -436,12 +515,14 @@ export class CsiPolicyManagementPage extends BasePage {
     const search = this.page.getByRole('searchbox', { name: 'Search policies' });
     await expect(search).toBeVisible({ timeout: 30_000 });
     await search.fill(query);
-    await this.page.getByRole('button', { name: 'Search' }).first().click();
-    await expect(this.viewPoliciesTable()).toBeVisible({ timeout: 30_000 });
+    const searchButtons = await this.page.getByRole('button', { name: 'Search' }).all();
+    expect(searchButtons.length).toBeGreaterThan(0);
+    await searchButtons[0].click();
+    await expect(this.viewPoliciesGrid()).toBeVisible({ timeout: 30_000 });
   }
 
   async openReviewLinkForRowWithPolicyTitle(policyTitle: string) {
-    const row = this.publishedPolicyRowByTitle(policyTitle);
+    const row = this.policyRowByTitle(policyTitle);
     await expect(row).toBeVisible({ timeout: 30_000 });
     await row.getByRole('link', { name: 'Review' }).click();
   }
@@ -461,15 +542,25 @@ export class CsiPolicyManagementPage extends BasePage {
   }
 
   async expectPolicyTitleVisibleInPublishedGrid(policyTitle: string) {
-    await expect(this.publishedPolicyRowByTitle(policyTitle)).toBeVisible({ timeout: 30_000 });
+    await expect(this.policyRowByTitle(policyTitle)).toBeVisible({ timeout: 30_000 });
   }
 
-  /** Version column is the 3rd column (Date, Policy, Version). */
   async expectPublishedRowVersionColumnIs(policyTitle: string, versionText: string) {
-    const row = this.publishedPolicyRowByTitle(policyTitle);
+    const row = this.policyRowByTitle(policyTitle);
     await expect(row).toBeVisible({ timeout: 30_000 });
-    const versionCell = row.locator('td').nth(2);
-    await expect(versionCell).toContainText(versionText, { timeout: 15_000 });
+    await expect(row.getByRole('gridcell', { name: versionText })).toBeVisible({ timeout: 15_000 });
+  }
+
+  /**
+   * PM-026: assert the Version column only. Substring match on e.g. `2` also hits date, policy title,
+   * and the `Update Version 2` action cell in the same row.
+   */
+  async expectPublishedRowVersionColumnIsExact(policyTitle: string, versionText: string) {
+    const row = this.policyRowByTitle(policyTitle);
+    await expect(row).toBeVisible({ timeout: 30_000 });
+    await expect(row.getByRole('gridcell', { name: versionText, exact: true })).toBeVisible({
+      timeout: 15_000,
+    });
   }
 
   buildEditedDocxPath(downloadPath: string, uniqueSuffix: string): string {

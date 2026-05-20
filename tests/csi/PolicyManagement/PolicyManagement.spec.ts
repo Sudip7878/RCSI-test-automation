@@ -191,7 +191,7 @@ test.describe('CSI · Policy Management', () => {
       await csiPolicyManagementPage.searchViewPoliciesGrid(newFullTitle);
       await csiPolicyManagementPage.expectPolicyTitleVisibleInPublishedGrid(newFullTitle);
       await csiPolicyManagementPage.sortViewPoliciesByVersionColumn();
-      await csiPolicyManagementPage.expectPublishedRowVersionColumnIs(newFullTitle, '2');
+      await csiPolicyManagementPage.expectPublishedRowVersionColumnIsExact(newFullTitle, '2');
     });
   });
 });
