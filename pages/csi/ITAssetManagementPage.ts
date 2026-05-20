@@ -205,6 +205,20 @@ export class CsiItAssetManagementPage extends BasePage {
     return scrollRoot.evaluate((el) => el.scrollLeft);
   }
 
+  /** Wijmo grid: force horizontal scroll to the left edge (IA-020 View/Edit live in left columns). */
+  private async scrollGridToLeftEdge(scrollRoot: Locator): Promise<void> {
+    await expect(scrollRoot).toBeAttached({ timeout: 30_000 });
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      await this.setGridScrollLeft(scrollRoot, 0);
+      await this.page.waitForTimeout(attempt === 0 ? 150 : 250);
+      const left = await this.gridScrollLeft(scrollRoot);
+      if (left <= 2) {
+        return;
+      }
+    }
+    await this.setGridScrollLeft(scrollRoot, 0);
+  }
+
   /** Increase `wj-part=root` scrollLeft until `chcells` shows Acquisition Date. */
   private async scrollToRevealAcquisitionDateHeader(runtime: Locator, scrollRoot: Locator): Promise<Locator> {
     const header = runtime.locator('[wj-part="chcells"]').getByText('Acquisition Date', { exact: true }).first();
@@ -226,37 +240,47 @@ export class CsiItAssetManagementPage extends BasePage {
     return header;
   }
 
-  /** Find asset cell: scroll left from current position, then 0→max if still hidden. */
+  /**
+   * Find asset cell: sweep from left edge → right, then (if still hidden) step left from current
+   * scroll (e.g. after Acquisition Date sort scrolled right). IA-020: always reaches scrollLeft 0.
+   */
   private async scrollToRevealAssetNameCell(scrollRoot: Locator, cell: Locator): Promise<boolean> {
     const step = 280;
     const max = await this.gridMaxScrollLeft(scrollRoot);
 
-    let x = await this.gridScrollLeft(scrollRoot);
-    while (x >= 0) {
-      await this.setGridScrollLeft(scrollRoot, x);
+    const tryReveal = async (): Promise<boolean> => {
       if (await cell.isVisible().catch(() => false)) {
         await cell.scrollIntoViewIfNeeded();
         return true;
       }
-      x -= step;
-    }
+      return false;
+    };
 
-    await this.setGridScrollLeft(scrollRoot, 0);
-    if (await cell.isVisible().catch(() => false)) {
-      await cell.scrollIntoViewIfNeeded();
+    await this.scrollGridToLeftEdge(scrollRoot);
+    if (await tryReveal()) {
       return true;
     }
 
-    for (x = step; x <= max + step; x += step) {
+    for (let x = step; x <= max + step; x += step) {
       await this.setGridScrollLeft(scrollRoot, Math.min(x, max));
-      if (await cell.isVisible().catch(() => false)) {
-        await cell.scrollIntoViewIfNeeded();
+      await this.page.waitForTimeout(80);
+      if (await tryReveal()) {
         return true;
       }
     }
 
-    await this.setGridScrollLeft(scrollRoot, 0);
-    return await cell.isVisible().catch(() => false);
+    let x = await this.gridScrollLeft(scrollRoot);
+    while (x > 0) {
+      x = Math.max(0, x - step);
+      await this.setGridScrollLeft(scrollRoot, x);
+      await this.page.waitForTimeout(80);
+      if (await tryReveal()) {
+        return true;
+      }
+    }
+
+    await this.scrollGridToLeftEdge(scrollRoot);
+    return await tryReveal();
   }
 
   /**
@@ -293,13 +317,10 @@ export class CsiItAssetManagementPage extends BasePage {
     return cell;
   }
 
-  /** IA-001: sort by Acquisition Date (horizontal scroll), assert asset name in `wj-part=cells`; retry sort once. */
+  /** IA-001 / IA-025 create: sort by Acquisition Date, paginate, assert asset name in grid. */
   async expectAssetVisibleInGridAfterAcquisitionSort(assetName: string) {
-    await expect(this.page.locator('.datagrid-autogenerate, [id*="datagrid_autogenerate"]')).toBeVisible({
-      timeout: 60_000,
-    });
-
-    await this.expectAssetNameCellVisibleInRuntimeGridAfterAcquisitionSort(this.clientMachineGridRuntime(), assetName);
+    const cell = await this.findClientMachineAutogenerateGridCellByAssetName(assetName);
+    await expect(cell).toBeVisible({ timeout: 10_000 });
   }
 
   /** IA-003: Client Machine bulk path (`categoryId=1` / `subCategoryId=1` desktop). */
@@ -644,7 +665,7 @@ export class CsiItAssetManagementPage extends BasePage {
     osVersionExact: string,
   ): Promise<void> {
     const runtime = this.clientMachineGridRuntimeIa016();
-    const nameCell = await this.expectAssetNameCellVisibleInRuntimeGridAfterAcquisitionSort(runtime, assetNameExact);
+    const nameCell = await this.findAssetNameCellInRuntimeGrid(runtime, assetNameExact);
     const scrollRoot = runtime.locator('div[wj-part="root"]').first();
     await expect(nameCell).toBeVisible({ timeout: 30_000 });
 
@@ -670,26 +691,33 @@ export class CsiItAssetManagementPage extends BasePage {
    * Wijmo grid (`clientMachineGridRuntimeIa016`), then return the name cell for Edit/View.
    */
   private async ia025ScrollToAssetNameCellInDesktopListGrid(assetDisplayName: string): Promise<Locator> {
-    return this.expectAssetNameCellVisibleInRuntimeGridAfterAcquisitionSort(
-      this.clientMachineGridRuntimeIa016(),
-      assetDisplayName,
-    );
+    return this.findAssetNameCellInRuntimeGrid(this.clientMachineGridRuntimeIa016(), assetDisplayName);
   }
 
   /** IA-025: `Edit` on the row whose Asset Name cell matches `assetDisplayName`. */
   async clickEditOnClientMachineGridRowByAssetNameIa025(assetDisplayName: string): Promise<void> {
+    const runtime = this.clientMachineGridRuntimeIa016();
     const nameCell = await this.ia025ScrollToAssetNameCellInDesktopListGrid(assetDisplayName);
+    const scrollRoot = runtime.locator('div[wj-part="root"]').first();
+    await this.scrollGridToLeftEdge(scrollRoot);
+
     const row = nameCell.locator('xpath=./ancestor::div[contains(@class,"wj-row")][1]');
     const editBtn = row.locator('button.wj-cell-maker').filter({ hasText: /^Edit$/ });
+    await editBtn.scrollIntoViewIfNeeded();
     await expect(editBtn).toBeVisible({ timeout: 15_000 });
     await editBtn.click();
   }
 
   /** IA-025: `View` on the row whose Asset Name cell matches `assetDisplayName`. */
   async clickViewOnClientMachineGridRowByAssetNameIa025(assetDisplayName: string): Promise<void> {
+    const runtime = this.clientMachineGridRuntimeIa016();
     const nameCell = await this.ia025ScrollToAssetNameCellInDesktopListGrid(assetDisplayName);
+    const scrollRoot = runtime.locator('div[wj-part="root"]').first();
+    await this.scrollGridToLeftEdge(scrollRoot);
+
     const row = nameCell.locator('xpath=./ancestor::div[contains(@class,"wj-row")][1]');
     const viewBtn = row.locator('button.wj-cell-maker').filter({ hasText: /^View$/ });
+    await viewBtn.scrollIntoViewIfNeeded();
     await expect(viewBtn).toBeVisible({ timeout: 15_000 });
     await viewBtn.click();
   }
@@ -841,25 +869,17 @@ export class CsiItAssetManagementPage extends BasePage {
   }
 
   /**
-   * Client machine autogenerate grid: find name `gridcell` — page 1 uses two Acquisition Date sorts
-   * (each followed by horizontal scroll); then Next up to `maxNextClicks` from pagination (`lastPage − 1`);
-   * later pages use horizontal scroll only.
+   * Find asset name `gridcell` in a Wijmo runtime grid: page 1 two Acquisition Date sorts + horizontal scroll;
+   * then Next through pagination. Shared by IA-001/020 (autogenerate) and IA-025 (desktop `.datagrid-runtime`).
    */
-  private async findClientMachineAutogenerateGridCellByAssetName(assetName: string): Promise<Locator> {
-    await expect(this.page.locator('.datagrid-autogenerate, [id*="datagrid_autogenerate"]')).toBeVisible({
-      timeout: 5_000,
-    });
-    // Grid assumed on page 1 when loaded; re-enable: await this.goToFirstAutogenerateGridPageViaPrevious();
-
-    const runtimeForPaging = this.clientMachineGridRuntime();
-    await expect(runtimeForPaging).toBeVisible({ timeout: 60_000 });
+  private async findAssetNameCellInRuntimeGrid(runtime: Locator, assetName: string): Promise<Locator> {
+    await expect(runtime).toBeVisible({ timeout: 60_000 });
     const maxNextClicks = await this.readMaxNextClicksFromAutogeneratePagination();
 
     let nextClicks = 0;
     let useAcquisitionTwoPasses = true;
 
     while (true) {
-      const runtime = this.clientMachineGridRuntime();
       await expect(runtime).toBeVisible({ timeout: 60_000 });
       const scrollRoot = runtime.locator('div[wj-part="root"]').first();
       await expect(scrollRoot).toBeAttached({ timeout: 30_000 });
@@ -875,10 +895,8 @@ export class CsiItAssetManagementPage extends BasePage {
         if (await this.scrollAutogenerateGridHorizontallyToRevealNameCell(scrollRoot, cell)) {
           return cell;
         }
-      } else {
-        if (await this.scrollAutogenerateGridHorizontallyToRevealNameCell(scrollRoot, cell)) {
-          return cell;
-        }
+      } else if (await this.scrollAutogenerateGridHorizontallyToRevealNameCell(scrollRoot, cell)) {
+        return cell;
       }
 
       if (nextClicks >= maxNextClicks) {
@@ -897,8 +915,16 @@ export class CsiItAssetManagementPage extends BasePage {
     }
 
     throw new Error(
-      `Client machine autogenerate grid: asset "${assetName}" not found after two Acquisition sorts + scrolls on page 1 and up to ${maxNextClicks} Next click(s) (scroll-only on later pages; cap from pagination last page − 1)`,
+      `Client machine grid: asset "${assetName}" not found after Acquisition sort + scroll on page 1 and up to ${maxNextClicks} Next page(s)`,
     );
+  }
+
+  /** Client machine autogenerate grid (IA-001, IA-020). */
+  private async findClientMachineAutogenerateGridCellByAssetName(assetName: string): Promise<Locator> {
+    await expect(this.page.locator('.datagrid-autogenerate, [id*="datagrid_autogenerate"]')).toBeVisible({
+      timeout: 5_000,
+    });
+    return this.findAssetNameCellInRuntimeGrid(this.clientMachineGridRuntime(), assetName);
   }
 
   /** Assert the asset name cell exists (same resolution path as View). */
@@ -910,8 +936,13 @@ export class CsiItAssetManagementPage extends BasePage {
   /** Click row View on the client machine autogenerate grid for `assetDisplayName`. */
   async clickViewOnClientMachineAutogenerateGridRowByAssetName(assetDisplayName: string): Promise<void> {
     const nameCell = await this.findClientMachineAutogenerateGridCellByAssetName(assetDisplayName);
+    const runtime = this.clientMachineGridRuntime();
+    const scrollRoot = runtime.locator('div[wj-part="root"]').first();
+    await this.scrollGridToLeftEdge(scrollRoot);
+
     const row = nameCell.locator('xpath=./ancestor::div[contains(@class,"wj-row")][1]');
     const viewBtn = row.locator('button.wj-cell-maker').filter({ hasText: /^View$/ });
+    await viewBtn.scrollIntoViewIfNeeded();
     await expect(viewBtn).toBeVisible({ timeout: 15_000 });
     await viewBtn.click();
   }
