@@ -60,22 +60,27 @@ test.describe('CSI · IT Asset Management', () => {
       await csiItAssetManagementPage.startAddAsset();
       await csiItAssetManagementPage.selectCategoryDesktopComputers();
 
-      await csiItAssetManagementPage.fillAssetIdentity({
+      const identityParams = {
         displayName,
         modelNumber,
         serialNumber,
         osVersion: csiItAssetOsVersion(),
         ipAddress: csiItAssetIpAddress(),
-      });
+      };
+      await csiItAssetManagementPage.fillAssetIdentity(identityParams);
 
-      await csiItAssetManagementPage.fillAssetStateAndLocation({
-        location: csiItAssetLocation(),
-      });
+      await csiItAssetManagementPage.fillAssetStateAndLocation(
+        { location: csiItAssetLocation() },
+        identityParams,
+      );
 
-      await csiItAssetManagementPage.fillSupplierAndCommercial({
-        website: csiItAssetWebsite(),
-        purchaseCost: csiItAssetPurchaseCost(),
-      });
+      await csiItAssetManagementPage.fillSupplierAndCommercial(
+        {
+          website: csiItAssetWebsite(),
+          purchaseCost: csiItAssetPurchaseCost(),
+        },
+        identityParams,
+      );
 
       await csiItAssetManagementPage.pickPurchaseDateToday();
       await csiItAssetManagementPage.pickWarrantyOrEndDateOneMonthFromToday();
@@ -99,35 +104,41 @@ test.describe('CSI · IT Asset Management', () => {
       const serialNumber = csiItAssetSerialFromModelNumber(modelNumber);
 
       await csiItAssetManagementPage.openClientMachineList();
-      await csiItAssetManagementPage.startAddAsset();
-      await csiItAssetManagementPage.selectCategoryDesktopComputers();
+      await csiItAssetManagementPage.startAddAssetIa020();
+      await csiItAssetManagementPage.selectCategoryDesktopComputersIa020();
 
-      await csiItAssetManagementPage.fillAssetIdentity({
+      const identityParams = {
         displayName,
         modelNumber,
         serialNumber,
         osVersion: csiItAssetOsVersion(),
         ipAddress: csiItAssetIpAddress(),
-      });
+      };
+      await csiItAssetManagementPage.fillAssetIdentityIa020(identityParams);
 
-      await csiItAssetManagementPage.fillAssetStateAndLocationUsingStateOption({
-        location: csiItAssetLocation(),
-        stateOptionName: csiItAssetStateLabelInStore,
-      });
+      await csiItAssetManagementPage.fillAssetStateAndLocationUsingStateOptionIa020(
+        {
+          location: csiItAssetLocation(),
+          stateOptionName: csiItAssetStateLabelInStore,
+        },
+        identityParams,
+      );
 
-      await csiItAssetManagementPage.fillSupplierAndCommercial({
-        website: csiItAssetWebsite(),
-        purchaseCost: csiItAssetPurchaseCost(),
-      });
+      await csiItAssetManagementPage.fillSupplierAndCommercialIa020(
+        {
+          website: csiItAssetWebsite(),
+          purchaseCost: csiItAssetPurchaseCost(),
+        },
+        identityParams,
+      );
 
       await csiItAssetManagementPage.pickPurchaseDateToday();
       await csiItAssetManagementPage.pickWarrantyOrEndDateOneMonthFromToday();
       await csiItAssetManagementPage.saveNewAsset();
+      await csiItAssetManagementPage.openClientMachineList();
 
       await csiItAssetManagementPage.expectClientMachineAutogenerateGridShowsAssetName(displayName);
 
-      // Still on client machine list after save + grid assert; skip redundant goto before View.
-      // await csiItAssetManagementPage.openClientMachineList();
       await csiItAssetManagementPage.clickViewOnClientMachineAutogenerateGridRowByAssetName(displayName);
       await csiItAssetManagementPage.expectItAssetDetailViewShowsAssetState(csiItAssetStateLabelInStore);
 
@@ -154,33 +165,40 @@ test.describe('CSI · IT Asset Management', () => {
       const serialNumber2 = csiItAssetSerialFromModelNumber(modelNumber2);
 
       await csiItAssetManagementPage.openClientMachineList();
-      await csiItAssetManagementPage.startAddAsset();
-      await csiItAssetManagementPage.selectCategoryDesktopComputers();
+      await csiItAssetManagementPage.startAddAssetIa020();
+      await csiItAssetManagementPage.selectCategoryDesktopComputersIa020();
 
-      await csiItAssetManagementPage.fillAssetIdentity({
+      const identityParams2 = {
         displayName: displayName2,
         modelNumber: modelNumber2,
         serialNumber: serialNumber2,
         osVersion: csiItAssetOsVersion(),
         ipAddress: csiItAssetIpAddress(),
-      });
+      };
+      await csiItAssetManagementPage.fillAssetIdentityIa020(identityParams2);
 
-      await csiItAssetManagementPage.fillAssetStateAndLocationUsingStateOption({
-        location: csiItAssetLocation(),
-        stateOptionName: csiItAssetStateLabelExpired,
-      });
+      await csiItAssetManagementPage.fillAssetStateAndLocationUsingStateOptionIa020(
+        {
+          location: csiItAssetLocation(),
+          stateOptionName: csiItAssetStateLabelExpired,
+        },
+        identityParams2,
+      );
 
-      await csiItAssetManagementPage.fillSupplierAndCommercial({
-        website: csiItAssetWebsite(),
-        purchaseCost: csiItAssetPurchaseCost(),
-      });
+      await csiItAssetManagementPage.fillSupplierAndCommercialIa020(
+        {
+          website: csiItAssetWebsite(),
+          purchaseCost: csiItAssetPurchaseCost(),
+        },
+        identityParams2,
+      );
 
       await csiItAssetManagementPage.pickPurchaseDateToday();
       await csiItAssetManagementPage.pickWarrantyOrEndDateOneMonthFromToday();
       await csiItAssetManagementPage.saveNewAsset();
+      await csiItAssetManagementPage.openClientMachineList();
 
       await csiItAssetManagementPage.expectClientMachineAutogenerateGridShowsAssetName(displayName2);
-      // await csiItAssetManagementPage.openClientMachineList();
       await csiItAssetManagementPage.clickViewOnClientMachineAutogenerateGridRowByAssetName(displayName2);
       await csiItAssetManagementPage.expectItAssetDetailViewShowsAssetState(csiItAssetStateLabelExpired);
     });
@@ -301,22 +319,27 @@ test.describe('CSI · IT Asset Management', () => {
       await csiItAssetManagementPage.startAddAsset();
       await csiItAssetManagementPage.selectCategoryDesktopComputers();
 
-      await csiItAssetManagementPage.fillAssetIdentity({
+      const identityParams = {
         displayName,
         modelNumber,
         serialNumber,
         osVersion: csiItAssetOsVersion(),
         ipAddress: csiItAssetIpAddress(),
-      });
+      };
+      await csiItAssetManagementPage.fillAssetIdentity(identityParams);
 
-      await csiItAssetManagementPage.fillAssetStateAndLocation({
-        location: csiItAssetLocation(),
-      });
+      await csiItAssetManagementPage.fillAssetStateAndLocation(
+        { location: csiItAssetLocation() },
+        identityParams,
+      );
 
-      await csiItAssetManagementPage.fillSupplierAndCommercial({
-        website: csiItAssetWebsite(),
-        purchaseCost: csiItAssetPurchaseCost(),
-      });
+      await csiItAssetManagementPage.fillSupplierAndCommercial(
+        {
+          website: csiItAssetWebsite(),
+          purchaseCost: csiItAssetPurchaseCost(),
+        },
+        identityParams,
+      );
 
       await csiItAssetManagementPage.pickPurchaseDateToday();
       await csiItAssetManagementPage.pickWarrantyOrEndDateOneMonthFromToday();

@@ -1,4 +1,4 @@
-/// <reference lib="dom" />
+﻿/// <reference lib="dom" />
 import { expect, type Locator } from '@playwright/test';
 import * as path from 'path';
 import { CSI_BASE_URL } from '../../config/csi';
@@ -7,7 +7,6 @@ import {
   csiItAssetManufacturer,
   csiItAssetOperatingSystem,
   csiItAssetState,
-  csiItAssetSupplier,
 } from '../../utils/csi/itAssetManagementTestData';
 import { BasePage } from '../BasePage';
 
@@ -15,12 +14,19 @@ function escapeRegExp(s: string) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+export type ItAssetIdentityParams = {
+  displayName: string;
+  modelNumber: string;
+  serialNumber: string;
+  osVersion: string;
+  ipAddress: string;
+};
+
 export class CsiItAssetManagementPage extends BasePage {
   readonly addAssetButton = this.page.getByRole('button', { name: 'Add Asset' });
   readonly saveButton = this.page.getByRole('button', { name: 'Save' });
   readonly assetNameInput = this.page.locator('[id*="Input_assetsName"]').first();
   readonly desktopComputersCategory = this.page.getByText('Desktop Computers', { exact: true }).first();
-
   /** Date widgets: stable `_16` / `_17` id suffix; `-b10-b2-Input` or legacy `InputWithIconWrapper`. */
   private readonly acquisitionDateWrapper = this.page.locator(
     'div.input-with-icon-input[id*="_16-b10-b2-Input"], [id*="_16-b10-b2-InputWithIconWrapper"]',
@@ -33,7 +39,7 @@ export class CsiItAssetManagementPage extends BasePage {
     .locator('div.input-with-icon-input')
     .filter({ has: this.page.locator('#Input_purchaseDate') });
 
-  /** Same destination as hub → IT Asset → Office → Client Machine; avoids menu transitions blocking clicks. */
+  /** Same destination as hub ΓåÆ IT Asset ΓåÆ Office ΓåÆ Client Machine; avoids menu transitions blocking clicks. */
   async openClientMachineList() {
     await this.gotoItAssetManagementClientMachineDesktopListUrl();
     await expect(this.addAssetButton).toBeVisible({ timeout: 60_000 });
@@ -45,30 +51,190 @@ export class CsiItAssetManagementPage extends BasePage {
     await expect(this.desktopComputersCategory).toBeVisible({ timeout: 30_000 });
   }
 
-  async selectCategoryDesktopComputers() {
+  /** IA-001 / IA-025: wait 3s for Asset Name; reload list URL and reopen form if still missing. */
+  async selectCategoryDesktopComputers(): Promise<void> {
     await this.desktopComputersCategory.click();
+    await this.page.waitForTimeout(3000);
+    if (await this.assetNameInput.isVisible().catch(() => false)) {
+      return;
+    }
+    await this.reopenAndOpenAddAssetClientMachineForm(false);
+    if (await this.assetNameInput.isVisible().catch(() => false)) {
+      return;
+    }
     await expect(this.assetNameInput).toBeVisible({ timeout: 30_000 });
   }
 
-  async fillAssetIdentity(params: {
-    displayName: string;
+  /** IA-020: open Add Asset wizard without requiring category tabs (may land on Client Machine form). */
+  async startAddAssetIa020(): Promise<void> {
+    await expect(this.addAssetButton).toBeVisible();
+    await this.addAssetButton.click();
+    await this.page.waitForTimeout(3000);
+  }
+
+  private async waitForAssetNameAfterCategoryIa020(): Promise<boolean> {
+    if (await this.desktopComputersCategory.isVisible().catch(() => false)) {
+      await this.desktopComputersCategory.click();
+    }
+    await this.page.waitForTimeout(3000);
+    return this.assetNameInput.isVisible().catch(() => false);
+  }
+
+  /** Reload list URL and reopen Add Asset → Client Machine form (IA-001 vs IA-020 navigation). */
+  private async reopenAndOpenAddAssetClientMachineForm(useIa020Navigation: boolean): Promise<void> {
+    await this.page.reload({ waitUntil: 'domcontentloaded' });
+    await this.gotoItAssetManagementClientMachineDesktopListUrl();
+    if (useIa020Navigation) {
+      await this.startAddAssetIa020();
+      if (!(await this.waitForAssetNameAfterCategoryIa020())) {
+        await expect(this.assetNameInput).toBeVisible({ timeout: 30_000 });
+      }
+    } else {
+      await this.startAddAsset();
+      await this.selectCategoryDesktopComputers();
+    }
+  }
+
+  /** IA-020: select Desktop Computers when shown; wait 3s for Asset Name, reload list URL if still missing. */
+  async selectCategoryDesktopComputersIa020(): Promise<void> {
+    if (await this.waitForAssetNameAfterCategoryIa020()) {
+      return;
+    }
+    await this.reopenAndOpenAddAssetClientMachineForm(true);
+    if (await this.waitForAssetNameAfterCategoryIa020()) {
+      return;
+    }
+    await expect(this.assetNameInput).toBeVisible({ timeout: 30_000 });
+  }
+
+  private async waitForPostAssetNameFields(): Promise<boolean> {
+    return this.itAssetInputFieldBlock('Manufacturer')
+      .locator('.vscomp-toggle-button')
+      .isVisible({ timeout: 3000 })
+      .catch(() => false);
+  }
+
+  private async withAddAssetFormReloadIfFieldMissing(
+    fieldLabel: string,
+    identityParams: ItAssetIdentityParams,
+    useIa020Navigation: boolean,
+    retried: boolean,
+    action: () => Promise<void>,
+  ): Promise<void> {
+    await this.page.waitForTimeout(3000);
+    const fieldReady = await this.itAssetInputFieldBlock(fieldLabel)
+      .locator('.vscomp-toggle-button')
+      .isVisible({ timeout: 3000 })
+      .catch(() => false);
+    if (!fieldReady) {
+      if (retried) {
+        await expect(this.itAssetInputFieldBlock(fieldLabel).locator('.vscomp-toggle-button')).toBeVisible({
+          timeout: 30_000,
+        });
+      } else {
+        await this.reopenAndOpenAddAssetClientMachineForm(useIa020Navigation);
+        await this.fillAssetIdentityWithFormReloadRetry(identityParams, useIa020Navigation);
+        return this.withAddAssetFormReloadIfFieldMissing(
+          fieldLabel,
+          identityParams,
+          useIa020Navigation,
+          true,
+          action,
+        );
+      }
+    }
+    await action();
+  }
+
+  private itAssetInputFieldBlock(fieldLabel: string): Locator {
+    return this.page
+      .locator('div[data-block="ITassets.inputFields"]')
+      .filter({ has: this.page.getByText(fieldLabel, { exact: true }) })
+      .first();
+  }
+
+  private async optionsForOpenCombobox(combobox: Locator): Promise<Locator> {
+    const panelId = await combobox.getAttribute('aria-controls');
+    if (panelId) {
+      const inPanel = this.page.locator(`#${panelId}`).locator('[role="option"], .vscomp-option');
+      if ((await inPanel.count()) > 0) {
+        return inPanel;
+      }
+    }
+    const inDropbox = this.page.locator('.vscomp-dropbox:visible').locator('[role="option"], .vscomp-option');
+    if ((await inDropbox.count()) > 0) {
+      return inDropbox;
+    }
+    return this.page.getByRole('listbox').last().getByRole('option');
+  }
+
+  private async clickFirstNonPlaceholderVirtualSelectOption(options: Locator): Promise<string> {
+    await expect(options.first()).toBeVisible({ timeout: 15_000 });
+    const placeholder = /^(select|choose|please|--|…|\.\.\.)$/i;
+    const n = await options.count();
+    for (let i = 0; i < n; i++) {
+      const opt = options.nth(i);
+      const label = (await opt.innerText()).replace(/\s+/g, ' ').trim();
+      if (label.length > 0 && !placeholder.test(label)) {
+        await opt.click();
+        return label;
+      }
+    }
+    throw new Error('No selectable VirtualSelect option found');
+  }
+
+  /** IT Asset VirtualSelect: open field, pick first non-placeholder option (supplier list varies by tenant). */
+  private async selectFirstVirtualSelectInItAssetField(fieldLabel: string): Promise<void> {
+    const block = this.itAssetInputFieldBlock(fieldLabel);
+    await expect(block).toBeVisible({ timeout: 30_000 });
+    const combobox = block.locator('[role="combobox"]').first();
+    await block.locator('.vscomp-toggle-button').first().click();
+    await expect(combobox).toHaveAttribute('aria-expanded', 'true', { timeout: 15_000 });
+
+    const options = await this.optionsForOpenCombobox(combobox);
+    const chosen = await this.clickFirstNonPlaceholderVirtualSelectOption(options);
+    await expect(block.locator('.vscomp-value')).toContainText(chosen, { timeout: 10_000 });
+  }
+
+  /**
+   * IT Asset create/edit VirtualSelect: open via `.vscomp-toggle-button`, pick option in this field's listbox panel.
+   */
+  private async selectVirtualSelectInItAssetField(
+    fieldLabel: string,
+    optionName: string,
+    exact = true,
+  ): Promise<void> {
+    const block = this.itAssetInputFieldBlock(fieldLabel);
+    await expect(block).toBeVisible({ timeout: 30_000 });
+    const combobox = block.locator('[role="combobox"]').first();
+    await block.locator('.vscomp-toggle-button').first().click();
+    await expect(combobox).toHaveAttribute('aria-expanded', 'true', { timeout: 15_000 });
+
+    const options = await this.optionsForOpenCombobox(combobox);
+    const option = options.filter({ hasText: optionName }).first();
+    await expect(option).toBeVisible({ timeout: 15_000 });
+    await option.click();
+
+    if (exact) {
+      await expect(block.locator('.vscomp-value')).toHaveText(optionName, { timeout: 10_000 });
+    } else {
+      await expect(block.locator('.vscomp-value')).toContainText(optionName, { timeout: 10_000 });
+    }
+  }
+
+  private async fillAssetIdentityDetails(params: {
     modelNumber: string;
     serialNumber: string;
     osVersion: string;
     ipAddress: string;
-  }) {
-    await this.assetNameInput.click();
-    await this.assetNameInput.fill(params.displayName);
-
-    await this.page.getByText('Select manufacturer', { exact: true }).click();
-    await this.page.getByRole('option', { name: csiItAssetManufacturer }).click();
+  }): Promise<void> {
+    await this.selectVirtualSelectInItAssetField('Manufacturer', csiItAssetManufacturer);
 
     const model = this.page.getByRole('textbox', { name: 'Enter model number' });
     await model.click();
     await model.fill(params.modelNumber);
 
-    await this.page.getByText('Select OS', { exact: true }).click();
-    await this.page.getByRole('option', { name: csiItAssetOperatingSystem }).click();
+    await this.selectVirtualSelectInItAssetField('Operating System (OS)', csiItAssetOperatingSystem);
 
     const osVersionInput = this.page.getByRole('textbox', { name: 'Enter OS version' });
     await osVersionInput.click();
@@ -83,32 +249,100 @@ export class CsiItAssetManagementPage extends BasePage {
     await ip.fill(params.ipAddress);
   }
 
-  async fillAssetStateAndLocation(params: { location: string }) {
-    await this.page.getByText('Select asset state', { exact: true }).click();
-    await this.page.getByRole('option', { name: csiItAssetState }).click();
+  /**
+   * Fill identity from Asset Name; reload and retry once if Basic Information fields are not ready.
+   */
+  private async fillAssetIdentityWithFormReloadRetry(
+    params: ItAssetIdentityParams,
+    useIa020Navigation: boolean,
+    retried = false,
+  ): Promise<void> {
+    await this.assetNameInput.click();
+    await this.assetNameInput.fill(params.displayName);
 
-    const loc = this.page.getByRole('textbox', { name: 'Enter asset location' });
-    await loc.click();
-    await loc.fill(params.location);
+    if (!(await this.waitForPostAssetNameFields())) {
+      if (retried) {
+        await expect(this.itAssetInputFieldBlock('Manufacturer').locator('.vscomp-toggle-button')).toBeVisible({
+          timeout: 30_000,
+        });
+      } else {
+        await this.reopenAndOpenAddAssetClientMachineForm(useIa020Navigation);
+        return this.fillAssetIdentityWithFormReloadRetry(params, useIa020Navigation, true);
+      }
+    }
+
+    await this.page.waitForTimeout(3000);
+    await this.fillAssetIdentityDetails(params);
   }
 
-  async fillSupplierAndCommercial(params: {
-    website: string;
-    purchaseCost: string;
-  }) {
-    await this.page.getByText('Select supplier', { exact: true }).click();
-    await this.page.getByRole('option', { name: csiItAssetSupplier }).click();
+  async fillAssetIdentity(params: ItAssetIdentityParams) {
+    await this.fillAssetIdentityWithFormReloadRetry(params, false);
+  }
 
-    const web = this.page.getByRole('textbox', { name: 'Enter website' });
-    await web.click();
-    await web.fill(params.website);
+  /** IA-020: same reload/retry as IA-001 with IA-020 Add Asset navigation. */
+  async fillAssetIdentityIa020(params: ItAssetIdentityParams, retried = false): Promise<void> {
+    await this.fillAssetIdentityWithFormReloadRetry(params, true, retried);
+  }
 
-    await this.page.getByText('Select currency', { exact: true }).click();
-    await this.page.getByRole('option', { name: csiItAssetCurrency }).click();
+  async fillAssetStateAndLocation(
+    params: { location: string },
+    identityParams?: ItAssetIdentityParams,
+    useIa020Navigation = false,
+    retried = false,
+  ): Promise<void> {
+    const fill = async () => {
+      await this.selectVirtualSelectInItAssetField('Asset State', csiItAssetState);
+      const loc = this.page.getByRole('textbox', { name: 'Enter asset location' });
+      await loc.click();
+      await loc.fill(params.location);
+    };
 
-    const cost = this.page.getByPlaceholder('Enter purchase cost');
-    await cost.click();
-    await cost.fill(params.purchaseCost);
+    if (identityParams) {
+      await this.withAddAssetFormReloadIfFieldMissing(
+        'Asset State',
+        identityParams,
+        useIa020Navigation,
+        retried,
+        fill,
+      );
+      return;
+    }
+
+    await fill();
+  }
+
+  async fillSupplierAndCommercial(
+    params: { website: string; purchaseCost: string },
+    identityParams?: ItAssetIdentityParams,
+    useIa020Navigation = false,
+    retried = false,
+  ): Promise<void> {
+    const fill = async () => {
+      await this.selectFirstVirtualSelectInItAssetField('Supplier Name');
+
+      const web = this.page.getByRole('textbox', { name: 'Enter website' });
+      await web.click();
+      await web.fill(params.website);
+
+      await this.selectVirtualSelectInItAssetField('Currency', csiItAssetCurrency, false);
+
+      const cost = this.page.getByPlaceholder('Enter purchase cost');
+      await cost.click();
+      await cost.fill(params.purchaseCost);
+    };
+
+    if (identityParams) {
+      await this.withAddAssetFormReloadIfFieldMissing(
+        'Supplier Name',
+        identityParams,
+        useIa020Navigation,
+        retried,
+        fill,
+      );
+      return;
+    }
+
+    await fill();
   }
 
   /** OS date picker: `flatpickr-input[type=date]` + readonly combobox; `_flatpickr.setDate` or `value` + events. */
@@ -205,20 +439,6 @@ export class CsiItAssetManagementPage extends BasePage {
     return scrollRoot.evaluate((el) => el.scrollLeft);
   }
 
-  /** Wijmo grid: force horizontal scroll to the left edge (IA-020 View/Edit live in left columns). */
-  private async scrollGridToLeftEdge(scrollRoot: Locator): Promise<void> {
-    await expect(scrollRoot).toBeAttached({ timeout: 30_000 });
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      await this.setGridScrollLeft(scrollRoot, 0);
-      await this.page.waitForTimeout(attempt === 0 ? 150 : 250);
-      const left = await this.gridScrollLeft(scrollRoot);
-      if (left <= 2) {
-        return;
-      }
-    }
-    await this.setGridScrollLeft(scrollRoot, 0);
-  }
-
   /** Increase `wj-part=root` scrollLeft until `chcells` shows Acquisition Date. */
   private async scrollToRevealAcquisitionDateHeader(runtime: Locator, scrollRoot: Locator): Promise<Locator> {
     const header = runtime.locator('[wj-part="chcells"]').getByText('Acquisition Date', { exact: true }).first();
@@ -240,10 +460,18 @@ export class CsiItAssetManagementPage extends BasePage {
     return header;
   }
 
-  /**
-   * Find asset cell: sweep from left edge → right, then (if still hidden) step left from current
-   * scroll (e.g. after Acquisition Date sort scrolled right). IA-020: always reaches scrollLeft 0.
-   */
+  private async scrollGridToLeftEdge(scrollRoot: Locator): Promise<void> {
+    await expect(scrollRoot).toBeAttached({ timeout: 30_000 });
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      await this.setGridScrollLeft(scrollRoot, 0);
+      await this.page.waitForTimeout(attempt === 0 ? 150 : 250);
+      if ((await this.gridScrollLeft(scrollRoot)) <= 2) {
+        return;
+      }
+    }
+    await this.setGridScrollLeft(scrollRoot, 0);
+  }
+
   private async scrollToRevealAssetNameCell(scrollRoot: Locator, cell: Locator): Promise<boolean> {
     const step = 280;
     const max = await this.gridMaxScrollLeft(scrollRoot);
@@ -317,7 +545,7 @@ export class CsiItAssetManagementPage extends BasePage {
     return cell;
   }
 
-  /** IA-001 / IA-025 create: sort by Acquisition Date, paginate, assert asset name in grid. */
+  /** IA-001 / IA-025 create: Acquisition Date sort, paginate, assert asset name in grid. */
   async expectAssetVisibleInGridAfterAcquisitionSort(assetName: string) {
     const cell = await this.findClientMachineAutogenerateGridCellByAssetName(assetName);
     await expect(cell).toBeVisible({ timeout: 10_000 });
@@ -350,10 +578,10 @@ export class CsiItAssetManagementPage extends BasePage {
   }
 
   async uploadBulkCompletedTemplate(absolutePath: string) {
+    const fileChooserPromise = this.page.waitForEvent('filechooser');
     await this.page.getByText('Upload completed template').click();
-    const fileInput = this.page.locator('input[type="file"]').first();
-    await expect(fileInput).toBeAttached({ timeout: 15_000 });
-    await fileInput.setInputFiles(absolutePath);
+    const fileChooser = await fileChooserPromise;
+    await fileChooser.setFiles(absolutePath);
   }
 
   async expectBulkTemplateUploadedToast() {
@@ -420,7 +648,7 @@ export class CsiItAssetManagementPage extends BasePage {
     );
   }
 
-  /** IA-011: `/ITAssetPurchaseEdit` — wait until purpose field is ready. */
+  /** IA-011: `/ITAssetPurchaseEdit` ΓÇö wait until purpose field is ready. */
   async gotoItAssetPurchaseEditUrl() {
     await this.page.goto(`${CSI_BASE_URL}/ITAssetPurchaseEdit`);
     await this.page.waitForLoadState('domcontentloaded');
@@ -437,7 +665,7 @@ export class CsiItAssetManagementPage extends BasePage {
     await this.setFlatpickrDateDirectOnWrapper(this.purchaseOrderDateWrapper, new Date());
   }
 
-  /** IA-011: Supplier Name — wait, open VirtualSelect (arrow is `::after`; use `.vscomp-toggle-button`), then option. */
+  /** IA-011: Supplier Name ΓÇö wait, open VirtualSelect (arrow is `::after`; use `.vscomp-toggle-button`), then option. */
   async selectItAssetPurchaseSupplierByName(supplierName: string) {
     const vendorRoot = this.page.locator('[id*="VendorDropdown"]').first();
     await expect(vendorRoot).toBeVisible({ timeout: 30_000 });
@@ -464,10 +692,10 @@ export class CsiItAssetManagementPage extends BasePage {
 
   /** Uploads one PDF for the active tab; asserts grid shows filename, then selects that cell (IA-011). */
   async uploadPurchaseWizardDocument(absolutePath: string, expectedFileNameInGrid: string) {
+    const fileChooserPromise = this.page.waitForEvent('filechooser');
     await this.page.getByText('Upload your file', { exact: true }).first().click();
-    const fileInput = this.page.locator('input[type="file"]').first();
-    await expect(fileInput).toBeAttached({ timeout: 15_000 });
-    await fileInput.setInputFiles(absolutePath);
+    const fileChooser = await fileChooserPromise;
+    await fileChooser.setFiles(absolutePath);
     const cell = this.page.getByRole('gridcell', { name: expectedFileNameInGrid });
     await expect(cell).toBeVisible({ timeout: 120_000 });
     await cell.click();
@@ -486,7 +714,7 @@ export class CsiItAssetManagementPage extends BasePage {
     await btn.click();
   }
 
-  /** First three data rows — Wijmo row selector: `input` is not tab-focusable; click the wrapping `wj-cell` (see `wj-column-selector`). */
+  /** First three data rows ΓÇö Wijmo row selector: `input` is not tab-focusable; click the wrapping `wj-cell` (see `wj-column-selector`). */
   async selectFirstThreePurchaseWizardAssetRows() {
     await this.page.waitForTimeout(3000);
     await expect(this.page.locator('[wj-part="cells"]').first()).toBeVisible({ timeout: 60_000 });
@@ -545,7 +773,7 @@ export class CsiItAssetManagementPage extends BasePage {
   async gotoItAssetManagementClientMachineDesktopListUrl() {
     await this.page.goto(`${CSI_BASE_URL}/ITAssetManagement?categoryId=1&subCategoryId=1`);
     await this.page.waitForLoadState('domcontentloaded');
-    await expect(this.desktopComputersCategory).toBeVisible({ timeout: 60_000 });
+    await expect(this.addAssetButton).toBeVisible({ timeout: 60_000 });
   }
 
   /** IA-016: ensure category is active and runtime grid is present (Wijmo under `.datagrid-runtime`). */
@@ -565,7 +793,7 @@ export class CsiItAssetManagementPage extends BasePage {
     await editBtn.click();
   }
 
-  /** IA-016: edit screen — `Asset Name:` label then name input (IDs vary by screen). */
+  /** IA-016: edit screen ΓÇö `Asset Name:` label then name input (IDs vary by screen). */
   async expectItAssetEditFormReady() {
     const label = this.page.getByText('Asset Name:', { exact: true });
     await expect(label).toBeVisible({ timeout: 60_000 });
@@ -592,7 +820,7 @@ export class CsiItAssetManagementPage extends BasePage {
     await osVersionInput.fill(osVersion);
   }
 
-  /** IA-016: horizontal scroll only — do not click OS Version header. */
+  /** IA-016: horizontal scroll only ΓÇö do not click OS Version header. */
   private async scrollToRevealColumnHeaderInChcells(
     runtime: Locator,
     scrollRoot: Locator,
@@ -657,7 +885,7 @@ export class CsiItAssetManagementPage extends BasePage {
   }
 
   /**
-   * IA-025: after save on desktop list — find row by `assetNameExact` using Acquisition Date sort + horizontal scroll
+   * IA-025: after save on desktop list ΓÇö find row by `assetNameExact` using Acquisition Date sort + horizontal scroll
    * (same as IA-001-style helper on this grid), then assert `osVersionExact` in that row (IA-016 OS scroll pattern).
    */
   async expectClientMachineGridRowShowsOsVersionForAssetAfterAcquisitionSortIa025(
@@ -723,7 +951,7 @@ export class CsiItAssetManagementPage extends BasePage {
   }
 
   /**
-   * IA-025: assign User on asset edit — open VirtualSelect (`UserDropdown` or `User` + `.vscomp-toggle-button`),
+   * IA-025: assign User on asset edit ΓÇö open VirtualSelect (`UserDropdown` or `User` + `.vscomp-toggle-button`),
    * pick first `option`, return trimmed label for view assertion.
    */
   async selectFirstUserOnItAssetEditFormIa025(): Promise<string> {
@@ -741,7 +969,7 @@ export class CsiItAssetManagementPage extends BasePage {
     await toggle.click();
     const options = this.page.getByRole('option');
     await expect(options.first()).toBeVisible({ timeout: 15_000 });
-    const placeholder = /^(select|choose|please|--|…|\.{3})$/i;
+    const placeholder = /^(select|choose|please|--|ΓÇª|\.{3})$/i;
     const n = await options.count();
     for (let i = 0; i < n; i++) {
       const opt = options.nth(i);
@@ -761,15 +989,57 @@ export class CsiItAssetManagementPage extends BasePage {
   }
 
   /** Create form: open Asset State, pick option by label, fill location (not fixed {@link csiItAssetState}). */
-  async fillAssetStateAndLocationUsingStateOption(params: { location: string; stateOptionName: string }) {
-    await this.page.getByText('Select asset state', { exact: true }).click();
-    await this.page.getByRole('option', { name: params.stateOptionName, exact: true }).click();
-    const loc = this.page.getByRole('textbox', { name: 'Enter asset location' });
-    await loc.click();
-    await loc.fill(params.location);
+  async fillAssetStateAndLocationUsingStateOption(
+    params: { location: string; stateOptionName: string },
+    identityParams?: ItAssetIdentityParams,
+    useIa020Navigation = false,
+    retried = false,
+  ): Promise<void> {
+    const fill = async () => {
+      await this.selectVirtualSelectInItAssetField('Asset State', params.stateOptionName);
+      const loc = this.page.getByRole('textbox', { name: 'Enter asset location' });
+      await loc.click();
+      await loc.fill(params.location);
+    };
+
+    if (identityParams) {
+      await this.withAddAssetFormReloadIfFieldMissing(
+        'Asset State',
+        identityParams,
+        useIa020Navigation,
+        retried,
+        fill,
+      );
+      return;
+    }
+
+    await fill();
   }
 
-  /** Next page control — first grid’s pagination block (angle icon). */
+  /** IA-020: state/location with reload + identity refill if downstream fields are not ready. */
+  async fillAssetStateAndLocationUsingStateOptionIa020(
+    stateParams: { location: string; stateOptionName: string },
+    identityParams: ItAssetIdentityParams,
+    retried = false,
+  ): Promise<void> {
+    await this.fillAssetStateAndLocationUsingStateOption(
+      stateParams,
+      identityParams,
+      true,
+      retried,
+    );
+  }
+
+  /** IA-020: supplier/commercial with reload + identity refill if fields are not ready. */
+  async fillSupplierAndCommercialIa020(
+    commercialParams: { website: string; purchaseCost: string },
+    identityParams: ItAssetIdentityParams,
+    retried = false,
+  ): Promise<void> {
+    await this.fillSupplierAndCommercial(commercialParams, identityParams, true, retried);
+  }
+
+  /** Next page control ΓÇö first gridΓÇÖs pagination block (angle icon). */
   private autogeneratePaginationNextButton(): Locator {
     return this.page
       .locator('.datagrid-pagination-controller')
@@ -789,8 +1059,8 @@ export class CsiItAssetManagementPage extends BasePage {
   }
 
   /**
-   * Rightmost page index in autogenerate `Pagination.ButtonList` (e.g. … 4 → 4).
-   * From page 1, at most `lastPage − 1` Next clicks; uses `getByRole('button')` on the strip.
+   * Rightmost page index in autogenerate `Pagination.ButtonList` (e.g. ΓÇª 4 ΓåÆ 4).
+   * From page 1, at most `lastPage ΓêÆ 1` Next clicks; uses `getByRole('button')` on the strip.
    */
   private async readMaxNextClicksFromAutogeneratePagination(): Promise<number> {
     const list = this.page
@@ -869,8 +1139,9 @@ export class CsiItAssetManagementPage extends BasePage {
   }
 
   /**
-   * Find asset name `gridcell` in a Wijmo runtime grid: page 1 two Acquisition Date sorts + horizontal scroll;
-   * then Next through pagination. Shared by IA-001/020 (autogenerate) and IA-025 (desktop `.datagrid-runtime`).
+   * Client machine autogenerate grid: find name `gridcell` ΓÇö page 1 uses two Acquisition Date sorts
+   * (each followed by horizontal scroll); then Next up to `maxNextClicks` from pagination (`lastPage ΓêÆ 1`);
+   * later pages use horizontal scroll only.
    */
   private async findAssetNameCellInRuntimeGrid(runtime: Locator, assetName: string): Promise<Locator> {
     await expect(runtime).toBeVisible({ timeout: 60_000 });
@@ -919,7 +1190,6 @@ export class CsiItAssetManagementPage extends BasePage {
     );
   }
 
-  /** Client machine autogenerate grid (IA-001, IA-020). */
   private async findClientMachineAutogenerateGridCellByAssetName(assetName: string): Promise<Locator> {
     await expect(this.page.locator('.datagrid-autogenerate, [id*="datagrid_autogenerate"]')).toBeVisible({
       timeout: 5_000,
@@ -956,7 +1226,7 @@ export class CsiItAssetManagementPage extends BasePage {
     await expect(section.getByText(stateText, { exact: true }).first()).toBeVisible({ timeout: 45_000 });
   }
 
-  /** IT asset read-only screen — Edit (toolbar, not grid row Edit). */
+  /** IT asset read-only screen ΓÇö Edit (toolbar, not grid row Edit). */
   async clickEditOnItAssetViewPage(): Promise<void> {
     const edit = this.page.getByRole('button', { name: 'Edit', exact: true }).first();
     await expect(edit).toBeVisible({ timeout: 30_000 });
