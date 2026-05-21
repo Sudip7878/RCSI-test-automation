@@ -6,7 +6,12 @@ import {
   csiTestEmail,
   csiTestPassword,
 } from '../../../utils/csi/credentials';
-import { CSI_ATTACK_SURFACE_REPORT_FILENAME, csiAttackSurfaceReportPdfPath } from '../../../utils/csi/securityReportTestData';
+import {
+  CSI_ATTACK_SURFACE_REPORT_FILENAME,
+  csiAttackSurfaceReportPdfPath,
+  csiDarkwebReportTest1PdfPath,
+  csiDarkwebReportTest2PdfPath,
+} from '../../../utils/csi/securityReportTestData';
 
 test.describe('CSI · Security Report', () => {
   test.describe.configure({ timeout: 300_000 });
@@ -96,5 +101,59 @@ test.describe('CSI · Security Report', () => {
     await csiSecurityReportPage.tryClickClearAfterGridSettled();
     await csiSecurityReportPage.openFirstPendingAttackSurfaceRequestDetails();
     await csiSecurityReportPage.approveRequestedDataWithUploadedPdf(pdfPath, CSI_ATTACK_SURFACE_REPORT_FILENAME);
+  });
+
+  test.describe('SR-010 — dark web scan request', () => {
+    test('SR-010 and SR-011', async ({ csiSecurityReportPage, csiLoginPage }) => {
+      if (
+        !process.env.CSI_SECURITY_REPORT_ADMIN_PASSWORD?.length ||
+        !process.env.CSI_SECURITY_REPORT_ADMIN_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      const darkwebPdf1 = csiDarkwebReportTest1PdfPath();
+      const darkwebPdf2 = csiDarkwebReportTest2PdfPath();
+      test.skip(
+        !fs.existsSync(darkwebPdf1) || !fs.existsSync(darkwebPdf2),
+        `Missing darkweb fixture PDF(s): ${darkwebPdf1}, ${darkwebPdf2}`,
+      );
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiSecurityReportAdminTestEmail(),
+        csiSecurityReportAdminTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+
+      // SR-010: step 1
+      await csiSecurityReportPage.openRequestHistoryForDarkwebRequest();
+      await csiSecurityReportPage.submitNewDarkwebRequestFlow();
+      await csiLoginPage.logoutViaHeaderMenu();
+      await csiLoginPage.expectEmailStepVisible();
+
+      // SR-011: step 2
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(csiTestEmail(), csiTestPassword());
+      await csiLoginPage.expectOnHome();
+
+      await csiSecurityReportPage.openRequestHistory();
+      await csiSecurityReportPage.tryClickClearAfterRequestHistoryGridSettled();
+      await csiSecurityReportPage.openFirstPendingRequestHistoryDetails();
+      await csiSecurityReportPage.submitDarkwebRequestedDataWithUploadedPdfs([darkwebPdf1, darkwebPdf2]);
+      await csiLoginPage.logoutViaHeaderMenu();
+      await csiLoginPage.expectEmailStepVisible();
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiSecurityReportAdminTestEmail(),
+        csiSecurityReportAdminTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+
+      await csiSecurityReportPage.openRequestHistory();
+      await csiSecurityReportPage.expectFirstRequestHistoryRowStatus('Completed');
+    });
   });
 });

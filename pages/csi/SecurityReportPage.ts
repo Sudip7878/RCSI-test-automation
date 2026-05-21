@@ -1,4 +1,5 @@
 import { expect, type Locator } from '@playwright/test';
+import * as path from 'node:path';
 import { CSI_ATTACK_SURFACE_PATH, CSI_BASE_URL, CSI_REQUEST_HISTORY_PATH } from '../../config/csi';
 import { BasePage } from '../BasePage';
 
@@ -84,6 +85,97 @@ export class CsiSecurityReportPage extends BasePage {
   async openRequestHistory() {
     await this.page.goto(`${CSI_BASE_URL}${CSI_REQUEST_HISTORY_PATH}`);
     await this.page.waitForLoadState('domcontentloaded');
+    await expect(this.requestHistoryGrid()).toBeVisible({ timeout: 60_000 });
+  }
+
+  /** SR-010: Request History ready for darkweb request (grid + Request New Report). */
+  async openRequestHistoryForDarkwebRequest() {
+    await this.openRequestHistory();
+    await expect(this.requestNewReportButton).toBeVisible({ timeout: 60_000 });
+    await expect(this.requestNewReportButton).toBeEnabled({ timeout: 15_000 });
+  }
+
+  private darkwebNewRequestDialog(): Locator {
+    return this.page.getByRole('dialog').filter({ hasText: 'Request New Report' });
+  }
+
+  /** SR-010 admin: dialog Request + success toast; grid first row should show Pending. */
+  async submitNewDarkwebRequestFlow() {
+    await this.requestNewReportButton.click();
+    await this.page.waitForTimeout(3000);
+
+    const dialog = this.darkwebNewRequestDialog();
+    await expect(dialog).toBeVisible({ timeout: 30_000 });
+
+    const companyDomainSelect = dialog.locator('select[id*="Dropdown_Domain"]');
+    await expect(companyDomainSelect).toBeVisible({ timeout: 15_000 });
+    // index 0 is placeholder (value="-1"); recorded step selects first domain option value "0".
+    await companyDomainSelect.selectOption('0');
+    await expect(companyDomainSelect).toHaveValue('0');
+
+    await dialog.getByRole('button', { name: 'Request' }).click();
+    await expect(this.page.getByText('New darkweb request created', { exact: true })).toBeVisible({
+      timeout: 60_000,
+    });
+    await this.expectFirstRequestHistoryRowStatus('Pending');
+  }
+
+  /** SR-010 CSI_TEST: optional Clear within 5s after grid loads (recorded steps). */
+  async tryClickClearAfterRequestHistoryGridSettled() {
+    await expect(this.requestHistoryGrid()).toBeVisible({ timeout: 60_000 });
+    const clearBtn = this.page.getByRole('button', { name: 'Clear button' });
+    const visible = await clearBtn.isVisible({ timeout: 5000 }).catch(() => false);
+    if (visible) {
+      await clearBtn.click();
+    }
+  }
+
+  async expectFirstRequestHistoryRowStatus(status: 'Pending' | 'Completed') {
+    const row = this.requestHistoryGrid().locator('tbody tr.table-row').first();
+    await expect(row).toBeVisible({ timeout: 120_000 });
+    await expect(row).toContainText(status);
+  }
+
+  /** SR-010: first Pending row on Request History → See Details. */
+  async openFirstPendingRequestHistoryDetails() {
+    const row = this.requestHistoryGrid().locator('tbody tr.table-row').filter({ hasText: 'Pending' }).first();
+    await expect(row).toBeVisible({ timeout: 120_000 });
+    await row.getByRole('button', { name: 'See Details' }).click();
+    await expect(this.page.getByText(/Requested Data/i)).toBeVisible({ timeout: 60_000 });
+  }
+
+  /** SR-010: first / last "Browse File" under Upload Report (Exposure Trends, then Exployee Credentials). */
+  private async uploadDarkwebReportViaBrowseFileText(fileIndex: 0 | 1, absolutePdfPath: string): Promise<void> {
+    const fileName = path.basename(absolutePdfPath);
+    const uploadReport = this.page.locator('#UploadingAndData');
+    const browseLinks = uploadReport.getByText('Browse File', { exact: true });
+    await expect(browseLinks.first()).toBeVisible({ timeout: 30_000 });
+
+    const browse = fileIndex === 0 ? browseLinks.first() : browseLinks.last();
+    await browse.scrollIntoViewIfNeeded();
+
+    const fileChooserPromise = this.page.waitForEvent('filechooser');
+    await browse.click();
+    const fileChooser = await fileChooserPromise;
+    await fileChooser.setFiles(absolutePdfPath);
+
+    await expect(uploadReport.getByText(fileName, { exact: true })).toBeVisible({ timeout: 60_000 });
+  }
+
+  /** SR-010: Yes → two PDF uploads → Submit → Request History shows submitted. */
+  async submitDarkwebRequestedDataWithUploadedPdfs(absolutePdfPaths: readonly [string, string]) {
+    await this.page.getByText('Requested Data', { exact: false }).first().click();
+    await this.page.getByRole('button', { name: 'Yes' }).click();
+    await expect(this.page.locator('#UploadingAndData')).toBeVisible({ timeout: 60_000 });
+    await this.uploadDarkwebReportViaBrowseFileText(0, absolutePdfPaths[0]);
+    await this.uploadDarkwebReportViaBrowseFileText(1, absolutePdfPaths[1]);
+    const submitBtn = this.page.locator('#Button').getByRole('button', { name: 'Submit' });
+    await expect(submitBtn).toBeEnabled({ timeout: 30_000 });
+    await submitBtn.click();
+    await expect(this.page.getByText('Request submitted', { exact: true })).toBeVisible({ timeout: 120_000 });
+    await this.page.waitForURL(/\/RequestHistory/i, { timeout: 60_000 }).catch(async () => {
+      await this.openRequestHistory();
+    });
     await expect(this.requestHistoryGrid()).toBeVisible({ timeout: 60_000 });
   }
 
