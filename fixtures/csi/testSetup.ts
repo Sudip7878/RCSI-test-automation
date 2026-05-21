@@ -6,6 +6,7 @@ import { CsiItAssetManagementPage } from '../../pages/csi/ITAssetManagementPage'
 import { CsiPhisingPage } from '../../pages/csi/PhisingPage';
 import { CsiPolicyManagementPage } from '../../pages/csi/PolicyManagementPage';
 import { CsiSalesAndBillingPage } from '../../pages/csi/SalesAndBillingPage';
+import { CsiPenetrationTestPage } from '../../pages/csi/PenetrationTestPage';
 import { CsiSecurityReportPage } from '../../pages/csi/SecurityReportPage';
 import { CsiTrainingPage } from '../../pages/csi/TrainingPage';
 
@@ -19,6 +20,7 @@ type CsiFixtures = {
   csiItAssetManagementPage: CsiItAssetManagementPage;
   csiIncidentReportPage: CsiIncidentReportPage;
   csiSecurityReportPage: CsiSecurityReportPage;
+  csiPenetrationTestPage: CsiPenetrationTestPage;
 };
 
 export const test = base.extend<CsiFixtures>({
@@ -48,6 +50,9 @@ export const test = base.extend<CsiFixtures>({
   },
   csiSecurityReportPage: async ({ page }, use) => {
     await use(new CsiSecurityReportPage(page));
+  },
+  csiPenetrationTestPage: async ({ page }, use) => {
+    await use(new CsiPenetrationTestPage(page));
   },
 });
 

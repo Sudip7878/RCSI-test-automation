@@ -23,6 +23,8 @@ export const CSI_INVOICE_LIST_PATH = '/InvoiceList' as const;
 export const CSI_ORGANIZATION_DETAIL_PATH = '/OrganizationDetail' as const;
 export const CSI_ATTACK_SURFACE_PATH = '/AttackSurface' as const;
 export const CSI_REQUEST_HISTORY_PATH = '/RequestHistory' as const;
+export const CSI_PENETRATION_TEST_PATH = '/PenetrationTest' as const;
+export const CSI_ACCOUNT_MANAGEMENT_PATH = '/AccountManagement' as const;
 
 function toUrl(url: string | URL): URL {
   return url instanceof URL ? url : new URL(url);

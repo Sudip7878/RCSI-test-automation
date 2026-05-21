@@ -136,3 +136,21 @@ export function csiTrainingPhisingSysOwnerTestPassword(): string {
   }
   return p;
 }
+
+/** PT-001: penetration tester who submits a new pen test request. */
+export function csiPenetrationTesterTestEmail(): string {
+  const e = process.env.CSI_PENETRATION_TESTER_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_PENETRATION_TESTER_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiPenetrationTesterTestEmail}. */
+export function csiPenetrationTesterTestPassword(): string {
+  const p = process.env.CSI_PENETRATION_TESTER_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_PENETRATION_TESTER_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}

@@ -1,5 +1,5 @@
 import { expect, type Page } from '@playwright/test';
-import { CSI_LEGACY_LOGIN_PATH, CSI_LOGIN_PATH } from '../../config/csi';
+import { CSI_ACCOUNT_MANAGEMENT_PATH, CSI_LEGACY_LOGIN_PATH, CSI_LOGIN_PATH } from '../../config/csi';
 import { BasePage } from '../BasePage';
 
 /**
@@ -14,6 +14,7 @@ export class CsiAvotechLoginPage extends BasePage {
   readonly emailField = this.page.getByRole('textbox', { name: 'Enter your email' });
   readonly nextButton = this.page.getByRole('button', { name: 'Next' });
   readonly passwordField = this.page.getByRole('textbox', { name: 'Enter your password' });
+  readonly staySignedInCheckbox = this.page.getByRole('checkbox', { name: 'Stay signed in for a week' });
   readonly loginButton = this.page.getByRole('button', { name: 'Log in' });
 
   private pathnameLooksLikeHome(pathname: string): boolean {
@@ -30,6 +31,23 @@ export class CsiAvotechLoginPage extends BasePage {
   private isAtHomePath(): boolean {
     try {
       return this.pathnameLooksLikeHome(new URL(this.page.url()).pathname);
+    } catch {
+      return false;
+    }
+  }
+
+  private pathnameLooksLikeAccountManagement(pathname: string): boolean {
+    const noTrail = pathname.replace(/\/$/, '');
+    const norm = noTrail === '' ? '/' : noTrail;
+    return (
+      norm === CSI_ACCOUNT_MANAGEMENT_PATH ||
+      norm === `/Avotech${CSI_ACCOUNT_MANAGEMENT_PATH}`
+    );
+  }
+
+  private isAtAccountManagementPath(): boolean {
+    try {
+      return this.pathnameLooksLikeAccountManagement(new URL(this.page.url()).pathname);
     } catch {
       return false;
     }
@@ -80,12 +98,13 @@ export class CsiAvotechLoginPage extends BasePage {
 
   async submitLogin() {
     await this.waitForElement(this.loginButton);
+    await this.staySignedInCheckbox.check();
     await this.loginButton.click();
   }
 
   async signInWithEmailAndPassword(email: string, password: string) {
     const emailStepVisible = await this.emailField.isVisible({ timeout: 2_000 }).catch(() => false);
-    if (!emailStepVisible && this.isAtHomePath()) {
+    if (!emailStepVisible && (this.isAtHomePath() || this.isAtAccountManagementPath())) {
       return;
     }
     await this.enterEmail(email);
@@ -100,6 +119,19 @@ export class CsiAvotechLoginPage extends BasePage {
       (url) => {
         try {
           return this.pathnameLooksLikeHome(new URL(url).pathname);
+        } catch {
+          return false;
+        }
+      },
+      { timeout: 30_000 },
+    );
+  }
+
+  async expectOnAccountManagement() {
+    await this.page.waitForURL(
+      (url) => {
+        try {
+          return this.pathnameLooksLikeAccountManagement(new URL(url).pathname);
         } catch {
           return false;
         }
