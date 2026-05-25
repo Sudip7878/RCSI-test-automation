@@ -49,6 +49,60 @@ export function csiOrgUserTestPassword(): string {
   return p;
 }
 
+/** `CSI_TP_TRAINING_ADMIN_TEST_EMAIL` — Training admin for CC-001 (Training + Phishing package tenant). */
+export function csiTpTrainingAdminTestEmail(): string {
+  const e = process.env.CSI_TP_TRAINING_ADMIN_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_TP_TRAINING_ADMIN_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiTpTrainingAdminTestEmail}. */
+export function csiTpTrainingAdminTestPassword(): string {
+  const p = process.env.CSI_TP_TRAINING_ADMIN_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_TP_TRAINING_ADMIN_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
+/** `CSI_TP_PHISING_ADMIN_TEST_EMAIL` — Phishing admin for CC-001 (Training + Phishing package tenant). */
+export function csiTpPhisingAdminTestEmail(): string {
+  const e = process.env.CSI_TP_PHISING_ADMIN_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_TP_PHISING_ADMIN_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiTpPhisingAdminTestEmail}. */
+export function csiTpPhisingAdminTestPassword(): string {
+  const p = process.env.CSI_TP_PHISING_ADMIN_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_TP_PHISING_ADMIN_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
+/** `CSI_TRAINING_ADMIN_TEST_EMAIL` — Training admin (TR-001 course distribution). */
+export function csiTrainingAdminTestEmail(): string {
+  const e = process.env.CSI_TRAINING_ADMIN_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_TRAINING_ADMIN_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiTrainingAdminTestEmail}. */
+export function csiTrainingAdminTestPassword(): string {
+  const p = process.env.CSI_TRAINING_ADMIN_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_TRAINING_ADMIN_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
 /** `CSI_PHISING_ADMIN_TEST_EMAIL` — admin used for Phising test creation. */
 export function csiPhisingAdminTestEmail(): string {
   const e = process.env.CSI_PHISING_ADMIN_TEST_EMAIL?.trim();

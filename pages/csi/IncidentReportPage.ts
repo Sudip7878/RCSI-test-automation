@@ -1,6 +1,10 @@
 import { expect, type Locator } from '@playwright/test';
 import * as fs from 'node:fs';
-import { CSI_BASE_URL, CSI_INCIDENT_REPORT_DASHBOARD_PATH } from '../../config/csi';
+import {
+  CSI_BASE_URL,
+  CSI_BLACKPANDA_AUTH_HOST,
+  CSI_INCIDENT_REPORT_DASHBOARD_PATH,
+} from '../../config/csi';
 import { BasePage } from '../BasePage';
 
 export class CsiIncidentReportPage extends BasePage {
@@ -117,6 +121,34 @@ export class CsiIncidentReportPage extends BasePage {
     const link = this.page.getByRole('link', { name: 'Incident Response' });
     await expect(link).toBeVisible({ timeout: 60_000 });
     await link.click();
+  }
+
+  /**
+   * IR-016: click Incident Response; new tab or same tab must reach Blackpanda auth
+   * (hostname only — e.g. `/en/login_passwordless` is not asserted).
+   */
+  async clickIncidentResponseAndExpectBlackpandaAuthRedirect() {
+    const link = this.page.getByRole('link', { name: 'Incident Response' });
+    await expect(link).toBeVisible({ timeout: 60_000 });
+
+    await link.click();
+
+    const popup = await this.page
+      .context()
+      .waitForEvent('page', { timeout: 10_000 })
+      .catch(() => null);
+    const authPage = popup ?? this.page;
+
+    await authPage.waitForURL(
+      (url) => {
+        try {
+          return new URL(url).hostname === CSI_BLACKPANDA_AUTH_HOST;
+        } catch {
+          return false;
+        }
+      },
+      { timeout: 120_000, waitUntil: 'domcontentloaded' },
+    );
   }
 
   async startNewIncidentForm() {

@@ -27,6 +27,9 @@ export const CSI_PENETRATION_TEST_PATH = '/PenetrationTest' as const;
 export const CSI_ACCOUNT_MANAGEMENT_PATH = '/AccountManagement' as const;
 export const CSI_CYBER_INSURANCE_PATH = '/CyberInsurance' as const;
 
+/** IR-016: external Incident Response SSO host (path under this host may vary). */
+export const CSI_BLACKPANDA_AUTH_HOST = 'auth.blackpanda.com' as const;
+
 function toUrl(url: string | URL): URL {
   return url instanceof URL ? url : new URL(url);
 }

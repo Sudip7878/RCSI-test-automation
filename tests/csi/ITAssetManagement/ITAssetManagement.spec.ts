@@ -214,8 +214,8 @@ test.describe('CSI · IT Asset Management', () => {
       const baseNumeric = csiIa003BulkBaseNumeric();
 
       await csiItAssetManagementPage.gotoItAssetManagementClientMachineBulkUrl();
-      await csiItAssetManagementPage.startBulkUploadAsset();
-      const downloadedPath = await csiItAssetManagementPage.downloadBulkAssetTemplateTo(os.tmpdir());
+      await csiItAssetManagementPage.startBulkUploadAssetIa003();
+      const downloadedPath = await csiItAssetManagementPage.downloadBulkAssetTemplateIa003(os.tmpdir());
       const parsed = path.parse(downloadedPath);
       const editedPath = path.join(parsed.dir, `${parsed.name}${baseNumeric}${parsed.ext || '.xlsx'}`);
       const assetNames = buildIa003BulkClientMachineWorkbook({
@@ -225,18 +225,14 @@ test.describe('CSI · IT Asset Management', () => {
       });
       saveIa003EditedWorkbookArtifact(editedPath);
 
-      await csiItAssetManagementPage.uploadBulkCompletedTemplate(editedPath);
-      await csiItAssetManagementPage.expectBulkTemplateUploadedToast();
+      await csiItAssetManagementPage.uploadBulkCompletedTemplateIa003(editedPath);
       await csiItAssetManagementPage.clickBulkUploadContinueWhenEnabled();
 
       for (const assetName of assetNames) {
-        await csiItAssetManagementPage.clickBulkAssetRowByName(assetName);
-        await csiItAssetManagementPage.clickFirstMissingFieldsTag();
-        await csiItAssetManagementPage.fillBulkAssetPurchaseCostAndSave('100');
-        await csiItAssetManagementPage.expectBulkAssetRowStatus(assetName, 'OK');
+        await csiItAssetManagementPage.fixBulkAssetMissingPurchaseCostIa003(assetName, '100');
       }
 
-      await csiItAssetManagementPage.importBulkAssetsAndExpectClientMachineListUrl();
+      await csiItAssetManagementPage.importBulkAssetsIa003();
     });
   });
 

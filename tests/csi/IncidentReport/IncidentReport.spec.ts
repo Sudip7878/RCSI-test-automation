@@ -3,6 +3,8 @@ import { test } from '../../../fixtures/csi/testSetup';
 import {
   csiIncidentReporterTestEmail,
   csiIncidentReporterTestPassword,
+  csiPenetrationTesterTestEmail,
+  csiPenetrationTesterTestPassword,
   csiSystemOwnerTestEmail,
   csiSystemOwnerTestPassword,
   csiTestEmail,
@@ -272,6 +274,31 @@ test.describe('CSI · Incident Report', () => {
         await csiLoginPage.expectEmailStepVisible();
         await csiLoginPage.gotoLogin();
       }
+    });
+  });
+
+  test.describe('IR-016 — penetration tester Incident Response Blackpanda auth', () => {
+    test.describe.configure({ timeout: 180_000 });
+
+    test.beforeEach(async ({ csiLoginPage }) => {
+      if (
+        !process.env.CSI_PENETRATION_TESTER_TEST_PASSWORD?.length ||
+        !process.env.CSI_PENETRATION_TESTER_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiPenetrationTesterTestEmail(),
+        csiPenetrationTesterTestPassword(),
+      );
+      await csiLoginPage.expectOnAccountManagement();
+    });
+
+    test('IR-016', async ({ csiIncidentReportPage }) => {
+      await csiIncidentReportPage.clickIncidentResponseAndExpectBlackpandaAuthRedirect();
     });
   });
 });
