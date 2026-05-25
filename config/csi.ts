@@ -21,6 +21,7 @@ export const CSI_PACKAGE_LIST_PATH = '/PackageList' as const;
 export const CSI_INCIDENT_REPORT_DASHBOARD_PATH = '/IncidentReportDashboard' as const;
 export const CSI_INVOICE_LIST_PATH = '/InvoiceList' as const;
 export const CSI_ORGANIZATION_DETAIL_PATH = '/OrganizationDetail' as const;
+export const CSI_ORGANIZATION_LIST_PATH = '/avo_organizationlist' as const;
 export const CSI_ATTACK_SURFACE_PATH = '/AttackSurface' as const;
 export const CSI_REQUEST_HISTORY_PATH = '/RequestHistory' as const;
 export const CSI_PENETRATION_TEST_PATH = '/PenetrationTest' as const;

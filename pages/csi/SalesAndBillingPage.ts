@@ -4,6 +4,9 @@ import { expect, type Locator } from '@playwright/test';
 import { CSI_BASE_URL, CSI_INVOICE_LIST_PATH } from '../../config/csi';
 import { BasePage } from '../BasePage';
 
+/** Pause before each sales-order VirtualSelect open (AM-009, SB-046). */
+export const CSI_SALES_ORDER_DROPDOWN_SETTLE_MS = 5_000;
+
 export class CsiSalesAndBillingPage extends BasePage {
   readonly salesOrderLink = this.page.getByRole('link', { name: 'Sales Order' });
   readonly addSalesOrderButton = this.page.getByRole('button', { name: 'Add Sales Order' });
@@ -162,11 +165,11 @@ export class CsiSalesAndBillingPage extends BasePage {
     await this.waitForElement(this.addSalesOrderButton);
     await this.addSalesOrderButton.click();
     await this.page.waitForLoadState('domcontentloaded');
-    await this.safeSleep(2_000);
+    await this.waitForSalesOrderDropdownToSettle();
     await this.waitForElement(this.addSalesOrderFormReady, 30_000);
   }
 
-  async waitForSalesOrderDropdownToSettle(ms = 5000) {
+  async waitForSalesOrderDropdownToSettle(ms = CSI_SALES_ORDER_DROPDOWN_SETTLE_MS) {
     await this.safeSleep(ms);
   }
 
@@ -200,10 +203,46 @@ export class CsiSalesAndBillingPage extends BasePage {
     let lastError: unknown;
 
     for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      await this.waitForSalesOrderDropdownToSettle();
       await trigger.click();
 
       try {
         await this.clickFirstDropdownOption();
+        return;
+      } catch (error) {
+        lastError = error;
+        if (attempt === maxAttempts - 1) {
+          throw lastError;
+        }
+        await this.page.keyboard.press('Escape').catch(() => {});
+        await this.safeSleep(500);
+      }
+    }
+  }
+
+  /**
+   * AM-009: search Client Name for the organization created in the same flow.
+   * Separate from {@link selectLastOptionByTriggerText}; uses the same dropdown settle as SB-046.
+   */
+  async selectSalesOrderClientByOrganizationNameForAm009(clientName: string, maxAttempts = 4) {
+    const trigger = this.salesOrderFieldTrigger('Select Client');
+    await this.waitForElement(trigger);
+
+    let lastError: unknown;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      await this.waitForSalesOrderDropdownToSettle();
+      await trigger.click();
+
+      try {
+        const search = this.page.getByPlaceholder('Search Client');
+        await expect(search).toBeVisible({ timeout: 12_000 });
+        await search.fill(clientName);
+
+        const clientListbox = this.page.getByRole('listbox');
+        const option = clientListbox.getByRole('option', { name: clientName }).first();
+        await expect(option).toBeVisible({ timeout: 30_000 });
+        await option.click();
         return;
       } catch (error) {
         lastError = error;
@@ -223,6 +262,7 @@ export class CsiSalesAndBillingPage extends BasePage {
     let lastError: unknown;
 
     for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      await this.waitForSalesOrderDropdownToSettle();
       await trigger.click();
 
       try {
@@ -241,6 +281,35 @@ export class CsiSalesAndBillingPage extends BasePage {
 
   async selectFirstBillingPartnerOption(maxAttempts = 1) {
     await this.selectFirstOptionByTriggerText('Select Billing Partner', maxAttempts);
+  }
+
+  /** AM-009: Billing Partner listbox is portaled; pick the first option from the open listbox. */
+  async selectFirstBillingPartnerOptionForAm009(maxAttempts = 4) {
+    await this.page.waitForTimeout(3_000);
+    const trigger = this.salesOrderFieldTrigger('Select Billing Partner');
+    await this.waitForElement(trigger);
+
+    let lastError: unknown;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      await this.waitForSalesOrderDropdownToSettle();
+      await trigger.click();
+
+      try {
+        const listbox = this.page.getByRole('listbox');
+        const option = listbox.getByRole('option').first();
+        await expect(option).toBeVisible({ timeout: 30_000 });
+        await option.click();
+        return;
+      } catch (error) {
+        lastError = error;
+        if (attempt === maxAttempts - 1) {
+          throw lastError;
+        }
+        await this.page.keyboard.press('Escape').catch(() => {});
+        await this.safeSleep(500);
+      }
+    }
   }
 
   async selectAllModulesAndSetUnitPrice(unitPrice: number) {

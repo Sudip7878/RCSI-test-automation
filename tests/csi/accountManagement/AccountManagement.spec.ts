@@ -15,11 +15,18 @@ import {
   csiSystemOwnerTestEmail,
   csiSystemOwnerTestPassword,
 } from '../../../utils/csi/credentials';
+import { buildAm009OrganizationProfile } from '../../../utils/csi/am009OrganizationTestData';
 import {
   csiAccountManagementEmailLocalPart,
   csiAccountManagementFirstName,
   csiAccountManagementLastName,
 } from '../../../utils/csi/accountManagementTestData';
+import { csiTestEmail, csiTestPassword } from '../../../utils/csi/credentials';
+import {
+  csiSalesOrderDuration,
+  csiSalesOrderUnitsPerModule,
+} from '../../../utils/csi/salesAndBillingTestData';
+import { writeLastUserNumber } from '../../../utils/csi/userCounter';
 
 test.describe('CSI · Account Management', () => {
   test.describe.configure({ timeout: 120_000 });
@@ -161,6 +168,75 @@ test.describe('CSI · Account Management', () => {
       await csiAccountManagementPage.submitMfaRoleSelection();
       await csiAccountManagementPage.saveOrganizationDetailChanges();
       await csiAccountManagementPage.expectOrganizationChangesSaved();
+    });
+  });
+
+  /**
+   * AM-009: create organization (`avo_organizationlist`) then sales order with that client
+   * (recorded-steps/AccountManagement/AM-009.txt). Uses `CSI_TEST_*` and `storage/userCounter.json`.
+   */
+  test.describe('AM-009 create organization and sales order', () => {
+    test.describe.configure({ timeout: 300_000 });
+
+    test.beforeEach(async ({ csiLoginPage }) => {
+      if (!process.env.CSI_TEST_PASSWORD?.length) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(csiTestEmail(), csiTestPassword());
+      await csiLoginPage.expectOnHome();
+    });
+
+    test('AM-009', async ({ csiAccountManagementPage, csiSalesAndBillingPage }) => {
+      const profile = buildAm009OrganizationProfile(csiTestEmail());
+      const salesOrderDropdownMaxAttempts = 4;
+      const salesOrderDatePickerMaxAttempts = 4;
+      const duration = csiSalesOrderDuration();
+      const unitsPerModule = csiSalesOrderUnitsPerModule();
+
+      await csiAccountManagementPage.openOrganizationList();
+      await csiAccountManagementPage.startAddOrganization();
+      await csiAccountManagementPage.fillNewOrganizationAm009({
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        ownerEmail: profile.ownerEmail,
+        phoneNumber: profile.phoneNumber,
+        organizationName: profile.organizationName,
+        category: profile.category,
+        size: profile.size,
+        plan: profile.plan,
+      });
+      await csiAccountManagementPage.submitCreateOrganization();
+      await csiAccountManagementPage.expectOrganizationRecordCreated();
+      await csiAccountManagementPage.dismissOrganizationRecordCreatedNotice();
+      writeLastUserNumber(profile.suffix);
+
+      await csiSalesAndBillingPage.openSalesAndBilling();
+      await csiSalesAndBillingPage.openSalesOrder();
+      await csiSalesAndBillingPage.clickAddSalesOrder();
+      await csiSalesAndBillingPage.selectSalesOrderClientByOrganizationNameForAm009(
+        profile.organizationName,
+        salesOrderDropdownMaxAttempts,
+      );
+      await csiSalesAndBillingPage.selectFirstOptionByTriggerText(
+        'Select Sales Partner',
+        salesOrderDropdownMaxAttempts,
+      );
+      await csiSalesAndBillingPage.selectFirstBillingPartnerOptionForAm009(salesOrderDropdownMaxAttempts);
+      await csiSalesAndBillingPage.selectFirstOptionByTriggerText(
+        'Select Package Type',
+        salesOrderDropdownMaxAttempts,
+      );
+
+      await csiSalesAndBillingPage.pickTodaySalesStartDate(salesOrderDatePickerMaxAttempts);
+      await csiSalesAndBillingPage.fillSalesOrderDuration(duration);
+      await csiSalesAndBillingPage.selectFirstBillingMode();
+      await csiSalesAndBillingPage.selectAllSalesOrderModulesAndSetUnits(unitsPerModule);
+      await csiSalesAndBillingPage.continueSalesOrderToReview();
+      await csiSalesAndBillingPage.submitPackage();
+      await csiSalesAndBillingPage.expectSalesOrderCreated();
     });
   });
 

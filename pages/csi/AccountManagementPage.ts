@@ -1,5 +1,5 @@
 import { expect, type Locator } from '@playwright/test';
-import { CSI_BASE_URL, CSI_ORGANIZATION_DETAIL_PATH } from '../../config/csi';
+import { CSI_BASE_URL, CSI_ORGANIZATION_DETAIL_PATH, CSI_ORGANIZATION_LIST_PATH } from '../../config/csi';
 import { BasePage } from '../BasePage';
 
 export class CsiAccountManagementPage extends BasePage {
@@ -378,5 +378,82 @@ export class CsiAccountManagementPage extends BasePage {
 
   async expectOrganizationChangesSaved() {
     await expect(this.page.getByText('Changes saved successfully')).toBeVisible({ timeout: 60_000 });
+  }
+
+  private addOrganizationDialog(): Locator {
+    return this.page.getByRole('dialog').filter({
+      has: this.page.getByText('Create new organization', { exact: true }),
+    });
+  }
+
+  /** AM-009: `/avo_organizationlist` — Add organization wizard. */
+  async openOrganizationList() {
+    await this.page.goto(`${CSI_BASE_URL}${CSI_ORGANIZATION_LIST_PATH}`);
+    await expect(this.page.getByRole('button', { name: 'Add' })).toBeVisible({ timeout: 60_000 });
+  }
+
+  async startAddOrganization() {
+    await this.page.getByRole('button', { name: 'Add' }).click();
+    const dialog = this.addOrganizationDialog();
+    await expect(dialog).toBeVisible({ timeout: 30_000 });
+    await expect(dialog.getByRole('textbox', { name: 'First name' })).toBeVisible({ timeout: 30_000 });
+  }
+
+  async fillNewOrganizationAm009(params: {
+    firstName: string;
+    lastName: string;
+    ownerEmail: string;
+    phoneNumber: string;
+    organizationName: string;
+    category: string;
+    size: string;
+    plan: string;
+  }) {
+    const dialog = this.addOrganizationDialog();
+
+    const firstName = dialog.getByRole('textbox', { name: 'First name' });
+    await firstName.click();
+    await firstName.fill(params.firstName);
+
+    const lastName = dialog.getByRole('textbox', { name: 'Last name' });
+    await lastName.click();
+    await lastName.fill(params.lastName);
+
+    const ownerEmail = dialog.getByRole('textbox', { name: 'Owner email' });
+    await ownerEmail.click();
+    await ownerEmail.fill(params.ownerEmail);
+
+    const phone = dialog.getByRole('textbox', { name: 'Phone number' });
+    await phone.click();
+    await phone.fill(params.phoneNumber);
+
+    const orgName = dialog.getByRole('textbox', { name: 'Organization name' });
+    await orgName.click();
+    await orgName.fill(params.organizationName);
+
+    await this.page.waitForTimeout(3_000);
+    await dialog.getByText('Category', { exact: true }).click();
+    await this.page.getByRole('option', { name: params.category }).click();
+
+    await dialog.getByText('Size', { exact: true }).click();
+    await this.page.getByRole('option', { name: params.size }).click();
+
+    await dialog.getByText('Plan', { exact: true }).click();
+    await this.page.getByRole('option', { name: params.plan }).click();
+  }
+
+  async submitCreateOrganization() {
+    await this.addOrganizationDialog().getByRole('button', { name: 'Create organization' }).click();
+  }
+
+  async expectOrganizationRecordCreated() {
+    await expect(this.page.getByText('Record created.', { exact: true })).toBeVisible({ timeout: 60_000 });
+  }
+
+  async dismissOrganizationRecordCreatedNotice() {
+    const closeIcon = this.page.getByRole('img').first();
+    if (await closeIcon.isVisible({ timeout: 5_000 }).catch(() => false)) {
+      await closeIcon.click();
+    }
   }
 }
