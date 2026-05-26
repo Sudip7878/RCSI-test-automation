@@ -6,8 +6,16 @@ import {
   writeBulkUsersToTemplateXlsx,
 } from '../../../utils/csi/accountManagementBulkUpload';
 import {
+  expectNoEmailIntersection,
+  writeAm063UserEmailsSnapshot,
+} from '../../../utils/csi/am063UserListEmails';
+import {
   csiIncidentReporterTestEmail,
   csiIncidentReporterTestPassword,
+  csiOrgASystemOwnerTestEmail,
+  csiOrgASystemOwnerTestPassword,
+  csiOrgBSystemOwnerTestEmail,
+  csiOrgBSystemOwnerTestPassword,
   csiOrgTestEmail,
   csiOrgTestPassword,
   csiOrgUserTestEmail,
@@ -237,6 +245,52 @@ test.describe('CSI · Account Management', () => {
       await csiSalesAndBillingPage.continueSalesOrderToReview();
       await csiSalesAndBillingPage.submitPackage();
       await csiSalesAndBillingPage.expectSalesOrderCreated();
+    });
+  });
+
+  /**
+   * AM-063: Org A system owner user list must not overlap Org B emails (recorded-steps/AccountManagement/AM-063.txt).
+   */
+  test.describe('AM-063 OrgA system owner cannot see OrgB users', () => {
+    test.describe.configure({ timeout: 600_000 });
+
+    test('AM-063', async ({ csiLoginPage, csiAccountManagementPage }) => {
+      if (
+        !process.env.CSI_ORG_A_SYSTEM_OWNER_TEST_PASSWORD?.length ||
+        !process.env.CSI_ORG_A_SYSTEM_OWNER_TEST_EMAIL?.trim()?.length ||
+        !process.env.CSI_ORG_B_SYSTEM_OWNER_TEST_PASSWORD?.length ||
+        !process.env.CSI_ORG_B_SYSTEM_OWNER_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiOrgASystemOwnerTestEmail(),
+        csiOrgASystemOwnerTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+
+      await csiAccountManagementPage.openUserListWithSearchReady();
+      const orgAEmails = await csiAccountManagementPage.collectAllUserListEmailsAm063();
+      writeAm063UserEmailsSnapshot('orgA', orgAEmails);
+
+      await csiLoginPage.logoutViaHeaderMenu();
+      await csiLoginPage.expectEmailStepVisible();
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiOrgBSystemOwnerTestEmail(),
+        csiOrgBSystemOwnerTestPassword(),
+      );
+      await csiLoginPage.expectOnAccountManagement();
+
+      await csiAccountManagementPage.openUserListWithSearchReady();
+      const orgBEmails = await csiAccountManagementPage.collectAllUserListEmailsAm063();
+      writeAm063UserEmailsSnapshot('orgB', orgBEmails);
+
+      expectNoEmailIntersection(orgAEmails, orgBEmails);
     });
   });
 

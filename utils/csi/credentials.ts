@@ -191,6 +191,42 @@ export function csiTrainingPhisingSysOwnerTestPassword(): string {
   return p;
 }
 
+/** AM-063: Org A system owner (`CSI_ORG_A_SYSTEM_OWNER_TEST_*`). */
+export function csiOrgASystemOwnerTestEmail(): string {
+  const e = process.env.CSI_ORG_A_SYSTEM_OWNER_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_ORG_A_SYSTEM_OWNER_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiOrgASystemOwnerTestEmail}. */
+export function csiOrgASystemOwnerTestPassword(): string {
+  const p = process.env.CSI_ORG_A_SYSTEM_OWNER_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_ORG_A_SYSTEM_OWNER_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
+/** AM-063: Org B system owner (`CSI_ORG_B_SYSTEM_OWNER_TEST_*`). */
+export function csiOrgBSystemOwnerTestEmail(): string {
+  const e = process.env.CSI_ORG_B_SYSTEM_OWNER_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_ORG_B_SYSTEM_OWNER_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiOrgBSystemOwnerTestEmail}. */
+export function csiOrgBSystemOwnerTestPassword(): string {
+  const p = process.env.CSI_ORG_B_SYSTEM_OWNER_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_ORG_B_SYSTEM_OWNER_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
 /** PT-001: penetration tester who submits a new pen test request. */
 export function csiPenetrationTesterTestEmail(): string {
   const e = process.env.CSI_PENETRATION_TESTER_TEST_EMAIL?.trim();

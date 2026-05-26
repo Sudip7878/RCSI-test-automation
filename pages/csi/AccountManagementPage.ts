@@ -456,4 +456,78 @@ export class CsiAccountManagementPage extends BasePage {
       await closeIcon.click();
     }
   }
+
+  /** AM-063: confirm Email column exists without clicking (sort must not change). */
+  async expectUserListEmailColumnPresent() {
+    await expect(this.userListGrid().getByRole('columnheader', { name: 'Email' })).toBeVisible({
+      timeout: 30_000,
+    });
+  }
+
+  private async collectEmailsOnCurrentUserListPage(): Promise<string[]> {
+    const grid = this.userListGrid();
+    await expect(grid).toBeVisible({ timeout: 30_000 });
+
+    const emails = await grid.evaluate((root) => {
+      const found: string[] = [];
+      const add = (raw: string) => {
+        const t = raw.replace(/\s+/g, ' ').trim();
+        if (t.includes('@')) {
+          found.push(t);
+        }
+      };
+
+      root.querySelectorAll('td[data-header="Email"]').forEach((td) => {
+        add(td.textContent ?? '');
+      });
+
+      root.querySelectorAll('[role="gridcell"]').forEach((cell) => {
+        add(cell.textContent ?? '');
+      });
+
+      return [...new Set(found)];
+    });
+
+    return emails;
+  }
+
+  /**
+   * AM-063: scan all `/userList` pages (pagination when present) and return every email in the grid.
+   */
+  async collectAllUserListEmailsAm063(): Promise<string[]> {
+    await this.clearUserListFilters();
+    await this.expectUserListEmailColumnPresent();
+
+    const allEmails = new Set<string>();
+
+    const mergeCurrentPage = async () => {
+      for (const email of await this.collectEmailsOnCurrentUserListPage()) {
+        allEmails.add(email);
+      }
+    };
+
+    await mergeCurrentPage();
+
+    const nextPage = this.page.getByRole('button', { name: 'go to next page' });
+    let pagesWalked = 0;
+
+    while (await nextPage.isVisible().catch(() => false)) {
+      const disabled = await nextPage.evaluate((btn) => (btn as HTMLButtonElement).disabled).catch(() => true);
+      if (disabled) {
+        break;
+      }
+
+      await nextPage.click();
+      await this.page.waitForLoadState('domcontentloaded').catch(() => {});
+      await expect(this.userListGrid()).toBeVisible({ timeout: 30_000 });
+      await mergeCurrentPage();
+
+      pagesWalked += 1;
+      if (pagesWalked > 200) {
+        throw new Error('AM-063: user list pagination exceeded 200 pages');
+      }
+    }
+
+    return [...allEmails].sort();
+  }
 }
