@@ -1,6 +1,6 @@
 import { expect, type Locator } from '@playwright/test';
 import * as path from 'path';
-import { CSI_BASE_URL } from '../../config/csi';
+import { CSI_BASE_URL, CSI_POLICY_DETAIL_PATH } from '../../config/csi';
 import { BasePage } from '../BasePage';
 
 export class CsiPolicyManagementPage extends BasePage {
@@ -184,6 +184,18 @@ export class CsiPolicyManagementPage extends BasePage {
     } catch {
       await btn.click({ force: true });
     }
+  }
+
+  /** PM-031: direct navigation to policy detail (cross-org access check). */
+  async openPolicyDetail(policyId: number) {
+    await this.page.goto(`${CSI_BASE_URL}${CSI_POLICY_DETAIL_PATH}?PolicyId=${policyId}`);
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  async expectPolicyDetailNoPermissionMessage() {
+    await expect(
+      this.page.getByText("You don't have permissions to view this screen.", { exact: true }),
+    ).toBeVisible({ timeout: 60_000 });
   }
 
   async openPolicyTemplateLibrary() {

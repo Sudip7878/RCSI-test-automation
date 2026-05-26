@@ -5,10 +5,18 @@ import {
   csiTestPassword,
 } from '../../../utils/csi/credentials';
 import {
+  csiOrgAPolicyId,
+  csiOrgBPolicyId,
   csiPolicyDistributionDueInDays,
   csiPolicyUniqueSuffix,
   replacePolicyTitleLastToken,
 } from '../../../utils/csi/policyManagementTestData';
+import {
+  csiOrgASystemOwnerTestEmail,
+  csiOrgASystemOwnerTestPassword,
+  csiOrgBSystemOwnerTestEmail,
+  csiOrgBSystemOwnerTestPassword,
+} from '../../../utils/csi/credentials';
 import { prependLineToDocx } from '../../../utils/csi/policyDocxPrepend';
 import { csiDistributionUserSearchToken } from '../../../utils/csi/trainingTestData';
 
@@ -192,6 +200,52 @@ test.describe('CSI · Policy Management', () => {
       await csiPolicyManagementPage.expectPolicyTitleVisibleInPublishedGrid(newFullTitle);
       await csiPolicyManagementPage.sortViewPoliciesByVersionColumn();
       await csiPolicyManagementPage.expectPublishedRowVersionColumnIsExact(newFullTitle, '2');
+    });
+  });
+});
+
+test.describe('CSI · Policy Management — org policy isolation', () => {
+  test.describe.configure({ timeout: 120_000 });
+
+  /**
+   * PM-031: Org A owner cannot open Org B policy detail and vice versa.
+   * Policy ids in `data/csi/policyManagement.json` (recorded-steps/PolicyManagement/PM-031.txt).
+   */
+  test.describe('PM-031 cross-org PolicyDetail access denied', () => {
+    test('PM-031', async ({ csiLoginPage, csiPolicyManagementPage }) => {
+      if (
+        !process.env.CSI_ORG_A_SYSTEM_OWNER_TEST_PASSWORD?.length ||
+        !process.env.CSI_ORG_A_SYSTEM_OWNER_TEST_EMAIL?.trim()?.length ||
+        !process.env.CSI_ORG_B_SYSTEM_OWNER_TEST_PASSWORD?.length ||
+        !process.env.CSI_ORG_B_SYSTEM_OWNER_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiOrgASystemOwnerTestEmail(),
+        csiOrgASystemOwnerTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+
+      await csiPolicyManagementPage.openPolicyDetail(csiOrgBPolicyId());
+      await csiPolicyManagementPage.expectPolicyDetailNoPermissionMessage();
+
+      await csiLoginPage.gotoHome();
+      await csiLoginPage.logoutViaHeaderMenu();
+      await csiLoginPage.expectEmailStepVisible();
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiOrgBSystemOwnerTestEmail(),
+        csiOrgBSystemOwnerTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+
+      await csiPolicyManagementPage.openPolicyDetail(csiOrgAPolicyId());
+      await csiPolicyManagementPage.expectPolicyDetailNoPermissionMessage();
     });
   });
 });

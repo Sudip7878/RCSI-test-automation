@@ -1,5 +1,11 @@
 import { expect, type Page } from '@playwright/test';
-import { CSI_ACCOUNT_MANAGEMENT_PATH, CSI_LEGACY_LOGIN_PATH, CSI_LOGIN_PATH } from '../../config/csi';
+import {
+  CSI_ACCOUNT_MANAGEMENT_PATH,
+  CSI_BASE_URL,
+  CSI_HOME_PATH,
+  CSI_LEGACY_LOGIN_PATH,
+  CSI_LOGIN_PATH,
+} from '../../config/csi';
 import { BasePage } from '../BasePage';
 
 /**
@@ -112,6 +118,12 @@ export class CsiAvotechLoginPage extends BasePage {
     await this.expectPasswordFieldVisible();
     await this.enterPassword(password);
     await this.submitLogin();
+  }
+
+  async gotoHome() {
+    await this.page.goto(`${CSI_BASE_URL}${CSI_HOME_PATH}`);
+    await this.page.waitForLoadState('domcontentloaded');
+    await this.expectOnHome();
   }
 
   async expectOnHome() {
