@@ -3,6 +3,10 @@ import { test } from '../../../fixtures/csi/testSetup';
 import {
   csiIncidentReporterTestEmail,
   csiIncidentReporterTestPassword,
+  csiOrgAIncidentReporterTestEmail,
+  csiOrgAIncidentReporterTestPassword,
+  csiOrgBIncidentReporterTestEmail,
+  csiOrgBIncidentReporterTestPassword,
   csiPenetrationTesterTestEmail,
   csiPenetrationTesterTestPassword,
   csiSystemOwnerTestEmail,
@@ -18,6 +22,8 @@ import {
   csiIncidentCommentUploadedPdfAliasName,
   csiIncidentDescription,
   csiIncidentHandlerDisplayName,
+  csiOrgAIncidentReportId,
+  csiOrgBIncidentReportId,
   CSI_INCIDENT_STATUS_TRANSITIONS_IR013,
   parseTestIncidentDescriptionSuffix,
 } from '../../../utils/csi/incidentReportTestData';
@@ -299,6 +305,52 @@ test.describe('CSI · Incident Report', () => {
 
     test('IR-016', async ({ csiIncidentReportPage }) => {
       await csiIncidentReportPage.clickIncidentResponseAndExpectBlackpandaAuthRedirect();
+    });
+  });
+});
+
+test.describe('CSI · Incident Report — org incident report isolation', () => {
+  test.describe.configure({ timeout: 120_000 });
+
+  /**
+   * IR-019: Org A reporter cannot open Org B incident detail and vice versa.
+   * Ids in `data/csi/incidentReport.json` (recorded-steps/IncidentReport/IR-019.txt).
+   */
+  test.describe('IR-019 cross-org IncidentReportDetail access denied', () => {
+    test('IR-019', async ({ csiLoginPage, csiIncidentReportPage }) => {
+      if (
+        !process.env.CSI_ORG_A_INCIDNET_REPORTER_TEST_PASSWORD?.length ||
+        !process.env.CSI_ORG_A_INCIDNET_REPORTER_TEST_EMAIL?.trim()?.length ||
+        !process.env.CSI_ORG_B_INCIDNET_REPORTER_TEST_PASSWORD?.length ||
+        !process.env.CSI_ORG_B_INCIDNET_REPORTER_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiOrgAIncidentReporterTestEmail(),
+        csiOrgAIncidentReporterTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+
+      await csiIncidentReportPage.openIncidentReportDetail(csiOrgBIncidentReportId());
+      await csiIncidentReportPage.expectIncidentReportDetailNoPermissionMessage();
+
+      await csiLoginPage.gotoHome();
+      await csiLoginPage.logoutViaHeaderMenu();
+      await csiLoginPage.expectEmailStepVisible();
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiOrgBIncidentReporterTestEmail(),
+        csiOrgBIncidentReporterTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+
+      await csiIncidentReportPage.openIncidentReportDetail(csiOrgAIncidentReportId());
+      await csiIncidentReportPage.expectIncidentReportDetailNoPermissionMessage();
     });
   });
 });

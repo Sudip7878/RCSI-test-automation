@@ -4,6 +4,7 @@ import {
   CSI_BASE_URL,
   CSI_BLACKPANDA_AUTH_HOST,
   CSI_INCIDENT_REPORT_DASHBOARD_PATH,
+  CSI_INCIDENT_REPORT_DETAIL_PATH,
 } from '../../config/csi';
 import { BasePage } from '../BasePage';
 
@@ -114,6 +115,20 @@ export class CsiIncidentReportPage extends BasePage {
     await this.page.goto(`${CSI_BASE_URL}${CSI_INCIDENT_REPORT_DASHBOARD_PATH}`);
     await this.page.waitForLoadState('domcontentloaded');
     await expect(this.addNewIncidentButton).toBeVisible({ timeout: 60_000 });
+  }
+
+  /** IR-019: direct navigation to incident report detail (cross-org access check). */
+  async openIncidentReportDetail(incidentReportId: number) {
+    await this.page.goto(
+      `${CSI_BASE_URL}${CSI_INCIDENT_REPORT_DETAIL_PATH}?IncidentReportId=${incidentReportId}`,
+    );
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  async expectIncidentReportDetailNoPermissionMessage() {
+    await expect(
+      this.page.getByText("You don't have permissions to view this screen.", { exact: true }),
+    ).toBeVisible({ timeout: 60_000 });
   }
 
   /** IR-001: sidebar navigation after reporter login (spec used inline getByRole). */

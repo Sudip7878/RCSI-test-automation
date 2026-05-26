@@ -1,5 +1,16 @@
 import * as path from 'node:path';
+import incidentReport from '../../data/csi/incidentReport.json';
 import { utcDateBasedNumber } from '../dateUtils';
+
+/** IR-019: Org A incident report id (`data/csi/incidentReport.json`). */
+export function csiOrgAIncidentReportId(): number {
+  return incidentReport.orgIncidentReportIds.orgA;
+}
+
+/** IR-019: Org B incident report id (`data/csi/incidentReport.json`). */
+export function csiOrgBIncidentReportId(): number {
+  return incidentReport.orgIncidentReportIds.orgB;
+}
 
 /** IR-005: `Test Incident ` + UTC numeric suffix (see recorded steps). */
 export function csiIncidentDescription(uniqueNumeric = utcDateBasedNumber()): string {

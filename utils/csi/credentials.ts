@@ -244,3 +244,39 @@ export function csiPenetrationTesterTestPassword(): string {
   }
   return p;
 }
+
+/** IR-019: Org A incident reporter (`CSI_ORG_A_INCIDNET_REPORTER_TEST_*` — env key spelling matches recorded steps). */
+export function csiOrgAIncidentReporterTestEmail(): string {
+  const e = process.env.CSI_ORG_A_INCIDNET_REPORTER_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_ORG_A_INCIDNET_REPORTER_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiOrgAIncidentReporterTestEmail}. */
+export function csiOrgAIncidentReporterTestPassword(): string {
+  const p = process.env.CSI_ORG_A_INCIDNET_REPORTER_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_ORG_A_INCIDNET_REPORTER_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
+/** IR-019: Org B incident reporter (`CSI_ORG_B_INCIDNET_REPORTER_TEST_*`). */
+export function csiOrgBIncidentReporterTestEmail(): string {
+  const e = process.env.CSI_ORG_B_INCIDNET_REPORTER_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_ORG_B_INCIDNET_REPORTER_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiOrgBIncidentReporterTestEmail}. */
+export function csiOrgBIncidentReporterTestPassword(): string {
+  const p = process.env.CSI_ORG_B_INCIDNET_REPORTER_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_ORG_B_INCIDNET_REPORTER_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
