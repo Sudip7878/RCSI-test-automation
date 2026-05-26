@@ -1,4 +1,15 @@
+import itAssetManagement from '../../data/csi/itAssetManagement.json';
 import { utcDateBasedNumber } from '../dateUtils';
+
+/** IA-048: Org A asset form id (`data/csi/itAssetManagement.json`). */
+export function csiOrgAAssetFormId(): number {
+  return itAssetManagement.orgAssetFormIds.orgA;
+}
+
+/** IA-048: Org B asset form id (`data/csi/itAssetManagement.json`). */
+export function csiOrgBAssetFormId(): number {
+  return itAssetManagement.orgAssetFormIds.orgB;
+}
 
 export const csiItAssetManufacturer = 'Acer' as const;
 export const csiItAssetOperatingSystem = 'Windows' as const;

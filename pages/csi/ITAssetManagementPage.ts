@@ -2,7 +2,7 @@
 import { expect, type Locator, type Response } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
-import { CSI_BASE_URL } from '../../config/csi';
+import { CSI_BASE_URL, CSI_VIEW_ASSET_PATH } from '../../config/csi';
 import {
   csiItAssetCurrency,
   csiItAssetManufacturer,
@@ -95,6 +95,18 @@ export class CsiItAssetManagementPage extends BasePage {
 
   private purchasePurposeField(): Locator {
     return this.page.getByRole('main').getByRole('textbox').first();
+  }
+
+  /** IA-048: direct navigation to asset view (cross-org access check). */
+  async openViewAsset(formId: number) {
+    await this.page.goto(`${CSI_BASE_URL}${CSI_VIEW_ASSET_PATH}?formId=${formId}`);
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  async expectViewAssetSomethingWentWrong() {
+    await expect(this.page.getByText('Sorry, something went wrong.', { exact: true })).toBeVisible({
+      timeout: 60_000,
+    });
   }
 
   /** Same destination as hub ΓåÆ IT Asset ΓåÆ Office ΓåÆ Client Machine; avoids menu transitions blocking clicks. */

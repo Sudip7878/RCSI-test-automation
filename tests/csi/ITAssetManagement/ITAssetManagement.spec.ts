@@ -1,13 +1,22 @@
 import * as os from 'os';
 import * as path from 'path';
 import { test } from '../../../fixtures/csi/testSetup';
-import { csiTestEmail, csiTestPassword } from '../../../utils/csi/credentials';
+import {
+  csiOrgASystemOwnerTestEmail,
+  csiOrgASystemOwnerTestPassword,
+  csiOrgBSystemOwnerTestEmail,
+  csiOrgBSystemOwnerTestPassword,
+  csiTestEmail,
+  csiTestPassword,
+} from '../../../utils/csi/credentials';
 import {
   buildIa003BulkClientMachineWorkbook,
   csiIa003BulkBaseNumeric,
   saveIa003EditedWorkbookArtifact,
 } from '../../../utils/csi/itAssetBulkUpload';
 import {
+  csiOrgAAssetFormId,
+  csiOrgBAssetFormId,
   csiItAssetDisplayName,
   csiItAssetIa016EditedDisplayName,
   csiItAssetIncrementOsVersionString,
@@ -367,6 +376,52 @@ test.describe('CSI · IT Asset Management', () => {
       await csiItAssetManagementPage.clickDesktopComputersExpectClientMachineGrid();
       await csiItAssetManagementPage.clickViewOnClientMachineGridRowByAssetNameIa025(newName);
       await csiItAssetManagementPage.expectItAssetViewShowsTextIa025(assignedUserLabel);
+    });
+  });
+});
+
+test.describe('CSI · IT Asset Management — org asset isolation', () => {
+  test.describe.configure({ timeout: 120_000 });
+
+  /**
+   * IA-048: Org A owner cannot open Org B asset view and vice versa.
+   * Form ids in `data/csi/itAssetManagement.json` (recorded-steps/ITAssetManagement/IA-048.txt).
+   */
+  test.describe('IA-048 cross-org ViewAsset access denied', () => {
+    test('IA-048', async ({ csiLoginPage, csiItAssetManagementPage }) => {
+      if (
+        !process.env.CSI_ORG_A_SYSTEM_OWNER_TEST_PASSWORD?.length ||
+        !process.env.CSI_ORG_A_SYSTEM_OWNER_TEST_EMAIL?.trim()?.length ||
+        !process.env.CSI_ORG_B_SYSTEM_OWNER_TEST_PASSWORD?.length ||
+        !process.env.CSI_ORG_B_SYSTEM_OWNER_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiOrgASystemOwnerTestEmail(),
+        csiOrgASystemOwnerTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+
+      await csiItAssetManagementPage.openViewAsset(csiOrgBAssetFormId());
+      await csiItAssetManagementPage.expectViewAssetSomethingWentWrong();
+
+      await csiLoginPage.gotoHome();
+      await csiLoginPage.logoutViaHeaderMenu();
+      await csiLoginPage.expectEmailStepVisible();
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiOrgBSystemOwnerTestEmail(),
+        csiOrgBSystemOwnerTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+
+      await csiItAssetManagementPage.openViewAsset(csiOrgAAssetFormId());
+      await csiItAssetManagementPage.expectViewAssetSomethingWentWrong();
     });
   });
 });
