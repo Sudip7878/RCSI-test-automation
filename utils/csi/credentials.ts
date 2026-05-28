@@ -13,6 +13,24 @@ export function csiTestEmail(): string {
   return process.env.CSI_TEST_EMAIL?.trim() || auth.validUser.email;
 }
 
+/** CC-022: system owner without Policy Management until sales order is updated (`CSI_NO_POLICY_SYSTEM_OWNER_TEST_*`). */
+export function csiNoPolicySystemOwnerTestEmail(): string {
+  const e = process.env.CSI_NO_POLICY_SYSTEM_OWNER_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_NO_POLICY_SYSTEM_OWNER_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiNoPolicySystemOwnerTestEmail}. */
+export function csiNoPolicySystemOwnerTestPassword(): string {
+  const p = process.env.CSI_NO_POLICY_SYSTEM_OWNER_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_NO_POLICY_SYSTEM_OWNER_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
 /** `CSI_ORG_TEST_EMAIL` — org admin used for Account Management (e.g. user list). */
 export function csiOrgTestEmail(): string {
   const e = process.env.CSI_ORG_TEST_EMAIL?.trim();
@@ -169,6 +187,24 @@ export function csiSecurityReportAdminTestPassword(): string {
   const p = process.env.CSI_SECURITY_REPORT_ADMIN_PASSWORD;
   if (p == null || p.length === 0) {
     throw new Error('Set CSI_SECURITY_REPORT_ADMIN_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
+/** CC-023: expired sales system owner — module access revoked on hub. */
+export function csiExpiredSalesSystemOwnerTestEmail(): string {
+  const e = process.env.CSI_EXPIRED_SALES_SYSTEM_OWNER_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_EXPIRED_SALES_SYSTEM_OWNER_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiExpiredSalesSystemOwnerTestEmail}. */
+export function csiExpiredSalesSystemOwnerTestPassword(): string {
+  const p = process.env.CSI_EXPIRED_SALES_SYSTEM_OWNER_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_EXPIRED_SALES_SYSTEM_OWNER_TEST_PASSWORD in the environment (see .env.example).');
   }
   return p;
 }

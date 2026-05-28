@@ -1,7 +1,15 @@
 import { readFileSync } from 'node:fs';
 
 import { expect, type Locator } from '@playwright/test';
-import { CSI_BASE_URL, CSI_INVOICE_LIST_PATH } from '../../config/csi';
+import { CSI_BASE_URL, CSI_INVOICE_LIST_PATH, CSI_SALES_ORDER_LIST_PATH } from '../../config/csi';
+import {
+  CC022_POLICY_HUB_VISIBILITY_TIMEOUT_MS,
+  CC022_POLICY_MANAGEMENT_MODULE_NAME,
+  CC022_POLICY_MANAGEMENT_UNITS,
+  CC022_SALES_ORDER_UPDATED_MESSAGE,
+  CC023_HUB_MODULE_VISIBILITY_TIMEOUT_MS,
+  CC023_REVOKED_HUB_MODULE_LABELS,
+} from '../../utils/csi/crossCuttingTestData';
 import { BasePage } from '../BasePage';
 
 /** Pause before each sales-order VirtualSelect open (AM-009, SB-046). */
@@ -23,6 +31,11 @@ export class CsiSalesAndBillingPage extends BasePage {
 
   readonly submitButton = this.page.getByRole('button', { name: 'Submit' });
   readonly continueToReviewButton = this.page.getByRole('button', { name: 'Continue to Review' });
+  readonly updateSalesOrderButton = this.page.getByRole('button', { name: 'Update' });
+  readonly salesOrderListSearchBox = this.page.getByRole('searchbox', {
+    name: /Enter Client\/Billing Partner/i,
+  });
+  readonly salesOrderListSearchButton = this.page.getByRole('button', { name: 'Search' });
   readonly addSalesOrderFormReady = this.page.getByText('Select Client', { exact: true });
 
   private async safeSleep(ms: number) {
@@ -723,19 +736,209 @@ export class CsiSalesAndBillingPage extends BasePage {
     await this.safeSleep(800);
   }
 
+  private async countVisibleHubMenuLabels(label: string): Promise<number> {
+    return this.page.getByText(label, { exact: true }).evaluateAll((nodes) => {
+      return nodes.filter((node) => {
+        const el = node as HTMLElement;
+        if (el.closest('a')) {
+          return false;
+        }
+        const style = window.getComputedStyle(el);
+        if (style.display === 'none' || style.visibility === 'hidden') {
+          return false;
+        }
+        return el.getClientRects().length > 0;
+      }).length;
+    });
+  }
+
   async expectSb056RestrictedHubModulesNotVisible() {
     for (const label of this.sb056RestrictedHubLabels) {
-      const visibleCount = await this.page.getByText(label, { exact: true }).evaluateAll((nodes) => {
-        return nodes.filter((node) => {
-          const el = node as HTMLElement;
-          const style = window.getComputedStyle(el);
-          if (style.display === 'none' || style.visibility === 'hidden') {
-            return false;
-          }
-          return el.getClientRects().length > 0;
-        }).length;
-      });
-      expect(visibleCount).toBe(0);
+      expect(await this.countVisibleHubMenuLabels(label)).toBe(0);
     }
+  }
+
+  /**
+   * CC-023: after login, revoked hub modules must stay hidden for the full window (default 10s).
+   */
+  async expectCc023RevokedHubModulesNotVisible(
+    timeoutMs = CC023_HUB_MODULE_VISIBILITY_TIMEOUT_MS,
+  ) {
+    const pollIntervalMs = 250;
+    const deadline = Date.now() + timeoutMs;
+
+    while (Date.now() < deadline) {
+      for (const label of CC023_REVOKED_HUB_MODULE_LABELS) {
+        expect(await this.countVisibleHubMenuLabels(label)).toBe(0);
+      }
+      await this.page.waitForTimeout(pollIntervalMs);
+    }
+  }
+
+  private salesOrderListGrid() {
+    return this.page.getByRole('grid').filter({
+      has: this.page.getByRole('columnheader', { name: 'Client Name' }),
+    });
+  }
+
+  private salesOrderModulePackageGrid() {
+    return this.page.getByRole('grid').filter({
+      has: this.page.getByRole('columnheader', { name: 'Module Name' }),
+    });
+  }
+
+  private salesOrderModulePackageRow(moduleName: string) {
+    return this.salesOrderModulePackageGrid().getByRole('row', {
+      name: new RegExp(moduleName, 'i'),
+    });
+  }
+
+  async openSalesOrderList() {
+    await this.page.goto(`${CSI_BASE_URL}${CSI_SALES_ORDER_LIST_PATH}`);
+    await this.page.waitForLoadState('domcontentloaded');
+    await expect(this.salesOrderListSearchBox).toBeVisible({ timeout: 30_000 });
+  }
+
+  async searchSalesOrderListByOrganization(organizationName: string) {
+    await this.salesOrderListSearchBox.click();
+    await this.salesOrderListSearchBox.fill(organizationName.trim());
+    await this.salesOrderListSearchButton.click();
+    await expect(this.salesOrderListSearchButton).toBeEnabled({ timeout: 30_000 });
+    await expect(
+      this.salesOrderListGrid().getByRole('gridcell', { name: organizationName }).first(),
+    ).toBeVisible({ timeout: 90_000 });
+  }
+
+  /** CC-022: open Edit on the Active sales order row matching `clientName`. */
+  async openEditOnActiveSalesOrderForClient(clientName: string) {
+    const row = this.salesOrderListGrid()
+      .getByRole('row')
+      .filter({
+        has: this.page.getByRole('gridcell', { name: clientName }),
+      })
+      .filter({
+        has: this.page.getByRole('gridcell', { name: 'Active', exact: true }),
+      })
+      .first();
+    await expect(row).toBeVisible({ timeout: 60_000 });
+
+    const actionCells = await row.getByRole('gridcell').all();
+    expect(actionCells.length).toBeGreaterThan(0);
+    await actionCells[actionCells.length - 1].click();
+
+    const editLink = this.page.getByRole('link', { name: 'Edit' });
+    await expect(editLink).toBeVisible({ timeout: 15_000 });
+    await editLink.click();
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  async expectPolicyManagementModuleOnEditScreen() {
+    await expect(this.salesOrderModulePackageRow(CC022_POLICY_MANAGEMENT_MODULE_NAME)).toBeVisible({
+      timeout: 60_000,
+    });
+  }
+
+  async setPolicyManagementModuleIncluded(
+    included: boolean,
+    units = CC022_POLICY_MANAGEMENT_UNITS,
+    options?: { allowAlreadyRevoked?: boolean },
+  ) {
+    await this.expectPolicyManagementModuleOnEditScreen();
+    const row = this.salesOrderModulePackageRow(CC022_POLICY_MANAGEMENT_MODULE_NAME);
+    const checkbox = row.getByRole('checkbox');
+
+    if (included) {
+      if (!(await checkbox.isChecked())) {
+        await checkbox.check();
+      }
+      const unitsInput = row.getByPlaceholder('Enter Number of Units');
+      await expect(unitsInput).toBeEnabled({ timeout: 15_000 });
+      await unitsInput.fill(String(units));
+    } else {
+      if (!options?.allowAlreadyRevoked) {
+        await expect(checkbox).toBeChecked({ timeout: 15_000 });
+      }
+      if (await checkbox.isChecked()) {
+        await checkbox.uncheck();
+      }
+    }
+  }
+
+  async submitSalesOrderEditUpdate() {
+    await this.continueSalesOrderToReview();
+    await expect(this.updateSalesOrderButton).toBeVisible({ timeout: 60_000 });
+    await this.updateSalesOrderButton.click();
+
+    const successToast = this.page.getByText(CC022_SALES_ORDER_UPDATED_MESSAGE);
+    await successToast.waitFor({ state: 'visible', timeout: 15_000 }).catch(() => {});
+
+    await expect(this.page).toHaveURL(/\/SalesOrderList/i, { timeout: 60_000 });
+    await expect(this.salesOrderListSearchBox).toBeVisible({ timeout: 30_000 });
+  }
+
+  /** CC-022: Policy Management hub label must stay hidden for the full window (default 5s). */
+  async isPolicyManagementHubMenuVisible(): Promise<boolean> {
+    return (await this.countVisibleHubMenuLabels(CC022_POLICY_MANAGEMENT_MODULE_NAME)) > 0;
+  }
+
+  /** CC-022: true when Policy Management hub label becomes visible within `timeoutMs` (hub loads after login). */
+  async isPolicyManagementHubMenuVisibleWithin(
+    timeoutMs = CC022_POLICY_HUB_VISIBILITY_TIMEOUT_MS,
+  ): Promise<boolean> {
+    const pollIntervalMs = 250;
+    const deadline = Date.now() + timeoutMs;
+
+    while (Date.now() < deadline) {
+      if (await this.isPolicyManagementHubMenuVisible()) {
+        return true;
+      }
+      await this.page.waitForTimeout(pollIntervalMs);
+    }
+
+    return false;
+  }
+
+  /**
+   * CC-022 preflight: ensure Policy Management is off on the active sales order for `clientName`.
+   * When hub access and the checkbox disagree, grant then revoke so Update persists a real change.
+   */
+  async ensurePolicyManagementRevokedOnActiveSalesOrderForClient(clientName: string) {
+    await this.openSalesOrderList();
+    await this.searchSalesOrderListByOrganization(clientName);
+    await this.openEditOnActiveSalesOrderForClient(clientName);
+
+    const row = this.salesOrderModulePackageRow(CC022_POLICY_MANAGEMENT_MODULE_NAME);
+    const checkbox = row.getByRole('checkbox');
+
+    if (await checkbox.isChecked()) {
+      await this.setPolicyManagementModuleIncluded(false);
+      await this.submitSalesOrderEditUpdate();
+      return;
+    }
+
+    await this.setPolicyManagementModuleIncluded(true);
+    await this.submitSalesOrderEditUpdate();
+
+    await this.openSalesOrderList();
+    await this.searchSalesOrderListByOrganization(clientName);
+    await this.openEditOnActiveSalesOrderForClient(clientName);
+    await this.setPolicyManagementModuleIncluded(false);
+    await this.submitSalesOrderEditUpdate();
+  }
+
+  async expectPolicyManagementHubNotVisible(timeoutMs = CC022_POLICY_HUB_VISIBILITY_TIMEOUT_MS) {
+    const pollIntervalMs = 250;
+    const deadline = Date.now() + timeoutMs;
+
+    while (Date.now() < deadline) {
+      expect(await this.countVisibleHubMenuLabels(CC022_POLICY_MANAGEMENT_MODULE_NAME)).toBe(0);
+      await this.page.waitForTimeout(pollIntervalMs);
+    }
+  }
+
+  async expectPolicyManagementHubVisible() {
+    await expect(
+      this.page.getByText(CC022_POLICY_MANAGEMENT_MODULE_NAME, { exact: true }),
+    ).toBeVisible({ timeout: 60_000 });
   }
 }

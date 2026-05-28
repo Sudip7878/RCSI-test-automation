@@ -18,6 +18,7 @@ export const CSI_LOGIN_PATH = '/Login' as const;
 export const CSI_LEGACY_LOGIN_PATH = '/Avotech/Login' as const;
 export const CSI_HOME_PATH = '/' as const;
 export const CSI_PACKAGE_LIST_PATH = '/PackageList' as const;
+export const CSI_SALES_ORDER_LIST_PATH = '/SalesOrderList' as const;
 export const CSI_INCIDENT_REPORT_DASHBOARD_PATH = '/IncidentReportDashboard' as const;
 export const CSI_INVOICE_LIST_PATH = '/InvoiceList' as const;
 export const CSI_ORGANIZATION_DETAIL_PATH = '/OrganizationDetail' as const;
