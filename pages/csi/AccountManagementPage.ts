@@ -1,5 +1,10 @@
 import { expect, type Locator } from '@playwright/test';
 import { CSI_BASE_URL, CSI_ORGANIZATION_DETAIL_PATH, CSI_ORGANIZATION_LIST_PATH } from '../../config/csi';
+import {
+  AM033_ASSIGNABLE_ROLE_NAMES,
+  AM033_MODULE_ACCESS_TIMEOUT_MS,
+  AM033_PERMISSION_DENIED_TEXT,
+} from '../../utils/csi/am033RoleModuleAccess';
 import { BasePage } from '../BasePage';
 
 export class CsiAccountManagementPage extends BasePage {
@@ -68,22 +73,35 @@ export class CsiAccountManagementPage extends BasePage {
     await this.emailInput.fill(params.emailLocalPart);
   }
 
-  private async checkRoleAssignmentByName(roleGrid: Locator, roleName: string) {
-    const roleCell = roleGrid.getByRole('gridcell', { name: new RegExp(`^${roleName}\\b`) });
+  private async setRoleAssignmentByName(roleGrid: Locator, roleName: string, shouldCheck: boolean) {
+    const roleCell = roleGrid.getByRole('gridcell', { name: new RegExp(`^${roleName}\\b`, 'i') });
     await expect(roleCell).toBeVisible({ timeout: 30_000 });
-    const checked = await roleCell.evaluate((cell) => {
-      const row = cell.closest('tr');
-      const assignCell = row?.querySelector('td[data-header="Assign to Role"]');
-      const checkbox = assignCell?.querySelector('input[type="checkbox"]') as HTMLInputElement | null;
-      if (!checkbox || checkbox.disabled) {
-        return false;
-      }
-      if (!checkbox.checked) {
-        checkbox.click();
-      }
-      return true;
-    });
-    expect(checked).toBe(true);
+    const updated = await roleCell.evaluate(
+      (cell, wantChecked) => {
+        const row = cell.closest('tr');
+        const assignCell = row?.querySelector('td[data-header="Assign to Role"]');
+        const checkbox = assignCell?.querySelector('input[type="checkbox"]') as HTMLInputElement | null;
+        if (!checkbox || checkbox.disabled) {
+          return false;
+        }
+        if (wantChecked && !checkbox.checked) {
+          checkbox.click();
+        } else if (!wantChecked && checkbox.checked) {
+          checkbox.click();
+        }
+        return true;
+      },
+      shouldCheck,
+    );
+    expect(updated).toBe(true);
+  }
+
+  private async checkRoleAssignmentByName(roleGrid: Locator, roleName: string) {
+    await this.setRoleAssignmentByName(roleGrid, roleName, true);
+  }
+
+  private async uncheckRoleAssignmentByName(roleGrid: Locator, roleName: string) {
+    await this.setRoleAssignmentByName(roleGrid, roleName, false);
   }
 
   async checkFirstTwoRoleAssignments() {
@@ -109,10 +127,15 @@ export class CsiAccountManagementPage extends BasePage {
     await expect(this.userNameSearchBox).toBeVisible({ timeout: 30_000 });
   }
 
-  /** Clears Status/Role VirtualSelect filters so inactive users are not hidden from the grid. */
+  /** Clears Status/Role VirtualSelect filters only (not the organization combobox). */
   private async clearUserListFilters() {
-    const filterComboboxes = await this.page.getByRole('combobox', { name: 'Select an option' }).all();
-    for (const combobox of filterComboboxes.slice(0, 2)) {
+    for (const filterLabel of ['Status', 'Role'] as const) {
+      const combobox = this.page.getByRole('combobox', { name: 'Select an option' }).filter({
+        has: this.page.getByText(filterLabel, { exact: true }),
+      });
+      if (!(await combobox.isVisible({ timeout: 2_000 }).catch(() => false))) {
+        continue;
+      }
       const clearButton = combobox.getByRole('button', { name: 'Clear button' });
       if (await clearButton.isVisible({ timeout: 2_000 }).catch(() => false)) {
         await clearButton.click();
@@ -127,6 +150,9 @@ export class CsiAccountManagementPage extends BasePage {
     await this.userNameSearchBox.fill(email.trim());
     await this.userSearchButton.click();
     await expect(this.userSearchButton).toBeEnabled({ timeout: 30_000 });
+    await expect(this.userListGrid().getByRole('gridcell', { name: email })).toBeVisible({
+      timeout: 90_000,
+    });
   }
 
   async expectUserGridShowsEmail(email: string) {
@@ -185,6 +211,95 @@ export class CsiAccountManagementPage extends BasePage {
 
   async expectRecordUpdatedSuccess() {
     await expect(this.page.getByText('Record updated.')).toBeVisible({ timeout: 60_000 });
+  }
+
+  /** Dismisses the role-change toast so header logout is clickable (AM-033). */
+  async dismissRecordUpdatedNotice() {
+    const toast = this.page.getByText('Record updated.', { exact: true });
+    if (!(await toast.isVisible({ timeout: 5_000 }).catch(() => false))) {
+      return;
+    }
+    await toast.evaluate((el) => {
+      let node: HTMLElement | null = el.parentElement;
+      while (node) {
+        const btn = node.querySelector('button');
+        if (btn) {
+          (btn as HTMLButtonElement).click();
+          return;
+        }
+        node = node.parentElement;
+      }
+    });
+    await expect(toast).not.toBeVisible({ timeout: 15_000 });
+  }
+
+  /** AM-033: open module path and assert permission denial within 5s. */
+  async openModulePathAndExpectPermissionDenied(
+    modulePath: string,
+    timeoutMs = AM033_MODULE_ACCESS_TIMEOUT_MS,
+  ) {
+    await this.page.goto(`${CSI_BASE_URL}${modulePath}`);
+    await this.page.waitForLoadState('domcontentloaded');
+    await expect(this.page.getByText(AM033_PERMISSION_DENIED_TEXT, { exact: true })).toBeVisible({
+      timeout: timeoutMs,
+    });
+  }
+
+  /**
+   * AM-033: after role assignment the subject must reach the URL without a permission denial.
+   * Polls for the full window (default 5s) — passes only if the denial text never appears.
+   */
+  async openModulePathAndExpectAccessible(
+    modulePath: string,
+    timeoutMs = AM033_MODULE_ACCESS_TIMEOUT_MS,
+  ) {
+    await this.page.goto(`${CSI_BASE_URL}${modulePath}`);
+    await this.page.waitForLoadState('domcontentloaded');
+
+    const permissionMsg = this.page.getByText(AM033_PERMISSION_DENIED_TEXT, { exact: true });
+    const pollIntervalMs = 250;
+    const deadline = Date.now() + timeoutMs;
+
+    while (Date.now() < deadline) {
+      if (await permissionMsg.isVisible().catch(() => false)) {
+        await expect(permissionMsg).not.toBeVisible();
+      }
+      await this.page.waitForTimeout(pollIntervalMs);
+    }
+  }
+
+  private async openChangeRoleDialogForUser(email: string) {
+    await this.openUserListWithSearchReady();
+    await this.searchUserListByEmail(email);
+    await this.expectUserGridShowsEmail(email);
+    await this.openUserRowActionsMenu(email);
+    await this.openChangeRoleFromActionsMenu();
+    const roleGrid = this.roleAssignmentGrid();
+    await expect(roleGrid).toBeVisible({ timeout: 30_000 });
+    return roleGrid;
+  }
+
+  /** AM-033: clear all assignable roles, assign only `roleName`, confirm. */
+  async assignExclusiveRoleToUserOnUserList(email: string, roleName: string) {
+    const roleGrid = await this.openChangeRoleDialogForUser(email);
+    for (const name of AM033_ASSIGNABLE_ROLE_NAMES) {
+      await this.uncheckRoleAssignmentByName(roleGrid, name);
+    }
+    await this.checkRoleAssignmentByName(roleGrid, roleName);
+    await this.confirmRoleChange();
+    await this.expectRecordUpdatedSuccess();
+    await this.dismissRecordUpdatedNotice();
+  }
+
+  /** AM-033: cleanup — uncheck every assignable role on the subject user. */
+  async removeAllRoleAssignmentsFromUser(email: string) {
+    const roleGrid = await this.openChangeRoleDialogForUser(email);
+    for (const name of AM033_ASSIGNABLE_ROLE_NAMES) {
+      await this.uncheckRoleAssignmentByName(roleGrid, name);
+    }
+    await this.confirmRoleChange();
+    await this.expectRecordUpdatedSuccess();
+    await this.dismissRecordUpdatedNotice();
   }
 
   async startAddUsersByExcelUpload() {

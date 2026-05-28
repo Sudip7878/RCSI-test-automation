@@ -49,6 +49,24 @@ export function csiOrgUserTestPassword(): string {
   return p;
 }
 
+/** AM-033: subject user for role/module access checks (`CSI_USER_TEST_*`). */
+export function csiUserTestEmail(): string {
+  const e = process.env.CSI_USER_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_USER_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiUserTestEmail}. */
+export function csiUserTestPassword(): string {
+  const p = process.env.CSI_USER_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_USER_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
 /** `CSI_TP_TRAINING_ADMIN_TEST_EMAIL` — Training admin for CC-001 (Training + Phishing package tenant). */
 export function csiTpTrainingAdminTestEmail(): string {
   const e = process.env.CSI_TP_TRAINING_ADMIN_TEST_EMAIL?.trim();

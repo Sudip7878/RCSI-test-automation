@@ -29,7 +29,15 @@ import {
   csiAccountManagementFirstName,
   csiAccountManagementLastName,
 } from '../../../utils/csi/accountManagementTestData';
-import { csiTestEmail, csiTestPassword } from '../../../utils/csi/credentials';
+import { csiTestEmail, csiTestPassword, csiUserTestEmail, csiUserTestPassword } from '../../../utils/csi/credentials';
+import {
+  cleanupAm033RoleAssignmentsOnFailure,
+  type Am033LoggedInAs,
+} from '../../../utils/csi/am033Cleanup';
+import {
+  AM033_ROLE_MODULE_ACCESS,
+  am033AllModulePaths,
+} from '../../../utils/csi/am033RoleModuleAccess';
 import {
   csiSalesOrderDuration,
   csiSalesOrderUnitsPerModule,
@@ -347,6 +355,98 @@ test.describe('CSI · Account Management', () => {
 
       await csiAccountManagementPage.setUserActiveViaUserListActions(targetEmail);
       await csiAccountManagementPage.expectUserListRowStatus(targetEmail, 'Active');
+    });
+  });
+
+  /**
+   * AM-033: per-role module URL access for `CSI_USER_TEST_*` (recorded-steps/AccountManagement/AM-033.txt).
+   */
+  test.describe('AM-033 role module access', () => {
+    test.describe.configure({ timeout: 900_000 });
+
+    test('AM-033', async ({ csiLoginPage, csiAccountManagementPage }) => {
+      if (
+        !process.env.CSI_TEST_PASSWORD?.length ||
+        !process.env.CSI_USER_TEST_PASSWORD?.length ||
+        !process.env.CSI_USER_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      const subjectEmail = csiUserTestEmail();
+      const subjectPassword = csiUserTestPassword();
+      const adminEmail = csiTestEmail();
+      const adminPassword = csiTestPassword();
+      const session: { loggedInAs: Am033LoggedInAs } = { loggedInAs: 'none' };
+      let am033FinishedSuccessfully = false;
+
+      try {
+        await csiLoginPage.gotoLogin();
+        await csiLoginPage.signInWithEmailAndPassword(subjectEmail, subjectPassword);
+        await csiLoginPage.expectAuthenticatedAppSession();
+        session.loggedInAs = 'subject';
+
+        for (const modulePath of am033AllModulePaths()) {
+          await csiAccountManagementPage.openModulePathAndExpectPermissionDenied(modulePath);
+        }
+
+        await csiLoginPage.gotoHomeAndLogoutForAm033();
+        session.loggedInAs = 'none';
+
+        for (const role of AM033_ROLE_MODULE_ACCESS) {
+          await csiLoginPage.gotoLogin();
+          await csiLoginPage.signInWithEmailAndPassword(adminEmail, adminPassword);
+          await csiLoginPage.expectOnHome();
+          session.loggedInAs = 'admin';
+
+          await csiAccountManagementPage.assignExclusiveRoleToUserOnUserList(subjectEmail, role.roleName);
+
+          await csiLoginPage.gotoHomeAndLogoutForAm033();
+          session.loggedInAs = 'none';
+
+          await csiLoginPage.gotoLogin();
+          await csiLoginPage.signInWithEmailAndPassword(subjectEmail, subjectPassword);
+          await csiLoginPage.expectAuthenticatedAppSession();
+          session.loggedInAs = 'subject';
+
+          for (const modulePath of role.modulePaths) {
+            await csiAccountManagementPage.openModulePathAndExpectAccessible(modulePath);
+          }
+
+          await csiLoginPage.gotoHomeAndLogoutForAm033();
+          session.loggedInAs = 'none';
+        }
+
+        await csiLoginPage.gotoLogin();
+        await csiLoginPage.signInWithEmailAndPassword(adminEmail, adminPassword);
+        await csiLoginPage.expectOnHome();
+        session.loggedInAs = 'admin';
+
+        await csiAccountManagementPage.removeAllRoleAssignmentsFromUser(subjectEmail);
+
+        await csiLoginPage.gotoHomeAndLogoutForAm033();
+        session.loggedInAs = 'none';
+
+        am033FinishedSuccessfully = true;
+      } finally {
+        if (am033FinishedSuccessfully) {
+          return;
+        }
+        try {
+          await cleanupAm033RoleAssignmentsOnFailure(csiLoginPage, csiAccountManagementPage, {
+            subjectEmail,
+            session,
+            adminEmail,
+            adminPassword,
+          });
+        } catch (cleanupError) {
+          console.error(
+            `[AM-033] Failure cleanup could not clear roles for ${subjectEmail} (loggedInAs=${session.loggedInAs}):`,
+            cleanupError,
+          );
+        }
+      }
     });
   });
 });
