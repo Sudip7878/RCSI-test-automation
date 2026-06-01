@@ -6,7 +6,7 @@ import { BasePage } from '../BasePage';
 export class CsiPhisingPage extends BasePage {
   readonly firstTemplateSelectButton = this.page.getByRole('button', { name: 'Select this attack' }).first();
   readonly nextButton = this.page.getByRole('button', { name: 'Next', exact: true });
-  readonly individualsRadio = this.page.getByRole('radio', { name: 'Individuals' });
+  readonly individualsTab = this.page.getByRole('tab', { name: 'Individuals', exact: true });
   readonly distributeButton = this.page.getByRole('button', { name: 'Distribute' });
 
   private async safeSleep(ms: number) {
@@ -197,8 +197,8 @@ export class CsiPhisingPage extends BasePage {
   }
 
   async chooseIndividualsAndSelectLoginUser(loginEmail: string, searchToken: string) {
-    await expect(this.individualsRadio).toBeVisible({ timeout: 30_000 });
-    await this.individualsRadio.click();
+    await expect(this.individualsTab).toBeVisible({ timeout: 30_000 });
+    await this.individualsTab.click();
 
     const searchInput = this.page.getByRole('searchbox');
     await expect(searchInput).toBeVisible({ timeout: 15_000 });

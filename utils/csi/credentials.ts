@@ -67,6 +67,42 @@ export function csiOrgUserTestPassword(): string {
   return p;
 }
 
+/** TR-010: user with passed course(s) on My Course (`CSI_TEST_PASSING_USER_TEST_*`). */
+export function csiTestPassingUserTestEmail(): string {
+  const e = process.env.CSI_TEST_PASSING_USER_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_TEST_PASSING_USER_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiTestPassingUserTestEmail}. */
+export function csiTestPassingUserTestPassword(): string {
+  const p = process.env.CSI_TEST_PASSING_USER_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_TEST_PASSING_USER_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
+/** TR-022: org user with auto-enrolled courses on My Course (`CSI_AUTO_ENROLL_ORG_USER_TEST_*`). */
+export function csiAutoEnrollOrgUserTestEmail(): string {
+  const e = process.env.CSI_AUTO_ENROLL_ORG_USER_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_AUTO_ENROLL_ORG_USER_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiAutoEnrollOrgUserTestEmail}. */
+export function csiAutoEnrollOrgUserTestPassword(): string {
+  const p = process.env.CSI_AUTO_ENROLL_ORG_USER_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_AUTO_ENROLL_ORG_USER_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
 /** `CSI_TP_TRAINING_ADMIN_TEST_EMAIL` — Training admin for CC-001 (Training + Phishing package tenant). */
 export function csiTpTrainingAdminTestEmail(): string {
   const e = process.env.CSI_TP_TRAINING_ADMIN_TEST_EMAIL?.trim();

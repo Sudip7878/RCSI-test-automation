@@ -15,7 +15,7 @@ import {
 test.describe('CSI · Phising', () => {
   test.describe.configure({ timeout: 180_000 });
 
-  /** PH-001 / PH-020: phishing admin. Kept separate from PH-024 so CSI_TEST login is not preceded by an admin session. */
+  /** PH-020: phishing admin. Kept separate from PH-024 so CSI_TEST login is not preceded by an admin session. */
   test.describe('Phishing admin', () => {
     test.beforeEach(async ({ csiLoginPage }) => {
       if (
@@ -34,17 +34,19 @@ test.describe('CSI · Phising', () => {
       await csiLoginPage.expectOnHome();
     });
 
-    test('Create a phishing test from template', async ({ csiPhisingPage }) => {
-      const loginEmail = csiPhisingAdminTestEmail();
-      const searchToken = csiPhisingUserSearchToken(loginEmail);
-      const testName = csiUniquePhisingTestName();
+    test.describe('Create a phishing test from template', () => {
+      test('PH-001', async ({ csiPhisingPage }) => {
+        const loginEmail = csiPhisingAdminTestEmail();
+        const searchToken = csiPhisingUserSearchToken(loginEmail);
+        const testName = csiUniquePhisingTestName();
 
-      await csiPhisingPage.openPhisingTestCreation();
-      await csiPhisingPage.selectFirstAttackTemplateAndContinue();
-      await csiPhisingPage.chooseIndividualsAndSelectLoginUser(loginEmail, searchToken);
-      await csiPhisingPage.fillPhisingTestDetailsAndContinue(testName);
-      await csiPhisingPage.finalizeAndDistribute();
-      await csiPhisingPage.expectPhisingTestCreated(testName);
+        await csiPhisingPage.openPhisingTestCreation();
+        await csiPhisingPage.selectFirstAttackTemplateAndContinue();
+        await csiPhisingPage.chooseIndividualsAndSelectLoginUser(loginEmail, searchToken);
+        await csiPhisingPage.fillPhisingTestDetailsAndContinue(testName);
+        await csiPhisingPage.finalizeAndDistribute();
+        await csiPhisingPage.expectPhisingTestCreated(testName);
+      });
     });
 
     test.describe('PH-020 phishing dashboard view', () => {
