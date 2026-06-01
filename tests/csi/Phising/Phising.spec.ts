@@ -2,6 +2,8 @@ import { test } from '../../../fixtures/csi/testSetup';
 import {
   csiPhisingAdminTestEmail,
   csiPhisingAdminTestPassword,
+  csiPhisingVictimTestEmail,
+  csiPhisingVictimTestPassword,
   csiTestEmail,
   csiTestPassword,
 } from '../../../utils/csi/credentials';
@@ -54,6 +56,29 @@ test.describe('CSI · Phising', () => {
         await csiPhisingPage.openPhishingDashboard();
         await csiPhisingPage.expectPh020PhishingDashboardSectionsVisible();
       });
+    });
+  });
+
+  test.describe('PH-014 phishing course completed passed certificate', () => {
+    test.beforeEach(async ({ csiLoginPage }) => {
+      if (
+        !process.env.CSI_PHISING_VICTIM_TEST_PASSWORD?.length ||
+        !process.env.CSI_PHISING_VICTIM_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiPhisingVictimTestEmail(),
+        csiPhisingVictimTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+    });
+
+    test('PH-014', async ({ csiPhisingPage }) => {
+      await csiPhisingPage.expectPh014CompletedPassedCourseWithViewCertificate();
     });
   });
 
