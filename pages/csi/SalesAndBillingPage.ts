@@ -1,7 +1,13 @@
 import { readFileSync } from 'node:fs';
 
 import { expect, type Locator } from '@playwright/test';
-import { CSI_BASE_URL, CSI_INVOICE_LIST_PATH, CSI_SALES_ORDER_LIST_PATH } from '../../config/csi';
+import {
+  CSI_BASE_URL,
+  CSI_INVOICE_LIST_PATH,
+  CSI_SALES_ORDER_LIST_PATH,
+  CSI_VIEW_SALES_ORDER_PATH,
+} from '../../config/csi';
+import { SB067_NO_PERMISSION_MESSAGE_TIMEOUT_MS } from '../../utils/csi/salesAndBillingTestData';
 import {
   CC022_POLICY_HUB_VISIBILITY_TIMEOUT_MS,
   CC022_POLICY_MANAGEMENT_MODULE_NAME,
@@ -940,5 +946,21 @@ export class CsiSalesAndBillingPage extends BasePage {
     await expect(
       this.page.getByText(CC022_POLICY_MANAGEMENT_MODULE_NAME, { exact: true }),
     ).toBeVisible({ timeout: 60_000 });
+  }
+
+  /** SB-067: direct navigation to sales order detail (cross-org data leak check). */
+  async openViewSalesOrder(salesOrderId: number) {
+    await this.page.goto(
+      `${CSI_BASE_URL}${CSI_VIEW_SALES_ORDER_PATH}?SalesOrderId=${salesOrderId}`,
+    );
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  async expectViewSalesOrderNoPermissionMessage(
+    timeoutMs = SB067_NO_PERMISSION_MESSAGE_TIMEOUT_MS,
+  ) {
+    await expect(
+      this.page.getByText("You don't have permissions to view this screen.", { exact: true }),
+    ).toBeVisible({ timeout: timeoutMs });
   }
 }

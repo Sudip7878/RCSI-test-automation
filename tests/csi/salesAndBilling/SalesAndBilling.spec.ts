@@ -1,10 +1,13 @@
 import { test } from '../../../fixtures/csi/testSetup';
 import {
+  csiPenetrationTesterTestEmail,
+  csiPenetrationTesterTestPassword,
   csiTestEmail,
   csiTestPassword,
   csiTrainingPhisingSysOwnerTestEmail,
   csiTrainingPhisingSysOwnerTestPassword,
 } from '../../../utils/csi/credentials';
+import { csiOrgASalesOrderIdForSb067 } from '../../../utils/csi/salesAndBillingTestData';
 import { writeInvoiceCompareDebugJsonFiles } from '../../../utils/csi/invoiceCompareDebugLog';
 import {
   assertInvoicePdfSubsetOfPreviewTemplate,
@@ -150,6 +153,31 @@ test.describe('CSI · Sales and Billing', () => {
 
         assertInvoicePdfSubsetOfPreviewTemplate(previewJson, previewFullText, pdfText);
       });
+    });
+  });
+
+  test.describe('SB-067 cross-org ViewSalesOrder access denied', () => {
+    test.beforeEach(async ({ csiLoginPage }) => {
+      if (
+        !process.env.CSI_PENETRATION_TESTER_TEST_PASSWORD?.length ||
+        !process.env.CSI_PENETRATION_TESTER_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiPenetrationTesterTestEmail(),
+        csiPenetrationTesterTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+    });
+
+    test('SB-067', async ({ csiSalesAndBillingPage }) => {
+      const salesOrderId = csiOrgASalesOrderIdForSb067();
+      await csiSalesAndBillingPage.openViewSalesOrder(salesOrderId);
+      await csiSalesAndBillingPage.expectViewSalesOrderNoPermissionMessage();
     });
   });
 

@@ -57,3 +57,21 @@ export function csiSalesPartnerSendgridReplyToEmail(): string {
 export function csiSalesPartnerContactEmail(): string {
   return salesAndBilling.salesPartnerDefaults.salesPartnerContactEmail;
 }
+
+const SB067_DEFAULT_ORG_A_SALES_ORDER_ID = 144;
+
+/** SB-067: Org A sales order id for cross-org leak check (`CSI_ORG_A_SALES_ORDER_ID`; default 144). */
+export function csiOrgASalesOrderIdForSb067(): number {
+  const raw = process.env.CSI_ORG_A_SALES_ORDER_ID?.trim();
+  if (raw == null || raw.length === 0) {
+    return SB067_DEFAULT_ORG_A_SALES_ORDER_ID;
+  }
+  const id = Number.parseInt(raw, 10);
+  if (!Number.isFinite(id) || id <= 0) {
+    throw new Error('CSI_ORG_A_SALES_ORDER_ID must be a positive integer.');
+  }
+  return id;
+}
+
+/** SB-067: permission message must appear within this window (recorded-steps/Sales&Billing/SB-067.txt). */
+export const SB067_NO_PERMISSION_MESSAGE_TIMEOUT_MS = 5_000;
