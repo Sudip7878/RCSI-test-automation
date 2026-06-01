@@ -175,6 +175,24 @@ export function csiPhisingAdminTestPassword(): string {
   return p;
 }
 
+/** PH-014: phishing victim with completed course on `/phishingCourse` (`CSI_PHISING_VICTIM_TEST_*`). */
+export function csiPhisingVictimTestEmail(): string {
+  const e = process.env.CSI_PHISING_VICTIM_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_PHISING_VICTIM_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiPhisingVictimTestEmail}. */
+export function csiPhisingVictimTestPassword(): string {
+  const p = process.env.CSI_PHISING_VICTIM_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_PHISING_VICTIM_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
 export function csiIncidentReporterTestEmail(): string {
   const e = process.env.CSI_INCIDENT_REPORTER_TEST_EMAIL?.trim();
   if (e == null || e.length === 0) {

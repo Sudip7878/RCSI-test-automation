@@ -1,6 +1,10 @@
 import { expect } from '@playwright/test';
 import { CSI_BASE_URL } from '../../config/csi';
-import { CSI_PH024_LANDING_PAGE_HOST } from '../../utils/csi/phisingTestData';
+import {
+  CSI_PH024_LANDING_PAGE_HOST,
+  PH014_COMPLETED_TAB_SETTLE_MS,
+  PH014_TAB_BEFORE_CLICK_MS,
+} from '../../utils/csi/phisingTestData';
 import { BasePage } from '../BasePage';
 
 export class CsiPhisingPage extends BasePage {
@@ -253,6 +257,43 @@ export class CsiPhisingPage extends BasePage {
   async openPhishingDashboard() {
     await this.page.goto(`${CSI_BASE_URL}/phishingDashboard`);
     await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  private phishingCourseCards() {
+    return this.page.locator('.course-card');
+  }
+
+  async openPhishingCourse() {
+    await this.page.goto(`${CSI_BASE_URL}/phishingCourse`);
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  async openPhishingCourseCompletedTab() {
+    await this.openPhishingCourse();
+    const completedTab = this.page.getByRole('link', { name: 'Completed', exact: true });
+    await expect(completedTab).toBeVisible({ timeout: 60_000 });
+    await this.safeSleep(PH014_TAB_BEFORE_CLICK_MS);
+    await completedTab.click();
+    await this.safeSleep(PH014_COMPLETED_TAB_SETTLE_MS);
+  }
+
+  /**
+   * PH-014: Completed tab — first course card shows Passed and View Certificate (presence only;
+   * recorded-steps/Phising/PH-014.txt).
+   */
+  async expectPh014CompletedPassedCourseWithViewCertificate() {
+    await this.openPhishingCourseCompletedTab();
+
+    const firstCard = this.phishingCourseCards().first();
+    await expect(firstCard).toBeVisible({ timeout: 60_000 });
+
+    const passedStatus = firstCard.getByText('Passed', { exact: true });
+    await expect(passedStatus).toBeVisible({ timeout: 60_000 });
+    await passedStatus.click();
+
+    await expect(firstCard.getByRole('button', { name: 'View Certificate' })).toBeVisible({
+      timeout: 60_000,
+    });
   }
 
   async expectPh020PhishingDashboardSectionsVisible() {
