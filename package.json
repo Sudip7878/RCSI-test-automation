@@ -6,6 +6,7 @@
   "scripts": {
     "test": "playwright test",
     "test:csi": "playwright test tests/csi",
+    "test:sb057:update-baselines": "node scripts/sb057-update-baselines.cjs",
     "test:ui": "playwright test --ui",
     "test:browserstack": "dotenv -- browserstack-node-sdk playwright test",
     "typecheck": "tsc --noEmit",

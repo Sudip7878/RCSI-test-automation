@@ -9,6 +9,11 @@ import {
 } from '../../config/csi';
 import { SB067_NO_PERMISSION_MESSAGE_TIMEOUT_MS } from '../../utils/csi/salesAndBillingTestData';
 import {
+  sb057HeaderOrgLogoLocator,
+  sb057WelcomeCardOrgLogoLocator,
+} from '../../utils/csi/sb057OrgLogoLocators';
+import { SB057_ORG_LOGO_SRC_FRAGMENT, SB057_POST_LOGIN_WAIT_MS } from '../../utils/csi/sb057WhiteLabelTestData';
+import {
   CC022_POLICY_HUB_VISIBILITY_TIMEOUT_MS,
   CC022_POLICY_MANAGEMENT_MODULE_NAME,
   CC022_POLICY_MANAGEMENT_UNITS,
@@ -962,5 +967,34 @@ export class CsiSalesAndBillingPage extends BasePage {
     await expect(
       this.page.getByText("You don't have permissions to view this screen.", { exact: true }),
     ).toBeVisible({ timeout: timeoutMs });
+  }
+
+  /** SB-057: settle after custom-org login before logo / theme assertions. */
+  async waitSb057PostLoginSettle() {
+    await this.safeSleep(SB057_POST_LOGIN_WAIT_MS);
+    await this.page.waitForFunction((srcFragment) => {
+      return Array.from(document.querySelectorAll('img')).some((image) =>
+        (image.currentSrc || image.src || '').includes(srcFragment),
+      );
+    }, SB057_ORG_LOGO_SRC_FRAGMENT);
+  }
+
+  sb057HeaderOrgLogo() {
+    return sb057HeaderOrgLogoLocator(this.page);
+  }
+
+  sb057WelcomeCardOrgLogo() {
+    return sb057WelcomeCardOrgLogoLocator(this.page);
+  }
+
+  sb057VisibleOrgLogoImages() {
+    return this.page.locator(`img[src*="${SB057_ORG_LOGO_SRC_FRAGMENT}"]`).filter({ visible: true });
+  }
+
+  async expectSb057LogosVisible(timeoutMs = 30_000) {
+    await expect(this.sb057WelcomeCardOrgLogo()).toBeVisible({ timeout: timeoutMs });
+    if ((await this.sb057VisibleOrgLogoImages().count()) >= 2) {
+      await expect(this.sb057HeaderOrgLogo()).toBeVisible({ timeout: timeoutMs });
+    }
   }
 }

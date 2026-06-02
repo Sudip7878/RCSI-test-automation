@@ -2,6 +2,7 @@ import { test } from '../../../fixtures/csi/testSetup';
 import {
   csiPhisingAdminTestEmail,
   csiPhisingAdminTestPassword,
+  csiPhisingNonVictimTestEmail,
   csiPhisingVictimTestEmail,
   csiPhisingVictimTestPassword,
   csiTestEmail,
@@ -11,6 +12,7 @@ import {
   CSI_PH024_LANDING_PAGE_HOST,
   csiPh024UniqueSuffix,
   csiPhisingUserSearchToken,
+  csiPhisingUserSearchTokenFullLocal,
   csiUniquePhisingTestName,
 } from '../../../utils/csi/phisingTestData';
 
@@ -56,6 +58,42 @@ test.describe('CSI · Phising', () => {
         await csiPhisingPage.openPhishingDashboard();
         await csiPhisingPage.expectPh020PhishingDashboardSectionsVisible();
       });
+    });
+  });
+
+  test.describe('PH-011 phishing mail ignore', () => {
+    test.describe.configure({ timeout: 1_500_000 });
+
+    test.beforeEach(async ({ csiLoginPage }) => {
+      if (
+        !process.env.CSI_PHISING_ADMIN_TEST_PASSWORD?.length ||
+        !process.env.CSI_PHISING_ADMIN_TEST_EMAIL?.trim()?.length ||
+        !process.env.CSI_PHISING_NON_VICTIM_TEST_PASSWORD?.length ||
+        !process.env.CSI_PHISING_NON_VICTIM_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiPhisingAdminTestEmail(),
+        csiPhisingAdminTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+    });
+
+    test('PH-011', async ({ csiPhisingPage }) => {
+      const targetEmail = csiPhisingNonVictimTestEmail();
+      const testName = csiUniquePhisingTestName();
+
+      await csiPhisingPage.createAndDistributePhishingTestForPh011({
+        targetEmail,
+        testName,
+        searchToken: csiPhisingUserSearchTokenFullLocal(targetEmail),
+      });
+
+      await csiPhisingPage.expectPh011IgnoredPhishingEngagementStats();
     });
   });
 

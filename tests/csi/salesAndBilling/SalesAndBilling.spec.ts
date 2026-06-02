@@ -1,5 +1,9 @@
+import { expect } from '@playwright/test';
+
 import { test } from '../../../fixtures/csi/testSetup';
 import {
+  csiCustomOrgOwnerTestEmail,
+  csiCustomOrgOwnerTestPassword,
   csiPenetrationTesterTestEmail,
   csiPenetrationTesterTestPassword,
   csiTestEmail,
@@ -7,6 +11,13 @@ import {
   csiTrainingPhisingSysOwnerTestEmail,
   csiTrainingPhisingSysOwnerTestPassword,
 } from '../../../utils/csi/credentials';
+import { assertSb057ThemeMatchesBaseline } from '../../../utils/csi/sb057WhiteLabelCompare';
+import {
+  SB057_LOGO_MAX_DIFF_PIXEL_RATIO,
+  SB057_VIEWPORT,
+  sb057LogoSnapshotName,
+  sb057OrgFileSlug,
+} from '../../../utils/csi/sb057WhiteLabelTestData';
 import { csiOrgASalesOrderIdForSb067 } from '../../../utils/csi/salesAndBillingTestData';
 import { writeInvoiceCompareDebugJsonFiles } from '../../../utils/csi/invoiceCompareDebugLog';
 import {
@@ -202,6 +213,52 @@ test.describe('CSI · Sales and Billing', () => {
       await csiSalesAndBillingPage.expectSb056TrainingAndPhishingNavVisible();
       await csiSalesAndBillingPage.navigateSb056TrainingPhishingThenAccountManagement();
       await csiSalesAndBillingPage.expectSb056RestrictedHubModulesNotVisible();
+    });
+  });
+
+  test.describe('SB-057 custom org white-label branding', () => {
+    test.use({ viewport: SB057_VIEWPORT });
+
+    test.beforeEach(async ({ csiLoginPage }) => {
+      if (
+        !process.env.CSI_CUSTOM_ORG_OWNER_TEST_PASSWORD?.length ||
+        !process.env.CSI_CUSTOM_ORG_OWNER_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiCustomOrgOwnerTestEmail(),
+        csiCustomOrgOwnerTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+    });
+
+    test('SB-057', async ({ csiSalesAndBillingPage }) => {
+      await csiSalesAndBillingPage.waitSb057PostLoginSettle();
+      await csiSalesAndBillingPage.expectSb057LogosVisible();
+
+      const orgSlug = sb057OrgFileSlug();
+      const logoCompareOptions = {
+        maxDiffPixelRatio: SB057_LOGO_MAX_DIFF_PIXEL_RATIO,
+        timeout: 30_000,
+      };
+
+      await expect(csiSalesAndBillingPage.sb057WelcomeCardOrgLogo()).toHaveScreenshot(
+        sb057LogoSnapshotName(orgSlug, 'welcome'),
+        logoCompareOptions,
+      );
+
+      if ((await csiSalesAndBillingPage.sb057VisibleOrgLogoImages().count()) >= 2) {
+        await expect(csiSalesAndBillingPage.sb057HeaderOrgLogo()).toHaveScreenshot(
+          sb057LogoSnapshotName(orgSlug, 'header'),
+          logoCompareOptions,
+        );
+      }
+
+      await assertSb057ThemeMatchesBaseline(csiSalesAndBillingPage.page, orgSlug);
     });
   });
 });

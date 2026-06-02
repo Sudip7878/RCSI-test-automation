@@ -193,6 +193,24 @@ export function csiPhisingVictimTestPassword(): string {
   return p;
 }
 
+/** PH-011: user who must not engage with phishing email (`CSI_PHISING_NON_VICTIM_TEST_*`). */
+export function csiPhisingNonVictimTestEmail(): string {
+  const e = process.env.CSI_PHISING_NON_VICTIM_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_PHISING_NON_VICTIM_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiPhisingNonVictimTestEmail}. */
+export function csiPhisingNonVictimTestPassword(): string {
+  const p = process.env.CSI_PHISING_NON_VICTIM_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_PHISING_NON_VICTIM_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
 export function csiIncidentReporterTestEmail(): string {
   const e = process.env.CSI_INCIDENT_REPORTER_TEST_EMAIL?.trim();
   if (e == null || e.length === 0) {
@@ -367,6 +385,24 @@ export function csiOrgBIncidentReporterTestPassword(): string {
   const p = process.env.CSI_ORG_B_INCIDNET_REPORTER_TEST_PASSWORD;
   if (p == null || p.length === 0) {
     throw new Error('Set CSI_ORG_B_INCIDNET_REPORTER_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
+/** SB-057: custom-themed org owner (`CSI_CUSTOM_ORG_OWNER_TEST_*`). */
+export function csiCustomOrgOwnerTestEmail(): string {
+  const e = process.env.CSI_CUSTOM_ORG_OWNER_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_CUSTOM_ORG_OWNER_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiCustomOrgOwnerTestEmail}. */
+export function csiCustomOrgOwnerTestPassword(): string {
+  const p = process.env.CSI_CUSTOM_ORG_OWNER_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_CUSTOM_ORG_OWNER_TEST_PASSWORD in the environment (see .env.example).');
   }
   return p;
 }
