@@ -115,6 +115,39 @@ test.describe('CSI · Sales and Billing', () => {
       });
     });
 
+    test.describe('SB-052 sales order review pricing totals', () => {
+      test('SB-052', async ({ csiSalesAndBillingPage }) => {
+        const duration = csiSalesOrderDuration();
+        const unitsPerModule = csiSalesOrderUnitsPerModule();
+        const salesOrderDropdownMaxAttempts = 4;
+        const salesOrderDatePickerMaxAttempts = 4;
+
+        await csiSalesAndBillingPage.openSalesAndBilling();
+        await csiSalesAndBillingPage.openSalesOrder();
+        await csiSalesAndBillingPage.clickAddSalesOrder();
+        await csiSalesAndBillingPage.selectLastOptionByTriggerText(
+          'Select Client',
+          salesOrderDropdownMaxAttempts,
+        );
+        await csiSalesAndBillingPage.selectFirstOptionByTriggerText(
+          'Select Sales Partner',
+          salesOrderDropdownMaxAttempts,
+        );
+        await csiSalesAndBillingPage.selectFirstBillingPartnerOption(salesOrderDropdownMaxAttempts);
+        await csiSalesAndBillingPage.selectFirstOptionByTriggerText(
+          'Select Package Type',
+          salesOrderDropdownMaxAttempts,
+        );
+        await csiSalesAndBillingPage.pickTodaySalesStartDate(salesOrderDatePickerMaxAttempts);
+        await csiSalesAndBillingPage.fillSalesOrderDuration(duration);
+        await csiSalesAndBillingPage.selectFirstBillingMode();
+        await csiSalesAndBillingPage.selectAllSalesOrderModulesAndSetUnits(unitsPerModule);
+        await csiSalesAndBillingPage.continueSalesOrderToReview();
+        await csiSalesAndBillingPage.expectSalesOrderReviewStepReady();
+        await csiSalesAndBillingPage.expectSb052SalesOrderReviewPricingConsistent();
+      });
+    });
+
     test.describe('Navigate to Sales Partner list and create sales partner', () => {
       test('Navigate to Sales Partner list and create sales partner', async ({
         csiSalesAndBillingPage,

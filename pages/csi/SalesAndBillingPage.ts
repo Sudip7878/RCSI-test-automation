@@ -7,6 +7,11 @@ import {
   CSI_SALES_ORDER_LIST_PATH,
   CSI_VIEW_SALES_ORDER_PATH,
 } from '../../config/csi';
+import {
+  assertSb052SalesOrderReviewPricing,
+  parseHongKongCurrencyAmount,
+  type SalesOrderReviewPricing,
+} from '../../utils/csi/sb052SalesOrderPricing';
 import { SB067_NO_PERMISSION_MESSAGE_TIMEOUT_MS } from '../../utils/csi/salesAndBillingTestData';
 import {
   sb057HeaderOrgLogoLocator,
@@ -23,7 +28,7 @@ import {
 } from '../../utils/csi/crossCuttingTestData';
 import { BasePage } from '../BasePage';
 
-/** Pause before each sales-order VirtualSelect open (AM-009, SB-046). */
+/** Pause before each sales-order VirtualSelect open (AM-009, SB-046, SB-052). */
 export const CSI_SALES_ORDER_DROPDOWN_SETTLE_MS = 5_000;
 
 export class CsiSalesAndBillingPage extends BasePage {
@@ -78,23 +83,13 @@ export class CsiSalesAndBillingPage extends BasePage {
   }
 
   private async clickFirstVisibleListboxOption() {
-    const clicked = await this.page.getByRole('option').evaluateAll((options) => {
-      for (const node of options) {
-        const el = node as HTMLElement;
-        const style = window.getComputedStyle(el);
-        if (style.display === 'none' || style.visibility === 'hidden') {
-          continue;
-        }
-        const rect = el.getBoundingClientRect();
-        if (rect.width === 0 && rect.height === 0) {
-          continue;
-        }
-        el.click();
-        return true;
-      }
-      return false;
-    });
-    expect(clicked).toBe(true);
+    const expanded = this.page.getByRole('combobox', { expanded: true });
+    await expect(expanded).toBeVisible({ timeout: 12_000 });
+
+    const listbox = this.page.getByRole('listbox');
+    const option = listbox.getByRole('option').first();
+    await expect(option).toBeVisible({ timeout: 30_000 });
+    await option.click();
   }
 
   private async clickLastVisibleListboxOption() {
@@ -435,6 +430,82 @@ export class CsiSalesAndBillingPage extends BasePage {
   async continueSalesOrderToReview() {
     await this.waitForElement(this.continueToReviewButton);
     await this.continueToReviewButton.click();
+  }
+
+  private salesOrderReviewModuleDetailsGrid(): Locator {
+    return this.page
+      .locator('div.container')
+      .filter({ has: this.page.getByText('Module Details', { exact: true }) })
+      .getByRole('grid');
+  }
+
+  private salesOrderReviewSummaryRow(label: string | RegExp): Locator {
+    if (typeof label === 'string') {
+      return this.page.locator('.columns.columns2').filter({
+        has: this.page.getByText(label, { exact: true }),
+      });
+    }
+    return this.page.locator('.columns.columns2').filter({
+      has: this.page.locator('.columns-item').first().filter({ hasText: label }),
+    });
+  }
+
+  private salesOrderReviewSummaryAmount(label: string | RegExp): Locator {
+    return this.salesOrderReviewSummaryRow(label)
+      .locator('.columns-item')
+      .last()
+      .locator('.text-align-right .bold');
+  }
+
+  /** SB-052: review step ready (Submit visible); does not submit. */
+  async expectSalesOrderReviewStepReady() {
+    await expect(this.page.getByText('Module Details', { exact: true })).toBeVisible({
+      timeout: 60_000,
+    });
+    await this.waitForElement(this.submitButton);
+    await expect(this.submitButton).toBeVisible();
+  }
+
+  async readSalesOrderReviewLineItemTotals(): Promise<number[]> {
+    const grid = this.salesOrderReviewModuleDetailsGrid();
+    await expect(grid).toBeVisible({ timeout: 60_000 });
+
+    const rows = grid.locator('tbody tr');
+    const rowCount = await rows.count();
+    expect(rowCount).toBeGreaterThan(0);
+
+    const totals: number[] = [];
+    for (let i = 0; i < rowCount; i += 1) {
+      const totalCell = rows.nth(i).locator('[data-header="Total"]');
+      const text = (await totalCell.innerText()).trim();
+      totals.push(parseHongKongCurrencyAmount(text));
+    }
+    return totals;
+  }
+
+  async readSalesOrderReviewPricing(): Promise<SalesOrderReviewPricing> {
+    const lineItemTotals = await this.readSalesOrderReviewLineItemTotals();
+    const subtotal = parseHongKongCurrencyAmount(
+      await this.readSalesOrderReviewSummaryAmountText('Subtotal'),
+    );
+    const tax = parseHongKongCurrencyAmount(
+      await this.readSalesOrderReviewSummaryAmountText(/^Tax\s*\(/),
+    );
+    const grandTotal = parseHongKongCurrencyAmount(
+      await this.readSalesOrderReviewSummaryAmountText('Grand Total'),
+    );
+    return { lineItemTotals, subtotal, tax, grandTotal };
+  }
+
+  private async readSalesOrderReviewSummaryAmountText(label: string | RegExp): Promise<string> {
+    const amount = this.salesOrderReviewSummaryAmount(label);
+    await expect(amount).toBeVisible({ timeout: 30_000 });
+    return (await amount.innerText()).trim();
+  }
+
+  async expectSb052SalesOrderReviewPricingConsistent() {
+    const pricing = await this.readSalesOrderReviewPricing();
+    assertSb052SalesOrderReviewPricing(pricing);
   }
 
   async submitPackage() {

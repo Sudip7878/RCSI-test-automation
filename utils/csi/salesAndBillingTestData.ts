@@ -21,8 +21,9 @@ export function csiSalesOrderDuration(): number {
 
 export function csiSalesOrderUnitsPerModule(): number {
   return salesAndBilling.salesOrderDefaults.unitsPerModule;
-/** Unique fragment for test data; includes `TEST_WORKER_INDEX` for parallel workers. */
 }
+
+/** Unique fragment for test data; includes `TEST_WORKER_INDEX` for parallel workers. */
 export function csiUniqueTimestampSuffix(): string {
   const worker = process.env.TEST_WORKER_INDEX ?? 'w0';
   return `${Date.now()}-${worker}`;
