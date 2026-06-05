@@ -3,6 +3,8 @@ import { readFileSync } from 'node:fs';
 import { expect, type Locator } from '@playwright/test';
 import {
   CSI_BASE_URL,
+  CSI_BILLING_PARTNER_LIST_PATH,
+  CSI_CLIENT_LIST_PATH,
   CSI_INVOICE_LIST_PATH,
   CSI_SALES_ORDER_LIST_PATH,
   CSI_VIEW_SALES_ORDER_PATH,
@@ -12,7 +14,20 @@ import {
   parseHongKongCurrencyAmount,
   type SalesOrderReviewPricing,
 } from '../../utils/csi/sb052SalesOrderPricing';
-import { SB067_NO_PERMISSION_MESSAGE_TIMEOUT_MS } from '../../utils/csi/salesAndBillingTestData';
+import {
+  SB030_CLIENT_LIST_SETTLE_MS,
+  SB030_CLIENT_NAME_DROPDOWN_SETTLE_MS,
+  SB030_DUPLICATE_CLIENT_NAME_ERROR,
+} from '../../utils/csi/sb030ClientTestData';
+import type { Sb030AddClientFormStep } from '../../utils/csi/sb030ClientTestData';
+import { SB031_DUPLICATE_CLIENT_EMAIL_ERROR } from '../../utils/csi/sb031ClientTestData';
+import {
+  SB004_DUPLICATE_PACKAGE_NAME_ERROR,
+  SB027_BILLING_PARTNER_EMAIL,
+  SB027_BILLING_PARTNER_PAYMENT_METHOD_OPTION,
+  SB027_DUPLICATE_BILLING_PARTNER_NAME_ERROR,
+  SB067_NO_PERMISSION_MESSAGE_TIMEOUT_MS,
+} from '../../utils/csi/salesAndBillingTestData';
 import {
   sb057HeaderOrgLogoLocator,
   sb057WelcomeCardOrgLogoLocator,
@@ -37,6 +52,7 @@ export class CsiSalesAndBillingPage extends BasePage {
   readonly salesAndBillingNav = this.page.getByText('Sales & Billing', { exact: true });
   readonly packageManagementLink = this.page.getByRole('link', { name: 'Package Management' });
   readonly addPackageButton = this.page.getByRole('button', { name: 'Add Package' });
+  readonly addClientButton = this.page.getByRole('button', { name: 'Add Client' });
   readonly downloadInvoiceButton = this.page.getByRole('button', { name: 'Download' });
 
   readonly packageNameInput = this.page.getByRole('textbox', { name: 'Package Name*' });
@@ -60,6 +76,9 @@ export class CsiSalesAndBillingPage extends BasePage {
     }
     await this.page.waitForTimeout(ms).catch(() => {});
   }
+
+  readonly addBillingPartnerButton = this.page.getByRole('button', { name: 'Add Billing Partner' });
+  readonly billingPartnerNameInput = this.page.getByRole('textbox', { name: 'Billing Partner Name*' });
 
   readonly addSalesPartnerButton = this.page.getByRole('button', { name: 'Add Sales Partner' });
   readonly salesPartnerPartnerNameInput = this.page.getByRole('textbox', { name: 'Partner Name*' });
@@ -517,6 +536,154 @@ export class CsiSalesAndBillingPage extends BasePage {
     await this.page.waitForURL(/\/PackageList/, { timeout: 60000 });
     const packageCell = this.page.getByRole('gridcell', { name: packageName });
     await this.waitForElement(packageCell, 60_000);
+  }
+
+  /** SB-004: Submit with an existing package name must not create a new package. */
+  async expectPackageDuplicateNameRejected() {
+    await expect(
+      this.page.getByText(SB004_DUPLICATE_PACKAGE_NAME_ERROR, { exact: true }),
+    ).toBeVisible({ timeout: 60_000 });
+    await expect(this.page).not.toHaveURL(/\/PackageList/);
+  }
+
+  async openClientList() {
+    await this.page.goto(`${CSI_BASE_URL}${CSI_CLIENT_LIST_PATH}`);
+    await expect(this.addClientButton).toBeVisible({ timeout: 60_000 });
+    await this.safeSleep(SB030_CLIENT_LIST_SETTLE_MS);
+  }
+
+  async clickAddClient() {
+    await this.waitForElement(this.addClientButton);
+    await this.addClientButton.click();
+    await expect(this.page.getByRole('textbox', { name: 'Client Name*' })).toBeVisible({
+      timeout: 30_000,
+    });
+  }
+
+  private async selectVirtualSelectOption(triggerText: string, optionName: string, maxAttempts = 4) {
+    const trigger = this.page.getByText(triggerText, { exact: true });
+    const option = this.page.getByRole('option', { name: optionName });
+    let lastError: unknown;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      if (attempt > 0) {
+        await this.page.keyboard.press('Escape').catch(() => {});
+        await this.safeSleep(500);
+      }
+
+      await trigger.click();
+
+      try {
+        await expect(option).toBeVisible({ timeout: 15_000 });
+        await option.click();
+        return;
+      } catch (error) {
+        lastError = error;
+        if (attempt === maxAttempts - 1) {
+          throw lastError;
+        }
+      }
+    }
+  }
+
+  private organizationSizeCombobox(): Locator {
+    return this.page.getByRole('combobox').filter({
+      has: this.page.getByRole('option', { name: 'Select Size', exact: true }),
+    });
+  }
+
+  private async selectFirstOrganizationSizeOption() {
+    const select = this.organizationSizeCombobox();
+    await this.waitForElement(select);
+    const firstValue = await select.evaluate((el) => {
+      const selectEl = el as HTMLSelectElement;
+      const option = Array.from(selectEl.options).find(
+        (entry) => entry.value !== '-1' && entry.value !== '',
+      );
+      return option?.value ?? '';
+    });
+    expect(firstValue.length).toBeGreaterThan(0);
+    await select.selectOption(firstValue);
+  }
+
+  async fillAddClientFormSb030(steps: Sb030AddClientFormStep[]) {
+    for (const step of steps) {
+      if (step.type === 'textbox') {
+        const input = this.page.getByRole('textbox', { name: step.name });
+        await this.waitForElement(input);
+        await input.fill(step.value);
+        if (step.name === 'Client Name*') {
+          await this.safeSleep(SB030_CLIENT_NAME_DROPDOWN_SETTLE_MS);
+        }
+        continue;
+      }
+
+      if (step.type === 'virtualSelect') {
+        await this.selectVirtualSelectOption(step.triggerText, step.optionName);
+        continue;
+      }
+
+      await this.selectFirstOrganizationSizeOption();
+    }
+  }
+
+  /** SB-030: Submit with an existing client name must not create a new client. */
+  async expectClientDuplicateNameRejected() {
+    await expect(
+      this.page.getByText(SB030_DUPLICATE_CLIENT_NAME_ERROR, { exact: true }),
+    ).toBeVisible({ timeout: 60_000 });
+    await expect(this.page.getByRole('textbox', { name: 'Client Name*' })).toBeVisible();
+  }
+
+  /** SB-031: Submit with an existing owner email must not create a new client. */
+  async expectClientDuplicateEmailRejected() {
+    await expect(
+      this.page.getByText(SB031_DUPLICATE_CLIENT_EMAIL_ERROR, { exact: true }),
+    ).toBeVisible({ timeout: 60_000 });
+    await expect(this.page.getByRole('textbox', { name: 'Owner Email*' })).toBeVisible();
+  }
+
+  async openBillingPartnerList() {
+    await this.page.goto(`${CSI_BASE_URL}${CSI_BILLING_PARTNER_LIST_PATH}`);
+    await expect(this.addBillingPartnerButton).toBeVisible({ timeout: 30_000 });
+  }
+
+  async clickAddBillingPartner() {
+    await this.waitForElement(this.addBillingPartnerButton);
+    await this.addBillingPartnerButton.click();
+    await expect(this.billingPartnerNameInput).toBeVisible({ timeout: 30_000 });
+  }
+
+  /**
+   * SB-027: fill the Add Billing Partner form with a duplicate name.
+   * Only the billing partner name is env-configurable; email, sales partner, payment method,
+   * and address are fixed test-env values sufficient to reach the duplicate-name rejection.
+   */
+  async fillBillingPartnerFormSb027(billingPartnerName: string) {
+    await this.billingPartnerNameInput.click();
+    await this.billingPartnerNameInput.fill(billingPartnerName);
+
+    const emailInput = this.page.getByRole('textbox', { name: 'Email*' });
+    await emailInput.click();
+    await emailInput.fill(SB027_BILLING_PARTNER_EMAIL);
+
+    await this.selectVirtualSelectOption('Select Sales Partner', 'Avotech');
+    await this.selectVirtualSelectOption(
+      'Select Payment Method',
+      SB027_BILLING_PARTNER_PAYMENT_METHOD_OPTION,
+    );
+
+    const addressInput = this.page.getByRole('textbox', { name: 'Address*' });
+    await addressInput.click();
+    await addressInput.fill('Test');
+  }
+
+  /** SB-027: Submit with an existing billing partner name must not create a new entry. */
+  async expectBillingPartnerDuplicateNameRejected() {
+    await expect(
+      this.page.getByText(SB027_DUPLICATE_BILLING_PARTNER_NAME_ERROR, { exact: true }),
+    ).toBeVisible({ timeout: 60_000 });
+    await expect(this.billingPartnerNameInput).toBeVisible();
   }
 
   async expectSalesOrderCreated() {

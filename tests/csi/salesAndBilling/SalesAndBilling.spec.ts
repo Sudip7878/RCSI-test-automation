@@ -18,13 +18,24 @@ import {
   sb057LogoSnapshotName,
   sb057OrgFileSlug,
 } from '../../../utils/csi/sb057WhiteLabelTestData';
-import { csiOrgASalesOrderIdForSb067 } from '../../../utils/csi/salesAndBillingTestData';
+import {
+  csiExistingBillingPartnerNameForSb027,
+  csiOrgASalesOrderIdForSb067,
+} from '../../../utils/csi/salesAndBillingTestData';
 import { writeInvoiceCompareDebugJsonFiles } from '../../../utils/csi/invoiceCompareDebugLog';
 import {
   assertInvoicePdfSubsetOfPreviewTemplate,
   extractInvoicePdfText,
   previewKeyValuesToCompareJson,
 } from '../../../utils/csi/invoicePdfPreviewCompare';
+import {
+  buildSb030AddClientFormData,
+  sb030AddClientFormSteps,
+} from '../../../utils/csi/sb030ClientTestData';
+import {
+  buildSb031AddClientFormData,
+  sb031AddClientFormSteps,
+} from '../../../utils/csi/sb031ClientTestData';
 import {
   csiPackageDescription,
   csiPackagePricePerModule,
@@ -36,6 +47,7 @@ import {
   csiSalesPartnerS3BucketUrl,
   csiSalesPartnerSendgridReplyToEmail,
   csiSalesPartnerSendgridSenderName,
+  csiExistingPackageNameForSb004,
   csiUniquePackageName,
   csiUniqueSalesPartnerName,
   csiUniqueTimestampSuffix,
@@ -75,6 +87,58 @@ test.describe('CSI · Sales and Billing', () => {
         await csiSalesAndBillingPage.selectAllModulesAndSetUnitPrice(unitPrice);
         await csiSalesAndBillingPage.submitPackage();
         await csiSalesAndBillingPage.expectPackageCreated(packageName);
+      });
+    });
+
+    test.describe('SB-004 create package with duplicate name', () => {
+      test('SB-004', async ({ csiSalesAndBillingPage }) => {
+        const packageName = csiExistingPackageNameForSb004();
+        const unitPrice = csiPackagePricePerModule();
+
+        await csiSalesAndBillingPage.openSalesAndBilling();
+        await csiSalesAndBillingPage.openPackageManagement();
+        await csiSalesAndBillingPage.clickAddPackage();
+        await csiSalesAndBillingPage.fillPackageDetails(packageName, csiPackageDescription());
+        await csiSalesAndBillingPage.selectSalesPartnerAvotech();
+        await csiSalesAndBillingPage.selectAllModulesAndSetUnitPrice(unitPrice);
+        await csiSalesAndBillingPage.submitPackage();
+        await csiSalesAndBillingPage.expectPackageDuplicateNameRejected();
+      });
+    });
+
+    test.describe('SB-027 create billing partner with duplicate name', () => {
+      test('SB-027', async ({ csiSalesAndBillingPage }) => {
+        const billingPartnerName = csiExistingBillingPartnerNameForSb027();
+
+        await csiSalesAndBillingPage.openBillingPartnerList();
+        await csiSalesAndBillingPage.clickAddBillingPartner();
+        await csiSalesAndBillingPage.fillBillingPartnerFormSb027(billingPartnerName);
+        await csiSalesAndBillingPage.submitPackage();
+        await csiSalesAndBillingPage.expectBillingPartnerDuplicateNameRejected();
+      });
+    });
+
+    test.describe('SB-030 add client with duplicate org name', () => {
+      test('SB-030', async ({ csiSalesAndBillingPage }) => {
+        const formData = buildSb030AddClientFormData();
+
+        await csiSalesAndBillingPage.openClientList();
+        await csiSalesAndBillingPage.clickAddClient();
+        await csiSalesAndBillingPage.fillAddClientFormSb030(sb030AddClientFormSteps(formData));
+        await csiSalesAndBillingPage.submitPackage();
+        await csiSalesAndBillingPage.expectClientDuplicateNameRejected();
+      });
+    });
+
+    test.describe('SB-031 add client with duplicate owner email', () => {
+      test('SB-031', async ({ csiSalesAndBillingPage }) => {
+        const formData = buildSb031AddClientFormData();
+
+        await csiSalesAndBillingPage.openClientList();
+        await csiSalesAndBillingPage.clickAddClient();
+        await csiSalesAndBillingPage.fillAddClientFormSb030(sb031AddClientFormSteps(formData));
+        await csiSalesAndBillingPage.submitPackage();
+        await csiSalesAndBillingPage.expectClientDuplicateEmailRejected();
       });
     });
 

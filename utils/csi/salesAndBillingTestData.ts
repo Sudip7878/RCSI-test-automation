@@ -76,3 +76,36 @@ export function csiOrgASalesOrderIdForSb067(): number {
 
 /** SB-067: permission message must appear within this window (recorded-steps/Sales&Billing/SB-067.txt). */
 export const SB067_NO_PERMISSION_MESSAGE_TIMEOUT_MS = 5_000;
+
+const SB027_DEFAULT_EXISTING_BILLING_PARTNER_NAME = 'BillingCo';
+
+/** SB-027: duplicate billing partner name error shown on Submit — mirrors the "X already exist" pattern. */
+export const SB027_DUPLICATE_BILLING_PARTNER_NAME_ERROR = 'Billing partner name already exist';
+
+/** SB-027: email submitted in the billing partner form (not the duplicate trigger; name is). */
+export const SB027_BILLING_PARTNER_EMAIL = 'dax.manning@appnovation.com';
+
+/** SB-027: partial option label used to select the HSBC payment method in the dropdown. */
+export const SB027_BILLING_PARTNER_PAYMENT_METHOD_OPTION = 'HSBC Avo Tech Limited (026–';
+
+/** SB-027: existing billing partner name for duplicate-name check (`CSI_EXISTING_BILLING_PARTNER_NAME`; default BillingCo). */
+export function csiExistingBillingPartnerNameForSb027(): string {
+  const raw = process.env.CSI_EXISTING_BILLING_PARTNER_NAME?.trim();
+  if (raw != null && raw.length > 0) {
+    return raw;
+  }
+  return SB027_DEFAULT_EXISTING_BILLING_PARTNER_NAME;
+}
+
+const SB004_DEFAULT_EXISTING_PACKAGE_NAME = 'Avotech FULL';
+
+/** SB-004: duplicate package name error shown on Submit (`CSI_EXISTING_PACKAGE_NAME`; default Avotech FULL). */
+export const SB004_DUPLICATE_PACKAGE_NAME_ERROR = 'Package name already exist';
+
+export function csiExistingPackageNameForSb004(): string {
+  const raw = process.env.CSI_EXISTING_PACKAGE_NAME?.trim();
+  if (raw != null && raw.length > 0) {
+    return raw;
+  }
+  return SB004_DEFAULT_EXISTING_PACKAGE_NAME;
+}

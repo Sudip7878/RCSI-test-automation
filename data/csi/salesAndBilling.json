@@ -8,6 +8,12 @@
     "duration": 6,
     "unitsPerModule": 10
   },
+  "sb030ClientDefaults": {
+    "organizationType": "Accounting",
+    "ownerFirstName": "Dax",
+    "ownerLastName": "Manning",
+    "ownerEmail": "dax.manning@appnovation.com"
+  },
   "salesPartnerDefaults": {
     "domain": "rcsi-tst.avotech.com",
     "s3BucketName": "dev-avotech-csi-bk",
