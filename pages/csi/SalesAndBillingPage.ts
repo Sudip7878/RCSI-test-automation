@@ -79,6 +79,7 @@ export class CsiSalesAndBillingPage extends BasePage {
 
   readonly addBillingPartnerButton = this.page.getByRole('button', { name: 'Add Billing Partner' });
   readonly billingPartnerNameInput = this.page.getByRole('textbox', { name: 'Billing Partner Name*' });
+  readonly salesPartnerListSearchBox = this.page.getByRole('searchbox', { name: 'Enter Sales Partner' });
 
   readonly addSalesPartnerButton = this.page.getByRole('button', { name: 'Add Sales Partner' });
   readonly salesPartnerPartnerNameInput = this.page.getByRole('textbox', { name: 'Partner Name*' });
@@ -627,6 +628,14 @@ export class CsiSalesAndBillingPage extends BasePage {
     }
   }
 
+  /** SB-029: successful client creation must redirect back to ClientList with a success message. */
+  async expectClientCreated() {
+    await expect(
+      this.page.getByText('You have successfully added', { exact: false }),
+    ).toBeVisible({ timeout: 60_000 });
+    await this.page.waitForURL(/\/ClientList/, { timeout: 60_000 });
+  }
+
   /** SB-030: Submit with an existing client name must not create a new client. */
   async expectClientDuplicateNameRejected() {
     await expect(
@@ -652,6 +661,153 @@ export class CsiSalesAndBillingPage extends BasePage {
     await this.waitForElement(this.addBillingPartnerButton);
     await this.addBillingPartnerButton.click();
     await expect(this.billingPartnerNameInput).toBeVisible({ timeout: 30_000 });
+  }
+
+  /**
+   * SB-022: fill the Add Billing Partner form for a successful creation.
+   * Payment method uses the same HSBC option as SB-027 (test-env specific).
+   */
+  async fillAddBillingPartnerForm(billingPartnerName: string, email: string) {
+    await this.billingPartnerNameInput.click();
+    await this.billingPartnerNameInput.fill(billingPartnerName);
+
+    const emailInput = this.page.getByRole('textbox', { name: 'Email*' });
+    await emailInput.click();
+    await emailInput.fill(email);
+
+    await this.selectVirtualSelectOption('Select Sales Partner', 'Avotech');
+    await this.selectVirtualSelectOption(
+      'Select Payment Method',
+      SB027_BILLING_PARTNER_PAYMENT_METHOD_OPTION,
+    );
+
+    const addressInput = this.page.getByRole('textbox', { name: 'Address*' });
+    await addressInput.click();
+    await addressInput.fill('Test Address');
+  }
+
+  /** SB-022: successful creation must redirect back to BillingPartnerList with a success message. */
+  async expectBillingPartnerCreated() {
+    await expect(
+      this.page.getByText('You have successfully added Billing Partner'),
+    ).toBeVisible({ timeout: 60_000 });
+    await this.page.waitForURL(/\/BillingPartnerList/, { timeout: 60_000 });
+  }
+
+  /**
+   * SB-024: open dropdown and select multiple Sales Partner options in sequence.
+   * VirtualSelect multi-select keeps the dropdown open after each selection; if it
+   * closes between selections the combobox is re-clicked to reopen it.
+   */
+  private async selectMultipleSalesPartnersInForm(partnerNames: readonly string[]) {
+    if (partnerNames.length === 0) return;
+
+    await this.page.getByText('Select Sales Partner', { exact: true }).click();
+
+    for (const name of partnerNames) {
+      // If the dropdown closed after the previous selection, reopen it via the first
+      // collapsed combobox (Sales Partner multi-select precedes Payment Method in DOM order)
+      const listbox = this.page.getByRole('listbox');
+      if (!(await listbox.isVisible().catch(() => false))) {
+        await this.page.getByRole('combobox', { expanded: false }).first().click();
+        await expect(listbox).toBeVisible({ timeout: 10_000 });
+      }
+
+      // Use the dropdown's built-in search to filter options; avoids stale-element
+      // issues from VirtualSelect's JS translate3d scroll during scroll
+      const searchInput = this.page.getByPlaceholder('Search sales Partner');
+      await expect(searchInput).toBeVisible({ timeout: 10_000 });
+      await searchInput.fill(name);
+
+      const option = listbox.getByRole('option', { name, exact: true });
+      await expect(option).toBeVisible({ timeout: 15_000 });
+      await option.click();
+
+      // Clear the search so the next iteration starts with the full option list
+      await searchInput.clear().catch(() => {});
+      await this.safeSleep(300);
+    }
+
+    await this.page.keyboard.press('Escape').catch(() => {});
+  }
+
+  /**
+   * SB-024: fill the Add Billing Partner form assigning to multiple Sales Partners.
+   * Differs from fillAddBillingPartnerForm only in the Sales Partner selection step.
+   */
+  async fillAddBillingPartnerFormSb024(
+    billingPartnerName: string,
+    email: string,
+    salesPartners: readonly string[],
+  ) {
+    await this.billingPartnerNameInput.click();
+    await this.billingPartnerNameInput.fill(billingPartnerName);
+
+    const emailInput = this.page.getByRole('textbox', { name: 'Email*' });
+    await emailInput.click();
+    await emailInput.fill(email);
+
+    await this.selectMultipleSalesPartnersInForm(salesPartners);
+    await this.selectVirtualSelectOption(
+      'Select Payment Method',
+      SB027_BILLING_PARTNER_PAYMENT_METHOD_OPTION,
+    );
+
+    const addressInput = this.page.getByRole('textbox', { name: 'Address*' });
+    await addressInput.click();
+    await addressInput.fill('Test Address');
+  }
+
+  private salesPartnerListGrid() {
+    return this.page.getByRole('grid').filter({
+      has: this.page.getByRole('columnheader', { name: 'Partner Name' }),
+    });
+  }
+
+  /** SB-024: search for a Sales Partner by name using the list searchbox. */
+  async searchSalesPartnerByName(partnerName: string) {
+    await expect(this.salesPartnerListSearchBox).toBeVisible({ timeout: 30_000 });
+    await this.salesPartnerListSearchBox.click();
+    await this.salesPartnerListSearchBox.fill(partnerName);
+    await this.salesOrderListSearchButton.click();
+    await expect(
+      this.salesPartnerListGrid().getByRole('gridcell', { name: partnerName }).first(),
+    ).toBeVisible({ timeout: 30_000 });
+  }
+
+  /**
+   * SB-024: click the Action cell of the matching Sales Partner row then follow
+   * the View Details link.
+   */
+  async openSalesPartnerViewDetailsForName(partnerName: string) {
+    const row = this.salesPartnerListGrid()
+      .getByRole('row')
+      .filter({ has: this.page.getByRole('gridcell', { name: partnerName }) })
+      .first();
+    await expect(row).toBeVisible({ timeout: 30_000 });
+
+    const cells = await row.getByRole('gridcell').all();
+    expect(cells.length).toBeGreaterThan(0);
+    await cells[cells.length - 1].click();
+
+    const viewDetailsLink = this.page.getByRole('link', { name: 'View Details' });
+    await expect(viewDetailsLink).toBeVisible({ timeout: 10_000 });
+    await viewDetailsLink.click();
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  /** SB-024: click the 'Invoice & Billing Partners' tab on the Sales Partner detail page. */
+  async clickInvoiceAndBillingPartnersTab() {
+    const tab = this.page.getByRole('tab', { name: 'Invoice & Billing Partners' });
+    await expect(tab).toBeVisible({ timeout: 30_000 });
+    await tab.click();
+  }
+
+  /** SB-024: billing partner name must appear in the Billing Partners grid of the detail page. */
+  async expectBillingPartnerVisibleInSalesPartnerDetail(billingPartnerName: string) {
+    await expect(
+      this.page.getByRole('gridcell', { name: billingPartnerName }).first(),
+    ).toBeVisible({ timeout: 30_000 });
   }
 
   /**

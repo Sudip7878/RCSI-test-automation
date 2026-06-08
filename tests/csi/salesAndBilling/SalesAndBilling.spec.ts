@@ -19,8 +19,11 @@ import {
   sb057OrgFileSlug,
 } from '../../../utils/csi/sb057WhiteLabelTestData';
 import {
+  SB024_SALES_PARTNERS,
   csiExistingBillingPartnerNameForSb027,
   csiOrgASalesOrderIdForSb067,
+  csiUniqueBillingPartnerName,
+  csiUniqueBillingPartnerNamePair,
 } from '../../../utils/csi/salesAndBillingTestData';
 import { writeInvoiceCompareDebugJsonFiles } from '../../../utils/csi/invoiceCompareDebugLog';
 import {
@@ -28,6 +31,10 @@ import {
   extractInvoicePdfText,
   previewKeyValuesToCompareJson,
 } from '../../../utils/csi/invoicePdfPreviewCompare';
+import {
+  buildSb029AddClientFormData,
+  sb029AddClientFormSteps,
+} from '../../../utils/csi/sb029ClientTestData';
 import {
   buildSb030AddClientFormData,
   sb030AddClientFormSteps,
@@ -106,6 +113,73 @@ test.describe('CSI · Sales and Billing', () => {
       });
     });
 
+    test.describe('SB-022 create billing partner', () => {
+      test('SB-022', async ({ csiSalesAndBillingPage }) => {
+        const billingPartnerName = csiUniqueBillingPartnerName();
+
+        await csiSalesAndBillingPage.openBillingPartnerList();
+        await csiSalesAndBillingPage.clickAddBillingPartner();
+        await csiSalesAndBillingPage.fillAddBillingPartnerForm(billingPartnerName, csiTestEmail());
+        await csiSalesAndBillingPage.submitPackage();
+        await csiSalesAndBillingPage.expectBillingPartnerCreated();
+      });
+    });
+
+    test.describe('SB-024 assign 1 billing partner to multiple sales partners', () => {
+      test('SB-024', async ({ csiSalesAndBillingPage }) => {
+        const billingPartnerName = csiUniqueBillingPartnerName();
+
+        await csiSalesAndBillingPage.openBillingPartnerList();
+        await csiSalesAndBillingPage.clickAddBillingPartner();
+        await csiSalesAndBillingPage.fillAddBillingPartnerFormSb024(
+          billingPartnerName,
+          csiTestEmail(),
+          SB024_SALES_PARTNERS,
+        );
+        await csiSalesAndBillingPage.submitPackage();
+        await csiSalesAndBillingPage.expectBillingPartnerCreated();
+
+        // Verify the billing partner appears under each assigned Sales Partner's detail
+        for (const salesPartner of SB024_SALES_PARTNERS) {
+          await csiSalesAndBillingPage.openSalesPartnerList();
+          await csiSalesAndBillingPage.searchSalesPartnerByName(salesPartner);
+          await csiSalesAndBillingPage.openSalesPartnerViewDetailsForName(salesPartner);
+          await csiSalesAndBillingPage.clickInvoiceAndBillingPartnersTab();
+          await csiSalesAndBillingPage.expectBillingPartnerVisibleInSalesPartnerDetail(billingPartnerName);
+        }
+      });
+    });
+
+    test.describe('SB-025 assign multiple billing partners to 1 sales partner', () => {
+      test('SB-025', async ({ csiSalesAndBillingPage }) => {
+        const [billingPartner1, billingPartner2] = csiUniqueBillingPartnerNamePair();
+        const salesPartner = 'Avotech';
+
+        // Create first billing partner assigned to Avotech
+        await csiSalesAndBillingPage.openBillingPartnerList();
+        await csiSalesAndBillingPage.clickAddBillingPartner();
+        await csiSalesAndBillingPage.fillAddBillingPartnerForm(billingPartner1, csiTestEmail());
+        await csiSalesAndBillingPage.submitPackage();
+        await csiSalesAndBillingPage.expectBillingPartnerCreated();
+
+        // Create second billing partner assigned to Avotech
+        await csiSalesAndBillingPage.openBillingPartnerList();
+        await csiSalesAndBillingPage.clickAddBillingPartner();
+        await csiSalesAndBillingPage.fillAddBillingPartnerForm(billingPartner2, csiTestEmail());
+        await csiSalesAndBillingPage.submitPackage();
+        await csiSalesAndBillingPage.expectBillingPartnerCreated();
+
+        // Verify both billing partners appear under Avotech's detail
+        await csiSalesAndBillingPage.openSalesPartnerList();
+        await csiSalesAndBillingPage.searchSalesPartnerByName(salesPartner);
+        await csiSalesAndBillingPage.openSalesPartnerViewDetailsForName(salesPartner);
+        await csiSalesAndBillingPage.clickInvoiceAndBillingPartnersTab();
+        for (const name of [billingPartner1, billingPartner2]) {
+          await csiSalesAndBillingPage.expectBillingPartnerVisibleInSalesPartnerDetail(name);
+        }
+      });
+    });
+
     test.describe('SB-027 create billing partner with duplicate name', () => {
       test('SB-027', async ({ csiSalesAndBillingPage }) => {
         const billingPartnerName = csiExistingBillingPartnerNameForSb027();
@@ -115,6 +189,18 @@ test.describe('CSI · Sales and Billing', () => {
         await csiSalesAndBillingPage.fillBillingPartnerFormSb027(billingPartnerName);
         await csiSalesAndBillingPage.submitPackage();
         await csiSalesAndBillingPage.expectBillingPartnerDuplicateNameRejected();
+      });
+    });
+
+    test.describe('SB-029 super admin adds client', () => {
+      test('SB-029', async ({ csiSalesAndBillingPage }) => {
+        const formData = buildSb029AddClientFormData();
+
+        await csiSalesAndBillingPage.openClientList();
+        await csiSalesAndBillingPage.clickAddClient();
+        await csiSalesAndBillingPage.fillAddClientFormSb030(sb029AddClientFormSteps(formData));
+        await csiSalesAndBillingPage.submitPackage();
+        await csiSalesAndBillingPage.expectClientCreated();
       });
     });
 

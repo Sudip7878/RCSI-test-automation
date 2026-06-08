@@ -77,6 +77,32 @@ export function csiOrgASalesOrderIdForSb067(): number {
 /** SB-067: permission message must appear within this window (recorded-steps/Sales&Billing/SB-067.txt). */
 export const SB067_NO_PERMISSION_MESSAGE_TIMEOUT_MS = 5_000;
 
+/**
+ * SB-024: Sales Partners to assign to a single billing partner.
+ * Must both exist in the test environment.
+ */
+export const SB024_SALES_PARTNERS = ['Avotech', 'Ricoh'] as const;
+
+/** SB-022: unique billing partner name prefix; suffix is timestamp-based to avoid collisions. */
+const SB022_BILLING_PARTNER_NAME_PREFIX = 'Billing Test ';
+
+/** SB-022: unique billing partner name for creation test (`Billing Test {timestamp}-{worker}`). */
+export function csiUniqueBillingPartnerName(): string {
+  return `${SB022_BILLING_PARTNER_NAME_PREFIX}${csiUniqueTimestampSuffix()}`;
+}
+
+/**
+ * SB-025: generate two unique billing partner names from the same timestamp suffix
+ * so they are distinct but share the same creation context.
+ */
+export function csiUniqueBillingPartnerNamePair(): [string, string] {
+  const suffix = csiUniqueTimestampSuffix();
+  return [
+    `${SB022_BILLING_PARTNER_NAME_PREFIX}${suffix}-1`,
+    `${SB022_BILLING_PARTNER_NAME_PREFIX}${suffix}-2`,
+  ];
+}
+
 const SB027_DEFAULT_EXISTING_BILLING_PARTNER_NAME = 'BillingCo';
 
 /** SB-027: duplicate billing partner name error shown on Submit — mirrors the "X already exist" pattern. */
