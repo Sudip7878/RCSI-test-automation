@@ -1,11 +1,19 @@
 import { expect, test } from '../../../fixtures/csi/testSetup';
 import {
+  csiAutoEnrollOrgUserTestEmail,
+  csiAutoEnrollOrgUserTestPassword,
   csiOrgTestEmail,
   csiOrgTestPassword,
   csiTestEmail,
+  csiTestPassingUserTestEmail,
+  csiTestPassingUserTestPassword,
   csiTestPassword,
 } from '../../../utils/csi/credentials';
-import { csiDistributionUserSearchToken, csiUniqueDistributionName } from '../../../utils/csi/trainingTestData';
+import {
+  csiDistributionUserSearchToken,
+  csiTrainingFailRetakeCourseName,
+  csiUniqueDistributionName,
+} from '../../../utils/csi/trainingTestData';
 
 test.describe('CSI · Training', () => {
   test.describe.configure({ timeout: 180_000 });
@@ -64,6 +72,73 @@ test.describe('CSI · Training', () => {
         const header = pdf.subarray(0, Math.min(8, pdf.length)).toString('latin1');
         expect(header.startsWith('%PDF'), 'download should be a PDF (starts with %PDF)').toBe(true);
       });
+    });
+
+    /**
+     * TR-011: retake failed course, complete video, intentionally fail quiz (recorded-steps/Training/TR-011.txt).
+     */
+    test.describe('TR-011 course retake and quiz failure', () => {
+      test.describe.configure({ timeout: 600_000 });
+
+      test('TR-011', async ({ csiTrainingPage }) => {
+        await csiTrainingPage.runTr011RetakeAndFailFlow(csiTrainingFailRetakeCourseName());
+      });
+    });
+  });
+
+  /**
+   * TR-010: passed course certificate preview and PDF download (recorded-steps/Training/TR-010.txt).
+   */
+  test.describe('TR-010 passed course certificate download', () => {
+    test.beforeEach(async ({ csiLoginPage }) => {
+      if (
+        !process.env.CSI_TEST_PASSING_USER_TEST_PASSWORD?.length ||
+        !process.env.CSI_TEST_PASSING_USER_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiTestPassingUserTestEmail(),
+        csiTestPassingUserTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+    });
+
+    test('TR-010', async ({ csiTrainingPage }) => {
+      const pdf = await csiTrainingPage.downloadFirstPassedCourseCertificatePdf();
+
+      expect(pdf.length, 'certificate PDF should have bytes').toBeGreaterThan(512);
+      const header = pdf.subarray(0, Math.min(8, pdf.length)).toString('latin1');
+      expect(header.startsWith('%PDF'), 'download should be a PDF (starts with %PDF)').toBe(true);
+    });
+  });
+
+  /**
+   * TR-022: auto-enrolled org user sees at least one course on My Course (recorded-steps/Training/TR-022.txt).
+   */
+  test.describe('TR-022 auto course assignment on My Course', () => {
+    test.beforeEach(async ({ csiLoginPage }) => {
+      if (
+        !process.env.CSI_AUTO_ENROLL_ORG_USER_TEST_PASSWORD?.length ||
+        !process.env.CSI_AUTO_ENROLL_ORG_USER_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiAutoEnrollOrgUserTestEmail(),
+        csiAutoEnrollOrgUserTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+    });
+
+    test('TR-022', async ({ csiTrainingPage }) => {
+      await csiTrainingPage.expectTr022AutoAssignedCourseOnMyCourse();
     });
   });
 

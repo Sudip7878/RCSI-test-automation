@@ -177,7 +177,7 @@ export class CsiAvotechLoginPage extends BasePage {
   }
 
   async openHeaderAccountMenu() {
-    const userMenuTrigger = this.page.getByText(/^Hi,\s/i);
+    const userMenuTrigger = this.page.getByText(/^Hi,\s/i).first();
     await expect(userMenuTrigger).toBeVisible({ timeout: 15_000 });
     await userMenuTrigger.click();
   }

@@ -160,6 +160,28 @@ export class CsiAccountManagementPage extends BasePage {
     await expect(emailCell).toBeVisible({ timeout: 60_000 });
   }
 
+  /**
+   * CC-022: first user-list row for `email` (top-to-bottom) — read Organization cell without sorting the grid.
+   */
+  async readOrganizationNameForFirstUserRowWithEmail(email: string): Promise<string> {
+    await this.openUserListWithSearchReady();
+    await this.searchUserListByEmail(email);
+
+    const row = this.userListGrid()
+      .getByRole('row')
+      .filter({ has: this.page.getByRole('gridcell', { name: email }) })
+      .first();
+    await expect(row).toBeVisible({ timeout: 60_000 });
+
+    const organizationName = await row.evaluate((tr) => {
+      const cell = tr.querySelector('td[data-header="Organization"]');
+      return cell?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
+    });
+
+    expect(organizationName.length).toBeGreaterThan(0);
+    return organizationName;
+  }
+
   async openUserRowActionsMenu(email: string) {
     const row = this.userTableRowForEmail(email);
     await expect(row).toBeVisible();

@@ -1,5 +1,11 @@
 import { test } from '../../../fixtures/csi/testSetup';
 import {
+  csiExpiredSalesSystemOwnerTestEmail,
+  csiExpiredSalesSystemOwnerTestPassword,
+  csiNoPolicySystemOwnerTestEmail,
+  csiNoPolicySystemOwnerTestPassword,
+  csiTestEmail,
+  csiTestPassword,
   csiTpPhisingAdminTestEmail,
   csiTpPhisingAdminTestPassword,
   csiTpTrainingAdminTestEmail,
@@ -107,5 +113,115 @@ test.describe('CSI · Cross Cutting', () => {
     await csiPhisingPage.fillPhisingTestDetailsAndContinue(phisingTestName);
     await csiPhisingPage.finalizeAndDistribute();
     await csiPhisingPage.expectPhisingTestCreated(phisingTestName);
+  });
+
+  /**
+   * CC-022: grant Policy Management via sales order, verify hub access, then revoke (recorded-steps/CrossCutting/CC-022.txt).
+   */
+  test.describe('CC-022 sales order policy management access change', () => {
+    test.describe.configure({ timeout: 600_000 });
+
+    test('CC-022', async ({
+      csiLoginPage,
+      csiAccountManagementPage,
+      csiSalesAndBillingPage,
+    }) => {
+      if (
+        !process.env.CSI_NO_POLICY_SYSTEM_OWNER_TEST_PASSWORD?.length ||
+        !process.env.CSI_NO_POLICY_SYSTEM_OWNER_TEST_EMAIL?.trim()?.length ||
+        !process.env.CSI_TEST_PASSWORD?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      const noPolicyEmail = csiNoPolicySystemOwnerTestEmail();
+      const noPolicyPassword = csiNoPolicySystemOwnerTestPassword();
+      const adminEmail = csiTestEmail();
+      const adminPassword = csiTestPassword();
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(noPolicyEmail, noPolicyPassword);
+
+      if (await csiSalesAndBillingPage.isPolicyManagementHubMenuVisibleWithin()) {
+        await csiLoginPage.logoutViaHeaderMenu();
+        await csiLoginPage.expectEmailStepVisible();
+        await csiLoginPage.gotoLogin();
+        await csiLoginPage.signInWithEmailAndPassword(adminEmail, adminPassword);
+        await csiLoginPage.expectOnHome();
+
+        const staleOrganizationName =
+          await csiAccountManagementPage.readOrganizationNameForFirstUserRowWithEmail(noPolicyEmail);
+        await csiSalesAndBillingPage.ensurePolicyManagementRevokedOnActiveSalesOrderForClient(
+          staleOrganizationName,
+        );
+
+        await csiLoginPage.logoutViaHeaderMenu();
+        await csiLoginPage.expectEmailStepVisible();
+        await csiLoginPage.gotoLogin();
+        await csiLoginPage.signInWithEmailAndPassword(noPolicyEmail, noPolicyPassword);
+      }
+
+      await csiSalesAndBillingPage.expectPolicyManagementHubNotVisible();
+
+      await csiLoginPage.logoutViaHeaderMenu();
+      await csiLoginPage.expectEmailStepVisible();
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(adminEmail, adminPassword);
+      await csiLoginPage.expectOnHome();
+
+      const organizationName =
+        await csiAccountManagementPage.readOrganizationNameForFirstUserRowWithEmail(noPolicyEmail);
+
+      await csiSalesAndBillingPage.openSalesOrderList();
+      await csiSalesAndBillingPage.searchSalesOrderListByOrganization(organizationName);
+      await csiSalesAndBillingPage.openEditOnActiveSalesOrderForClient(organizationName);
+      await csiSalesAndBillingPage.setPolicyManagementModuleIncluded(true);
+      await csiSalesAndBillingPage.submitSalesOrderEditUpdate();
+
+      await csiLoginPage.logoutViaHeaderMenu();
+      await csiLoginPage.expectEmailStepVisible();
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(noPolicyEmail, noPolicyPassword);
+      await csiSalesAndBillingPage.expectPolicyManagementHubVisible();
+
+      await csiLoginPage.logoutViaHeaderMenu();
+      await csiLoginPage.expectEmailStepVisible();
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(adminEmail, adminPassword);
+      await csiLoginPage.expectOnHome();
+
+      await csiSalesAndBillingPage.openSalesOrderList();
+      await csiSalesAndBillingPage.searchSalesOrderListByOrganization(organizationName);
+      await csiSalesAndBillingPage.openEditOnActiveSalesOrderForClient(organizationName);
+      await csiSalesAndBillingPage.setPolicyManagementModuleIncluded(false);
+      await csiSalesAndBillingPage.submitSalesOrderEditUpdate();
+    });
+  });
+
+  /**
+   * CC-023: expired sales system owner must not see revoked hub modules (recorded-steps/CrossCutting/CC-023.txt).
+   */
+  test.describe('CC-023 expired sales system owner access revoked', () => {
+    test('CC-023', async ({ csiLoginPage, csiSalesAndBillingPage }) => {
+      if (
+        !process.env.CSI_EXPIRED_SALES_SYSTEM_OWNER_TEST_PASSWORD?.length ||
+        !process.env.CSI_EXPIRED_SALES_SYSTEM_OWNER_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiExpiredSalesSystemOwnerTestEmail(),
+        csiExpiredSalesSystemOwnerTestPassword(),
+      );
+
+      await csiSalesAndBillingPage.expectCc023RevokedHubModulesNotVisible();
+    });
   });
 });
