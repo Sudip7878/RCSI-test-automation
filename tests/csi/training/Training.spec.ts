@@ -1,22 +1,174 @@
 import { expect, test } from '../../../fixtures/csi/testSetup';
 import {
+  csiAdminTestEmail,
+  csiAdminTestPassword,
   csiAutoEnrollOrgUserTestEmail,
   csiAutoEnrollOrgUserTestPassword,
   csiOrgTestEmail,
   csiOrgTestPassword,
+  csiSystemOwnerTestEmail,
+  csiSystemOwnerTestPassword,
   csiTestEmail,
   csiTestPassingUserTestEmail,
   csiTestPassingUserTestPassword,
   csiTestPassword,
+  csiTpTrainingAdminTestEmail,
+  csiTpTrainingAdminTestPassword,
 } from '../../../utils/csi/credentials';
 import {
-  csiDistributionUserSearchToken,
   csiTrainingFailRetakeCourseName,
   csiUniqueDistributionName,
 } from '../../../utils/csi/trainingTestData';
 
 test.describe('CSI · Training', () => {
   test.describe.configure({ timeout: 180_000 });
+
+  /**
+   * TR-001: Training Admin creates a course distribution from Course Distribution
+   * (recorded-steps/Training/TR-001.txt).
+   */
+  test.describe('TR-001 training admin creates distribution', () => {
+    test.beforeEach(async ({ csiLoginPage }) => {
+      if (
+        !process.env.CSI_TP_TRAINING_ADMIN_TEST_PASSWORD?.length ||
+        !process.env.CSI_TP_TRAINING_ADMIN_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiTpTrainingAdminTestEmail(),
+        csiTpTrainingAdminTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+    });
+
+    test('TR-001', async ({ csiTrainingPage }) => {
+      const loginEmail = csiTpTrainingAdminTestEmail();
+      const distributionName = csiUniqueDistributionName();
+
+      const myCourseTitles = await csiTrainingPage.openMyCourseAndCollectRegisteredCourseTitles();
+      const excludedForFirst = new Set(myCourseTitles);
+
+      await csiTrainingPage.openCourseDistribution();
+      await csiTrainingPage.startNewDistribution();
+      await csiTrainingPage.fillDistributionName(distributionName);
+
+      const firstSelectedCourse = await csiTrainingPage.selectFirstVisibleCourseOptionNotIn(
+        excludedForFirst,
+        0,
+      );
+      const excludedForSecond = new Set([...myCourseTitles, firstSelectedCourse]);
+      await csiTrainingPage.selectFirstVisibleCourseOptionNotIn(excludedForSecond, 1);
+      await csiTrainingPage.goToNextWizardStep();
+      await csiTrainingPage.pickTodayDistributionStartDate();
+      await csiTrainingPage.searchUsersAndSelectRowByEmail(loginEmail, loginEmail);
+      await csiTrainingPage.checkOptionalNotifySwitch();
+      await csiTrainingPage.goToNextWizardStep();
+      await csiTrainingPage.submitDistribute();
+      await csiTrainingPage.openDistributionView();
+      await csiTrainingPage.expectDistributionListed(distributionName);
+    });
+  });
+
+  /**
+   * TR-002: System Owner creates a course distribution — identical flow to TR-001
+   * but logged in as CSI_SYSTEM_OWNER_TEST_EMAIL (recorded-steps/Training/TR-002.txt).
+   */
+  test.describe('TR-002 system owner creates distribution', () => {
+    test.beforeEach(async ({ csiLoginPage }) => {
+      if (
+        !process.env.CSI_SYSTEM_OWNER_TEST_PASSWORD?.length ||
+        !process.env.CSI_SYSTEM_OWNER_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiSystemOwnerTestEmail(),
+        csiSystemOwnerTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+    });
+
+    test('TR-002', async ({ csiTrainingPage }) => {
+      const loginEmail = csiSystemOwnerTestEmail();
+      const distributionName = csiUniqueDistributionName();
+
+      const myCourseTitles = await csiTrainingPage.openMyCourseAndCollectRegisteredCourseTitles();
+      const excludedForFirst = new Set(myCourseTitles);
+
+      await csiTrainingPage.openCourseDistribution();
+      await csiTrainingPage.startNewDistribution();
+      await csiTrainingPage.fillDistributionName(distributionName);
+
+      const firstSelectedCourse = await csiTrainingPage.selectFirstVisibleCourseOptionNotIn(
+        excludedForFirst,
+        0,
+      );
+      const excludedForSecond = new Set([...myCourseTitles, firstSelectedCourse]);
+      await csiTrainingPage.selectFirstVisibleCourseOptionNotIn(excludedForSecond, 1);
+      await csiTrainingPage.goToNextWizardStep();
+      await csiTrainingPage.pickTodayDistributionStartDate();
+      await csiTrainingPage.searchUsersAndSelectRowByEmail(loginEmail, loginEmail);
+      await csiTrainingPage.checkOptionalNotifySwitch();
+      await csiTrainingPage.goToNextWizardStep();
+      await csiTrainingPage.submitDistribute();
+      await csiTrainingPage.openDistributionView();
+      await csiTrainingPage.expectDistributionListed(distributionName);
+    });
+  });
+
+  /**
+   * TR-003: Admin creates a course distribution — identical flow to TR-001
+   * but logged in as CSI_ADMIN_TEST_EMAIL (recorded-steps/Training/TR-003.txt).
+   */
+  test.describe('TR-003 admin creates distribution', () => {
+    test.beforeEach(async ({ csiLoginPage }) => {
+      if (
+        !process.env.CSI_ADMIN_TEST_PASSWORD?.length ||
+        !process.env.CSI_ADMIN_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(csiAdminTestEmail(), csiAdminTestPassword());
+      await csiLoginPage.expectOnHome();
+    });
+
+    test('TR-003', async ({ csiTrainingPage }) => {
+      const loginEmail = csiAdminTestEmail();
+      const distributionName = csiUniqueDistributionName();
+
+      const myCourseTitles = await csiTrainingPage.openMyCourseAndCollectRegisteredCourseTitles();
+      const excludedForFirst = new Set(myCourseTitles);
+
+      await csiTrainingPage.openCourseDistribution();
+      await csiTrainingPage.startNewDistribution();
+      await csiTrainingPage.fillDistributionName(distributionName);
+
+      const firstSelectedCourse = await csiTrainingPage.selectFirstVisibleCourseOptionNotIn(
+        excludedForFirst,
+        0,
+      );
+      const excludedForSecond = new Set([...myCourseTitles, firstSelectedCourse]);
+      await csiTrainingPage.selectFirstVisibleCourseOptionNotIn(excludedForSecond, 1);
+      await csiTrainingPage.goToNextWizardStep();
+      await csiTrainingPage.pickTodayDistributionStartDate();
+      await csiTrainingPage.searchUsersAndSelectRowByEmail(loginEmail, loginEmail);
+      await csiTrainingPage.checkOptionalNotifySwitch();
+      await csiTrainingPage.goToNextWizardStep();
+      await csiTrainingPage.submitDistribute();
+      await csiTrainingPage.openDistributionView();
+      await csiTrainingPage.expectDistributionListed(distributionName);
+    });
+  });
 
   test.describe('CSI_TEST user flows', () => {
     test.beforeEach(async ({ csiLoginPage }) => {
@@ -31,36 +183,6 @@ test.describe('CSI · Training', () => {
       await csiLoginPage.gotoLogin();
       await csiLoginPage.signInWithEmailAndPassword(email, password);
       await csiLoginPage.expectOnHome();
-    });
-
-    test.describe('Create course distribution from Course Distribution', () => {
-      test('TR-001', async ({ csiTrainingPage }) => {
-        const loginEmail = csiTestEmail();
-        const distributionName = csiUniqueDistributionName();
-        const userSearchToken = csiDistributionUserSearchToken(loginEmail);
-
-        const myCourseTitles = await csiTrainingPage.openMyCourseAndCollectRegisteredCourseTitles();
-        const excludedForFirst = new Set(myCourseTitles);
-
-        await csiTrainingPage.openCourseDistribution();
-        await csiTrainingPage.startNewDistribution();
-        await csiTrainingPage.fillDistributionName(distributionName);
-
-        const firstSelectedCourse = await csiTrainingPage.selectFirstVisibleCourseOptionNotIn(
-          excludedForFirst,
-          0,
-        );
-        const excludedForSecond = new Set([...myCourseTitles, firstSelectedCourse]);
-        await csiTrainingPage.selectFirstVisibleCourseOptionNotIn(excludedForSecond, 1);
-        await csiTrainingPage.goToNextWizardStep();
-        await csiTrainingPage.pickTodayDistributionStartDate();
-        await csiTrainingPage.searchUsersAndSelectRowByEmail(loginEmail, userSearchToken);
-        await csiTrainingPage.checkOptionalNotifySwitch();
-        await csiTrainingPage.goToNextWizardStep();
-        await csiTrainingPage.submitDistribute();
-        await csiTrainingPage.openDistributionView();
-        await csiTrainingPage.expectDistributionListed(distributionName);
-      });
     });
 
     test.describe('TR-025 Course report PDF export', () => {
