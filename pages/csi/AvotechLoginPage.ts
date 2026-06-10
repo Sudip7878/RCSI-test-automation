@@ -189,20 +189,40 @@ export class CsiAvotechLoginPage extends BasePage {
     await logoutLink.click();
   }
 
-  /** AM-033: allow header chrome to finish loading, then retry menu logout until session ends. */
+  /**
+   * AM-033: allow header chrome to finish loading, then retry menu logout until session ends.
+   *
+   * The header can glitch into a half-loaded state where the account menu never opens (e.g. after
+   * a failed/deep-linked module navigation). On every retry the page is reloaded so the header is
+   * re-rendered cleanly before logout is attempted again, and the menu interaction is wrapped so a
+   * glitch triggers a reload-and-retry instead of throwing out of the loop.
+   */
   async logoutViaHeaderMenuForAm033(headerSettleMs = 3_000) {
     await this.page.waitForTimeout(headerSettleMs);
 
     for (let attempt = 0; attempt < 3; attempt++) {
+      // Reload before retrying so a glitched header is freshly loaded (attempt 0 relies on the
+      // caller's preceding navigation to home).
+      if (attempt > 0) {
+        await this.page.reload().catch(() => {});
+        await this.page.waitForLoadState('domcontentloaded').catch(() => {});
+        await this.page.waitForTimeout(1_000);
+      }
+
       if (!(await this.hasAuthenticatedHeader())) {
         return;
       }
 
-      await this.openHeaderAccountMenu();
-      const logoutLink = this.page.getByRole('link', { name: /Logout/i });
-      await expect(logoutLink).toBeVisible({ timeout: 15_000 });
-      await logoutLink.click();
-      await this.page.waitForLoadState('domcontentloaded').catch(() => {});
+      try {
+        await this.openHeaderAccountMenu();
+        const logoutLink = this.page.getByRole('link', { name: /Logout/i });
+        await expect(logoutLink).toBeVisible({ timeout: 15_000 });
+        await logoutLink.click();
+        await this.page.waitForLoadState('domcontentloaded').catch(() => {});
+      } catch {
+        // Header menu/logout link did not render — next iteration reloads and retries.
+        continue;
+      }
 
       if (await this.emailField.isVisible({ timeout: 10_000 }).catch(() => false)) {
         return;
@@ -210,8 +230,6 @@ export class CsiAvotechLoginPage extends BasePage {
       if (!(await this.hasAuthenticatedHeader())) {
         return;
       }
-
-      await this.page.waitForTimeout(1_000);
     }
   }
 
