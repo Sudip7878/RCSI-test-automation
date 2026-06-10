@@ -408,6 +408,28 @@ export function csiOrgBIncidentReporterTestPassword(): string {
 }
 
 /**
+ * AM-054: user account that starts in Inactive state; the test reactivates it, verifies
+ * login succeeds, then deactivates it again (`CSI_ORG_INACTIVE_USER_TEST_EMAIL`).
+ * Keep Inactive when not running the test.
+ */
+export function csiOrgInactiveUserTestEmail(): string {
+  const e = process.env.CSI_ORG_INACTIVE_USER_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_ORG_INACTIVE_USER_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiOrgInactiveUserTestEmail}. */
+export function csiOrgInactiveUserTestPassword(): string {
+  const p = process.env.CSI_ORG_INACTIVE_USER_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_ORG_INACTIVE_USER_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
+/**
  * AM-041: display name of the group manager used when searching in the group creation form.
  * This is the name as it appears in the manager search dropdown (e.g. "Dax Manning12").
  */
@@ -478,6 +500,38 @@ export function csiAdminTestPassword(): string {
   const p = process.env.CSI_ADMIN_TEST_PASSWORD;
   if (p == null || p.length === 0) {
     throw new Error('Set CSI_ADMIN_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
+/**
+ * AM-061: account used for the change-password test. The account alternates between two known
+ * passwords (PASSWORD_1 / PASSWORD_2); the test tries PASSWORD_1 first and falls back to
+ * PASSWORD_2 if the login is rejected, then changes to the other one.
+ * Keep the account in a consistent state (either password is valid before running).
+ */
+export function csiOrgPasswordChangeUserTestEmail(): string {
+  const e = process.env.CSI_ORG_PASSWORD_CHANGE_USER_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_ORG_PASSWORD_CHANGE_USER_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** AM-061: first of the two alternating passwords for the password-change test account. */
+export function csiOrgPasswordChangeUserTestPassword1(): string {
+  const p = process.env.CSI_ORG_PASSWORD_CHANGE_USER_TEST_PASSWORD_1;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_ORG_PASSWORD_CHANGE_USER_TEST_PASSWORD_1 in the environment (see .env.example).');
+  }
+  return p;
+}
+
+/** AM-061: second of the two alternating passwords for the password-change test account. */
+export function csiOrgPasswordChangeUserTestPassword2(): string {
+  const p = process.env.CSI_ORG_PASSWORD_CHANGE_USER_TEST_PASSWORD_2;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_ORG_PASSWORD_CHANGE_USER_TEST_PASSWORD_2 in the environment (see .env.example).');
   }
   return p;
 }

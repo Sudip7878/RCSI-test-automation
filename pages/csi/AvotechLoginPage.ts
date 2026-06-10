@@ -284,4 +284,18 @@ export class CsiAvotechLoginPage extends BasePage {
     await expect(this.emailField).toBeVisible({ timeout: 60_000 });
     await this.page.waitForLoadState('domcontentloaded').catch(() => {});
   }
+
+  /**
+   * AM-061: waits up to 8 s for the "Invalid username or password." error text to appear after
+   * a login attempt. Returns true if the error surfaces (login failed), false if it never
+   * appears within the timeout (login succeeded and the page navigated away).
+   * Uses waitFor so the check actively watches for the element rather than sampling once.
+   */
+  async isInvalidCredentialsVisible(): Promise<boolean> {
+    return this.page
+      .getByText('Invalid username or password.', { exact: true })
+      .waitFor({ state: 'visible', timeout: 8_000 })
+      .then(() => true)
+      .catch(() => false);
+  }
 }

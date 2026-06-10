@@ -817,4 +817,62 @@ export class CsiAccountManagementPage extends BasePage {
       timeout: 30_000,
     });
   }
+
+  /**
+   * AM-061: navigate to /UserProfile and click the "Security" tab button.
+   * Waits for the Security button to be visible before clicking to ensure the profile page has loaded.
+   */
+  async openUserProfileSecurityTab() {
+    await this.page.goto(`${CSI_BASE_URL}/UserProfile`);
+    const securityButton = this.page.getByRole('button', { name: 'Security' });
+    await expect(securityButton).toBeVisible({ timeout: 30_000 });
+    await securityButton.click();
+  }
+
+  /**
+   * AM-061: fill the Change Password form fields without using element IDs.
+   *
+   * Each password field lives inside a `.columns-item` container that also holds its label.
+   * Scoping the input locator to that container uniquely identifies each field:
+   *   - "Current password" label  → first input
+   *   - /New Password/ (capital P) → second input; case-sensitive regex avoids matching
+   *                                   "Confirm new password" (lowercase p)
+   *   - "Confirm new password"    → third input
+   *
+   * The method fills newPassword into both the new-password and confirm-password fields.
+   */
+  async fillChangePasswordFormAm061(currentPassword: string, newPassword: string) {
+    const currentField = this.page
+      .locator('.columns-item')
+      .filter({ hasText: 'Current password' })
+      .locator('input');
+    const newField = this.page
+      .locator('.columns-item')
+      .filter({ hasText: /New Password/ })
+      .locator('input');
+    const confirmField = this.page
+      .locator('.columns-item')
+      .filter({ hasText: 'Confirm new password' })
+      .locator('input');
+
+    await expect(currentField).toBeVisible({ timeout: 15_000 });
+    await currentField.click();
+    await currentField.fill(currentPassword);
+    await newField.click();
+    await newField.fill(newPassword);
+    await confirmField.click();
+    await confirmField.fill(newPassword);
+  }
+
+  /** AM-061: click the "Update new password" submit button. */
+  async submitChangePasswordAm061() {
+    await this.page.getByRole('button', { name: 'Update new password' }).click();
+  }
+
+  /** AM-061: assert the "Password changed successfully" confirmation message is visible. */
+  async expectPasswordChangedSuccessAm061() {
+    await expect(this.page.getByText('Password changed successfully')).toBeVisible({
+      timeout: 30_000,
+    });
+  }
 }

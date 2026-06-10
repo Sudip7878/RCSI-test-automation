@@ -45,6 +45,11 @@ import {
   csiGroupManagerName,
   csiGroupManagerPassword,
   csiGroupMemberEmail,
+  csiOrgInactiveUserTestEmail,
+  csiOrgInactiveUserTestPassword,
+  csiOrgPasswordChangeUserTestEmail,
+  csiOrgPasswordChangeUserTestPassword1,
+  csiOrgPasswordChangeUserTestPassword2,
   csiTestEmail,
   csiTestPassword,
   csiUserTestEmail,
@@ -743,6 +748,136 @@ test.describe('CSI · Account Management', () => {
 
       await csiAccountManagementPage.setUserActiveViaUserListActions(targetEmail);
       await csiAccountManagementPage.expectUserListRowStatus(targetEmail, 'Active');
+    });
+  });
+
+  /**
+   * AM-054: reverse of AM-052 — super admin (CSI_TEST_EMAIL) reactivates an initially-inactive
+   * user, verifies that user can now log in successfully, then deactivates the user again
+   * (recorded-steps/AccountManagement/AM-054.txt).
+   * Target account: CSI_ORG_INACTIVE_USER_TEST_EMAIL (keep Inactive when not running the test).
+   */
+  test.describe('AM-054 super admin reactivates user', () => {
+    test.describe.configure({ timeout: 180_000 });
+
+    test.beforeEach(async ({ csiLoginPage }) => {
+      if (
+        !process.env.CSI_TEST_PASSWORD?.length ||
+        !process.env.CSI_ORG_INACTIVE_USER_TEST_PASSWORD?.length ||
+        !process.env.CSI_ORG_INACTIVE_USER_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(csiTestEmail(), csiTestPassword());
+      await csiLoginPage.expectOnHome();
+    });
+
+    test('AM-054', async ({ csiLoginPage, csiAccountManagementPage }) => {
+      const adminEmail = csiTestEmail();
+      const adminPassword = csiTestPassword();
+      const targetEmail = csiOrgInactiveUserTestEmail();
+      const targetPassword = csiOrgInactiveUserTestPassword();
+
+      // Phase 1 — super admin sets the initially-inactive user to Active
+      await csiAccountManagementPage.openUserListWithSearchReady();
+      await csiAccountManagementPage.searchUserListByEmail(targetEmail);
+      await csiAccountManagementPage.expectUserGridShowsEmail(targetEmail);
+
+      await csiAccountManagementPage.setUserActiveViaUserListActions(targetEmail);
+      await csiAccountManagementPage.expectUserListRowStatus(targetEmail, 'Active');
+
+      // Phase 2 — verify the target user can now log in successfully (no inactive error)
+      await csiLoginPage.logoutViaHeaderMenu();
+      await csiLoginPage.expectEmailStepVisible();
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(targetEmail, targetPassword);
+      await csiLoginPage.expectOnHome();
+
+      // Phase 3 — log out the target user and re-login as super admin to revert the status
+      // (successful login means gotoLogin would redirect to home, so logout via header first)
+      await csiLoginPage.logoutViaHeaderMenu();
+      await csiLoginPage.expectEmailStepVisible();
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(adminEmail, adminPassword);
+      await csiLoginPage.expectOnHome();
+
+      // Phase 4 — super admin sets the user back to Inactive (restore pre-test state)
+      await csiAccountManagementPage.openUserListWithSearchReady();
+      await csiAccountManagementPage.searchUserListByEmail(targetEmail);
+      await csiAccountManagementPage.expectUserGridShowsEmail(targetEmail);
+
+      await csiAccountManagementPage.setUserInactiveViaUserListActions(targetEmail);
+      await csiAccountManagementPage.expectUserListRowStatus(targetEmail, 'Inactive');
+    });
+  });
+
+  /**
+   * AM-061: a user changes their own password from the Security tab of UserProfile, then
+   * verifies that the new password is accepted on the next login.
+   * The test account has two known passwords (PASSWORD_1 / PASSWORD_2) that alternate after
+   * each successful run. The test probes PASSWORD_1 first; if the login returns
+   * "Invalid username or password." it falls back to PASSWORD_2 and swaps the roles.
+   * (recorded-steps/AccountManagement/AM-061.txt)
+   */
+  test.describe('AM-061 change password while logged in', () => {
+    test.describe.configure({ timeout: 120_000 });
+
+    // No login in beforeEach — the alternating-password logic must run in the test body
+    // to determine which password is currently active before navigating to the app.
+    test.beforeEach(async () => {
+      if (
+        !process.env.CSI_ORG_PASSWORD_CHANGE_USER_TEST_EMAIL?.trim()?.length ||
+        !process.env.CSI_ORG_PASSWORD_CHANGE_USER_TEST_PASSWORD_1?.length ||
+        !process.env.CSI_ORG_PASSWORD_CHANGE_USER_TEST_PASSWORD_2?.length
+      ) {
+        test.skip();
+        return;
+      }
+    });
+
+    test('AM-061', async ({ csiLoginPage, csiAccountManagementPage }) => {
+      const userEmail = csiOrgPasswordChangeUserTestEmail();
+      const password1 = csiOrgPasswordChangeUserTestPassword1();
+      const password2 = csiOrgPasswordChangeUserTestPassword2();
+
+      // Probe which password is currently active by attempting password1.
+      // If the login page returns "Invalid username or password.", password1 is not the active
+      // one — go directly to the login page and retry with password2 (no expectOnHome between
+      // the failed attempt and the retry).
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(userEmail, password1);
+
+      let currentPassword: string;
+      let newPassword: string;
+
+      if (await csiLoginPage.isInvalidCredentialsVisible()) {
+        // password1 rejected — go straight to login and use password2
+        currentPassword = password2;
+        newPassword = password1;
+        await csiLoginPage.gotoLogin();
+        await csiLoginPage.signInWithEmailAndPassword(userEmail, password2);
+      } else {
+        currentPassword = password1;
+        newPassword = password2;
+      }
+
+      await csiLoginPage.expectOnHome();
+
+      // Navigate to UserProfile → Security tab and perform the password change
+      await csiAccountManagementPage.openUserProfileSecurityTab();
+      await csiAccountManagementPage.fillChangePasswordFormAm061(currentPassword, newPassword);
+      await csiAccountManagementPage.submitChangePasswordAm061();
+      await csiAccountManagementPage.expectPasswordChangedSuccessAm061();
+
+      // Verify the new password is accepted on the next login
+      await csiLoginPage.logoutViaHeaderMenu();
+      await csiLoginPage.expectEmailStepVisible();
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(userEmail, newPassword);
+      await csiLoginPage.expectOnHome();
     });
   });
 
