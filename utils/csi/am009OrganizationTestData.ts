@@ -64,6 +64,40 @@ export function parseOwnerNameFromCsiTestEmail(email: string): {
   };
 }
 
+export const AM021_ORG_NAME = 'Avotech' as const;
+export const AM021_ORG_SEARCH_TERM = 'avotech' as const;
+/** Domain appended by the application when a user is created under the Avotech org. */
+export const AM021_ORG_EMAIL_DOMAIN = 'avotech.com' as const;
+
+export type Am021UserProfile = {
+  suffix: number;
+  firstName: string;
+  lastName: string;
+  /** Local part only — filled in the Email* field; app appends the org domain automatically. */
+  emailLocalPart: string;
+  /** Full email with `@avotech.com` — used to verify the user appears in the org manager's user list. */
+  avotechEmail: string;
+};
+
+/**
+ * AM-021: super admin creates a user under the Avotech org.
+ * Uses the same first/last naming convention as AM-009 (CSI_TEST_EMAIL + lastUserNumber + 1).
+ */
+export function buildAm021UserProfile(csiTestEmail: string): Am021UserProfile {
+  const suffix = readLastUserNumber() + 1;
+  const { firstName, lastNameBase, emailLocalBase } = parseOwnerNameFromCsiTestEmail(csiTestEmail);
+  const lastName = `${lastNameBase}${suffix}`;
+  const emailLocalPart = `${emailLocalBase}+${suffix}`;
+
+  return {
+    suffix,
+    firstName,
+    lastName,
+    emailLocalPart,
+    avotechEmail: `${emailLocalPart}@${AM021_ORG_EMAIL_DOMAIN}`,
+  };
+}
+
 /** Suffix = `lastUserNumber + 1` from `storage/userCounter.json` (AM-009). */
 export function buildAm009OrganizationProfile(csiTestEmail: string): Am009OrganizationProfile {
   const suffix = readLastUserNumber() + 1;

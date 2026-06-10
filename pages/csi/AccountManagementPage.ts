@@ -1,5 +1,5 @@
 import { expect, type Locator } from '@playwright/test';
-import { CSI_BASE_URL, CSI_ORGANIZATION_DETAIL_PATH, CSI_ORGANIZATION_LIST_PATH } from '../../config/csi';
+import { CSI_BASE_URL, CSI_GROUP_LIST_PATH, CSI_ORGANIZATION_DETAIL_PATH, CSI_ORGANIZATION_LIST_PATH } from '../../config/csi';
 import {
   AM033_ASSIGNABLE_ROLE_NAMES,
   AM033_MODULE_ACCESS_TIMEOUT_MS,
@@ -192,7 +192,8 @@ export class CsiAccountManagementPage extends BasePage {
 
   async setUserInactiveViaUserListActions(email: string) {
     const row = this.userTableRowForEmail(email);
-    if (await row.getByRole('gridcell', { name: 'Inactive' }).isVisible().catch(() => false)) {
+    // exact: true prevents 'Active' substring matching 'Inactive'
+    if (await row.getByRole('gridcell', { name: 'Inactive', exact: true }).isVisible().catch(() => false)) {
       return;
     }
     await this.openUserRowActionsMenu(email);
@@ -203,7 +204,9 @@ export class CsiAccountManagementPage extends BasePage {
 
   async setUserActiveViaUserListActions(email: string) {
     const row = this.userTableRowForEmail(email);
-    if (await row.getByRole('gridcell', { name: 'Active' }).isVisible().catch(() => false)) {
+    // exact: true is critical — without it 'Inactive' matches the 'Active' search (case-insensitive substring),
+    // causing this guard to return early and skip the Set as Active action entirely
+    if (await row.getByRole('gridcell', { name: 'Active', exact: true }).isVisible().catch(() => false)) {
       return;
     }
     await this.openUserRowActionsMenu(email);
@@ -215,7 +218,8 @@ export class CsiAccountManagementPage extends BasePage {
   async expectUserListRowStatus(email: string, status: 'Active' | 'Inactive') {
     const row = this.userTableRowForEmail(email);
     await expect(row).toBeVisible();
-    await expect(row.getByRole('gridcell', { name: status })).toBeVisible({ timeout: 60_000 });
+    // exact: true ensures 'Active' does not match rows still showing 'Inactive'
+    await expect(row.getByRole('gridcell', { name: status, exact: true })).toBeVisible({ timeout: 60_000 });
   }
 
   async openChangeRoleFromActionsMenu() {
@@ -377,6 +381,33 @@ export class CsiAccountManagementPage extends BasePage {
     await this.openUserListWithSearchReady();
   }
 
+  /**
+   * AM-028: loops through every "Invalid domain" entry in the fix-problematic-data panel.
+   * For each entry it clicks the button, clicks Save, then waits for the count of remaining
+   * "Invalid domain" entries to drop by one before moving to the next. Exits when none remain.
+   */
+  async fixAllInvalidDomainEntriesAm028() {
+    const invalidTag = this.page.getByText('Invalid domain', { exact: true });
+    const saveLink = this.page.getByRole('link', { name: /Save/i });
+
+    await expect(invalidTag.first()).toBeVisible({ timeout: 30_000 });
+    let remaining = await invalidTag.count();
+
+    while (remaining > 0) {
+      await invalidTag.first().click();
+      await expect(saveLink).toBeVisible({ timeout: 15_000 });
+      await saveLink.click();
+      remaining -= 1;
+      if (remaining > 0) {
+        await expect(invalidTag).toHaveCount(remaining, { timeout: 30_000 });
+      }
+    }
+
+    // All entries should now show OK; wait briefly for the UI to settle before Continue
+    await expect(this.page.getByText('OK').first()).toBeVisible({ timeout: 30_000 });
+    await this.page.waitForTimeout(3_000);
+  }
+
   async expectUserGridShowsEmails(emails: ReadonlyArray<string>) {
     expect(emails.length).toBeGreaterThan(0);
 
@@ -517,10 +548,32 @@ export class CsiAccountManagementPage extends BasePage {
     await expect(this.page.getByText('Changes saved successfully')).toBeVisible({ timeout: 60_000 });
   }
 
+  private addNewUsersDialog(): Locator {
+    return this.page.getByRole('dialog').filter({
+      has: this.page.getByText('Add new users', { exact: true }),
+    });
+  }
+
   private addOrganizationDialog(): Locator {
     return this.page.getByRole('dialog').filter({
       has: this.page.getByText('Create new organization', { exact: true }),
     });
+  }
+
+  /**
+   * AM-021: clicks "Select Organization" inside the "Add new users" dialog, types the search
+   * term, and picks the exact matching option. Scoped to the dialog to avoid the strict-mode
+   * violation caused by the identically-named org filter combobox on the background page.
+   */
+  async selectOrganizationInAddUserFormAm021(searchTerm: string, orgName: string) {
+    const dialog = this.addNewUsersDialog();
+    await expect(dialog).toBeVisible({ timeout: 15_000 });
+    await dialog.getByText('Select Organization').click();
+    const searchInput = this.page.getByRole('textbox', { name: 'Search' });
+    await expect(searchInput).toBeVisible({ timeout: 15_000 });
+    await searchInput.click();
+    await searchInput.fill(searchTerm);
+    await this.page.getByRole('option', { name: orgName, exact: true }).click();
   }
 
   /** AM-009: `/avo_organizationlist` — Add organization wizard. */
@@ -666,5 +719,102 @@ export class CsiAccountManagementPage extends BasePage {
     }
 
     return [...allEmails].sort();
+  }
+
+  // ─── AM-041: group creation ────────────────────────────────────────────────
+
+  /** AM-041: navigate to /groupList and wait for the Create New Group button. */
+  async openGroupList() {
+    await this.page.goto(`${CSI_BASE_URL}${CSI_GROUP_LIST_PATH}`);
+    await expect(this.page.getByRole('button', { name: /Create New Group/i })).toBeVisible({
+      timeout: 30_000,
+    });
+  }
+
+  /**
+   * AM-041: click "+ Create New Group" and fill the group title field.
+   * Must be followed by selectGroupManagerAm041 and addGroupMemberByEmailAm041.
+   */
+  async startCreateGroupAm041(groupTitle: string) {
+    await this.page.getByRole('button', { name: /Create New Group/i }).click();
+    const titleInput = this.page.getByRole('textbox', { name: 'Group title*' });
+    await expect(titleInput).toBeVisible({ timeout: 15_000 });
+    await titleInput.click();
+    await titleInput.fill(groupTitle);
+  }
+
+  /**
+   * AM-041: open the manager VirtualSelect ("Search..."), type the manager's display name,
+   * and click the matching option. The "Search..." element is the VirtualSelect placeholder
+   * for the group manager assignment field.
+   */
+  async selectGroupManagerAm041(managerName: string) {
+    await this.page.waitForTimeout(5_000);
+    await this.page.getByText('Search...').click();
+    const searchInput = this.page.getByRole('textbox', { name: 'Search' });
+    await expect(searchInput).toBeVisible({ timeout: 15_000 });
+    await searchInput.click();
+    await searchInput.fill(managerName);
+    await this.page.getByRole('option', { name: managerName }).click();
+  }
+
+  /**
+   * AM-041: open the member picker ("Add User"), search by the member's email, check the
+   * member's row checkbox, and confirm selection with "Add Users".
+   * The user grid is identified by its "Email" column header to avoid ambiguity.
+   */
+  async addGroupMemberByEmailAm041(memberEmail: string) {
+    await this.page.getByRole('button', { name: 'Add User' }).click();
+
+    const memberSearchBox = this.page.getByRole('searchbox', { name: 'Search user/position' });
+    await expect(memberSearchBox).toBeVisible({ timeout: 15_000 });
+    await memberSearchBox.click();
+    await memberSearchBox.fill(memberEmail);
+    await this.page.getByRole('button', { name: 'Search' }).click();
+
+    // Wait for the member row to appear, then check its checkbox
+    const memberGrid = this.page.getByRole('grid').filter({
+      has: this.page.getByRole('columnheader', { name: 'Email' }),
+    });
+    const memberRow = memberGrid.getByRole('row').filter({
+      has: this.page.getByRole('gridcell', { name: memberEmail }),
+    });
+    await expect(memberRow).toBeVisible({ timeout: 30_000 });
+    await memberRow.getByRole('checkbox').check();
+
+    await this.page.getByRole('button', { name: 'Add Users' }).click();
+  }
+
+  /** AM-041: click Save and wait for the "Group is successfully created." confirmation. */
+  async saveGroupCreationAm041() {
+    await this.page.getByRole('button', { name: 'Save' }).click();
+    await expect(this.page.getByText('Group is successfully created.')).toBeVisible({
+      timeout: 60_000,
+    });
+  }
+
+  /**
+   * AM-041: navigate to /groupList as the group manager and wait for the group search box.
+   * Used in the verification phase after the system owner creates the group.
+   */
+  async openGroupListWithSearchReadyAm041() {
+    await this.page.goto(`${CSI_BASE_URL}${CSI_GROUP_LIST_PATH}`);
+    await expect(
+      this.page.getByRole('searchbox', { name: 'Enter group name or contact' }),
+    ).toBeVisible({ timeout: 30_000 });
+  }
+
+  /**
+   * AM-041: search the group list by exact group title.
+   * The group title cell must be visible in the grid after Search — do not click it.
+   */
+  async searchAndExpectGroupInGridAm041(groupTitle: string) {
+    const searchBox = this.page.getByRole('searchbox', { name: 'Enter group name or contact' });
+    await searchBox.click();
+    await searchBox.fill(groupTitle);
+    await this.page.getByRole('button', { name: 'Search' }).click();
+    await expect(this.page.getByRole('gridcell', { name: groupTitle })).toBeVisible({
+      timeout: 30_000,
+    });
   }
 }

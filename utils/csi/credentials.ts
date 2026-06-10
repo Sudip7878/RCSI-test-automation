@@ -407,6 +407,81 @@ export function csiOrgBIncidentReporterTestPassword(): string {
   return p;
 }
 
+/**
+ * AM-041: display name of the group manager used when searching in the group creation form.
+ * This is the name as it appears in the manager search dropdown (e.g. "Dax Manning12").
+ */
+export function csiGroupManagerName(): string {
+  const n = process.env.CSI_GROUP_MANAGER_NAME?.trim();
+  if (n == null || n.length === 0) {
+    throw new Error('Set CSI_GROUP_MANAGER_NAME in the environment (see .env.example).');
+  }
+  return n;
+}
+
+/** AM-041: group manager email used for the second login to verify group visibility. */
+export function csiGroupManagerEmail(): string {
+  const e = process.env.CSI_GROUP_MANAGER_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_GROUP_MANAGER_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiGroupManagerEmail}. */
+export function csiGroupManagerPassword(): string {
+  const p = process.env.CSI_GROUP_MANAGER_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_GROUP_MANAGER_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
+/** AM-041: email of the user to be added as a group member. */
+export function csiGroupMemberEmail(): string {
+  const e = process.env.CSI_GROUP_MEMBER_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_GROUP_MEMBER_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** AM-021: Avotech org manager who verifies the super-admin-created user appears in their user list (`CSI_AVOTECH_MANAGER_TEST_EMAIL`). */
+export function csiAvotechManagerTestEmail(): string {
+  const e = process.env.CSI_AVOTECH_MANAGER_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_AVOTECH_MANAGER_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiAvotechManagerTestEmail}. */
+export function csiAvotechManagerTestPassword(): string {
+  const p = process.env.CSI_AVOTECH_MANAGER_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_AVOTECH_MANAGER_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
+/** AM-020: admin user who adds a user to any org (`CSI_ADMIN_TEST_EMAIL`). */
+export function csiAdminTestEmail(): string {
+  const e = process.env.CSI_ADMIN_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_ADMIN_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiAdminTestEmail}. */
+export function csiAdminTestPassword(): string {
+  const p = process.env.CSI_ADMIN_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_ADMIN_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
 /** SB-057: custom-themed org owner (`CSI_CUSTOM_ORG_OWNER_TEST_*`). */
 export function csiCustomOrgOwnerTestEmail(): string {
   const e = process.env.CSI_CUSTOM_ORG_OWNER_TEST_EMAIL?.trim();

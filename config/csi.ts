@@ -30,6 +30,7 @@ export const CSI_ATTACK_SURFACE_PATH = '/AttackSurface' as const;
 export const CSI_REQUEST_HISTORY_PATH = '/RequestHistory' as const;
 export const CSI_PENETRATION_TEST_PATH = '/PenetrationTest' as const;
 export const CSI_ACCOUNT_MANAGEMENT_PATH = '/AccountManagement' as const;
+export const CSI_GROUP_LIST_PATH = '/groupList' as const;
 export const CSI_CYBER_INSURANCE_PATH = '/CyberInsurance' as const;
 export const CSI_POLICY_DETAIL_PATH = '/PolicyDetail' as const;
 export const CSI_VIEW_ASSET_PATH = '/ViewAsset' as const;

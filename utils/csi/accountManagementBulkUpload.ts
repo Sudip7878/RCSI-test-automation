@@ -99,6 +99,50 @@ export function buildBulkUsersFromSystemOwnerEmail(
 }
 
 /**
+ * AM-028: same naming logic as `buildBulkUsersFromSystemOwnerEmail` but writes `invalid.com`
+ * as the email domain so every row triggers an "Invalid domain" validation error on upload.
+ * Returns both `uploadRows` (for the Excel file) and `fixedRows` (real domain, for post-fix
+ * grid verification after the UI fix-and-save loop).
+ */
+export function buildBulkUsersWithInvalidDomainAm028(
+  systemOwnerEmail: string,
+  count = 5,
+  position = 'QA',
+): { uploadRows: BulkUserRow[]; fixedRows: BulkUserRow[]; startingNumber: number; endingNumber: number } {
+  const { lastUserNumber } = readUserCounter();
+  const { firstName, firstNameToken, lastNameBase, domain } =
+    parseSystemOwnerEmailForBulkPattern(systemOwnerEmail);
+
+  const uploadRows: BulkUserRow[] = [];
+  const fixedRows: BulkUserRow[] = [];
+
+  for (let i = 1; i <= count; i += 1) {
+    const n = lastUserNumber + i;
+    const lastName = `${titleCase(lastNameBase)}${n}`;
+    uploadRows.push({
+      firstName,
+      lastName,
+      email: `${firstNameToken}.${lastNameBase}+${n}@invalid.com`,
+      position,
+    });
+    fixedRows.push({
+      firstName,
+      lastName,
+      email: `${firstNameToken}.${lastNameBase}+${n}@${domain}`,
+      position,
+    });
+  }
+
+  writeUserCounter({ lastUserNumber: lastUserNumber + count });
+  return {
+    uploadRows,
+    fixedRows,
+    startingNumber: lastUserNumber + 1,
+    endingNumber: lastUserNumber + count,
+  };
+}
+
+/**
  * Rewrites the downloaded bulk-import template with header + provided rows.
  * Row data starts from the first data row (dummy template rows are replaced).
  */
