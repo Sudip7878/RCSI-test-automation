@@ -6,6 +6,7 @@ import {
   csiAutoEnrollOrgUserTestPassword,
   csiOrgTestEmail,
   csiOrgTestPassword,
+  csiOrgUserTestEmail,
   csiSystemOwnerTestEmail,
   csiSystemOwnerTestPassword,
   csiTestEmail,
@@ -162,6 +163,56 @@ test.describe('CSI · Training', () => {
       await csiTrainingPage.goToNextWizardStep();
       await csiTrainingPage.pickTodayDistributionStartDate();
       await csiTrainingPage.searchUsersAndSelectRowByEmail(loginEmail, loginEmail);
+      await csiTrainingPage.checkOptionalNotifySwitch();
+      await csiTrainingPage.goToNextWizardStep();
+      await csiTrainingPage.submitDistribute();
+      await csiTrainingPage.openDistributionView();
+      await csiTrainingPage.expectDistributionListed(distributionName);
+    });
+  });
+
+  /**
+   * TR-004: Super Admin creates a course distribution in any org — same flow as TR-001 but
+   * logged in as CSI_TEST_EMAIL (super admin) and the distribution target user is
+   * CSI_ORG_USER_TEST_EMAIL instead of the logged-in account
+   * (recorded-steps/Training/TR-004.txt).
+   */
+  test.describe('TR-004 super admin creates distribution in any org', () => {
+    test.beforeEach(async ({ csiLoginPage }) => {
+      if (
+        !process.env.CSI_TEST_PASSWORD?.length ||
+        !process.env.CSI_ORG_USER_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(csiTestEmail(), csiTestPassword());
+      await csiLoginPage.expectOnHome();
+    });
+
+    test('TR-004', async ({ csiTrainingPage }) => {
+      const targetEmail = csiOrgUserTestEmail();
+      const distributionName = csiUniqueDistributionName();
+
+      const myCourseTitles = await csiTrainingPage.openMyCourseAndCollectRegisteredCourseTitles();
+      const excludedForFirst = new Set(myCourseTitles);
+
+      await csiTrainingPage.openCourseDistribution();
+      await csiTrainingPage.startNewDistribution();
+      await csiTrainingPage.fillDistributionName(distributionName);
+
+      const firstSelectedCourse = await csiTrainingPage.selectFirstVisibleCourseOptionNotInStrict(
+        excludedForFirst,
+        0,
+      );
+      const excludedForSecond = new Set([...myCourseTitles, firstSelectedCourse]);
+      await csiTrainingPage.selectFirstVisibleCourseOptionNotInStrict(excludedForSecond, 1);
+      await csiTrainingPage.goToNextWizardStep();
+      await csiTrainingPage.pickTodayDistributionStartDate();
+      // Search and select the org user (not the super admin) as the distribution target
+      await csiTrainingPage.searchUsersAndSelectRowByEmail(targetEmail, targetEmail);
       await csiTrainingPage.checkOptionalNotifySwitch();
       await csiTrainingPage.goToNextWizardStep();
       await csiTrainingPage.submitDistribute();

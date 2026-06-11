@@ -443,6 +443,157 @@ export class CsiTrainingPage extends BasePage {
     );
   }
 
+  /**
+   * VirtualSelect renders only the currently-visible rows (virtual scrolling).
+   * The scroll container is `.vscomp-options-container` (the element with max-height).
+   * `.vscomp-options` itself uses transform: translate3d — setting scrollTop on it does nothing.
+   * This method scrolls `.vscomp-options-container` one viewport-height at a time, waits for
+   * VirtualSelect to re-render the new batch, then looks for the first option NOT in `excluded`.
+   * Must be called while the dropdown is already expanded.
+   */
+  private async scrollVsDropdownAndPickNonExcluded(
+    excluded: ReadonlySet<string>,
+  ): Promise<string | null> {
+    // The scrollable viewport is .vscomp-options-container, not .vscomp-options
+    const scrollContainer = this.page
+      .locator('.vscomp-dropbox-container')
+      .last()
+      .locator('.vscomp-options-container');
+
+    if (!(await scrollContainer.isVisible().catch(() => false))) {
+      return null;
+    }
+
+    const { scrollHeight, clientHeight } = await scrollContainer.evaluate((el: HTMLElement) => ({
+      scrollHeight: el.scrollHeight,
+      clientHeight: el.clientHeight,
+    }));
+
+    // Nothing to scroll — caller already checked the only visible batch
+    if (scrollHeight <= clientHeight) {
+      return null;
+    }
+
+    const steps = Math.ceil(scrollHeight / Math.max(clientHeight, 1)) + 1;
+
+    for (let step = 1; step <= steps; step++) {
+      const nextTop = Math.min(step * clientHeight, scrollHeight);
+
+      // Scroll and dispatch so VirtualSelect's listener fires even in headless mode
+      await scrollContainer.evaluate((el: HTMLElement, top: number) => {
+        el.scrollTop = top;
+        el.dispatchEvent(new Event('scroll', { bubbles: true }));
+      }, nextTop);
+      await this.safeSleep(400);
+
+      // Playwright locator pass — options inside the open listbox container
+      const listbox = this.page.locator('.vscomp-dropbox-container').last();
+      const options = await listbox.getByRole('option').all();
+      for (const option of options) {
+        if (!(await option.isVisible().catch(() => false))) {
+          continue;
+        }
+        const name = this.normalizeCourseTitle((await option.textContent()) ?? '');
+        if (!name || this.isCourseTitleExcluded(name, excluded)) {
+          continue;
+        }
+        await option.click();
+        return name;
+      }
+
+      // DOM evaluate pass — query from the listbox root to reach re-rendered options
+      const found = await listbox.evaluate((root, excList) => {
+        const excSet = new Set(
+          (excList as string[]).map((e) => e.replace(/\s+/g, ' ').trim().toLowerCase()),
+        );
+        const opts = Array.from(
+          root.querySelectorAll('[role="option"], .vscomp-option'),
+        ) as HTMLElement[];
+        for (const el of opts) {
+          const style = window.getComputedStyle(el);
+          if (style.display === 'none' || style.visibility === 'hidden') {
+            continue;
+          }
+          const rect = el.getBoundingClientRect();
+          if (rect.width === 0 && rect.height === 0) {
+            continue;
+          }
+          const name = el.textContent?.replace(/\s+/g, ' ').trim() ?? '';
+          if (!name || excSet.has(name.toLowerCase())) {
+            continue;
+          }
+          el.click();
+          return name;
+        }
+        return null;
+      }, [...excluded]);
+
+      if (found) {
+        return found;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * TR-004: same as selectFirstVisibleCourseOptionNotIn but enforces the exclusion set at every
+   * fallback level — the prestored-course fallback skips any name already in `excluded`, the
+   * last-resort fallback still passes `excluded`, and a VirtualSelect scroll-through is attempted
+   * before falling to prestored names so that off-screen non-excluded options are not missed.
+   */
+  async selectFirstVisibleCourseOptionNotInStrict(
+    excluded: ReadonlySet<string>,
+    courseSlotIndex: number,
+  ): Promise<string> {
+    await this.waitForCourseSelectionStepReady();
+
+    // Primary pass: check initially visible items, then scroll through if needed
+    const preferred = await this.selectWithCourseDropdownRetries(
+      courseSlotIndex,
+      async (combobox) => {
+        const quick = await this.selectFirstVisibleCourseOptionFromExpanded(combobox, excluded);
+        if (quick) {
+          return quick;
+        }
+        return this.scrollVsDropdownAndPickNonExcluded(excluded);
+      },
+    );
+    if (preferred) {
+      return preferred;
+    }
+
+    // Prestored-name fallback — skip any name that is itself excluded
+    for (const courseName of this.prestoredFallbackCourseNames(courseSlotIndex)) {
+      if (this.isCourseTitleExcluded(courseName, excluded)) {
+        continue;
+      }
+      const fallback = await this.trySelectCourseOptionByName(courseName, courseSlotIndex);
+      if (fallback) {
+        return fallback;
+      }
+    }
+
+    // Last-resort: scroll-through with exclusion still enforced
+    const anyCourse = await this.selectWithCourseDropdownRetries(
+      courseSlotIndex,
+      async (combobox) => {
+        const quick = await this.selectFirstVisibleCourseOptionFromExpanded(combobox, excluded);
+        if (quick) {
+          return quick;
+        }
+        return this.scrollVsDropdownAndPickNonExcluded(excluded);
+      },
+    );
+    if (anyCourse) {
+      return anyCourse;
+    }
+
+    throw new Error(
+      `No VirtualSelect course option could be selected for slot ${courseSlotIndex} (all options in exclusion list or none visible).`,
+    );
+  }
+
   async goToNextWizardStep() {
     await expect(this.nextButton).toBeVisible();
     await this.nextButton.click();
