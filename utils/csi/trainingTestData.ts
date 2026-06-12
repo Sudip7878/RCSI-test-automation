@@ -62,3 +62,11 @@ export const csiTr029CourseBgImagePath = path.resolve(
   __dirname,
   '../../data/csi/training/course-bg.png',
 );
+
+/** TR-029 — publicly accessible video URL for the course video lesson. Falls back to the Google sample MP4. */
+export function csiTr029VideoUrl(): string {
+  const url = process.env.CSI_TR029_VIDEO_URL?.trim();
+  return url && url.length > 0
+    ? url
+    : 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4';
+}

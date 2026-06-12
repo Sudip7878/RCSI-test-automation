@@ -1352,4 +1352,88 @@ export class CsiTrainingPage extends BasePage {
   async finishQuizLesson() {
     await this.page.getByRole('button', { name: 'Finish' }).click();
   }
+
+  // --- TR-029 Version 3: add Video lesson before clicking Finish ---
+
+  async addVideoLesson(
+    title: string,
+    lengthMinutes: string,
+    videoUrl: string,
+    description: string,
+  ) {
+    // Select "Video" (value '0') from the FIRST visible "Add Lesson Content" dropdown,
+    // identified by its placeholder option text without using element IDs
+    const lessonDropdown = this.page
+      .locator('select')
+      .filter({ has: this.page.locator('option').filter({ hasText: 'Add Lesson Content' }) })
+      .first();
+    await expect(lessonDropdown).toBeVisible({ timeout: 15_000 });
+    await lessonDropdown.selectOption('0');
+
+    // Wait for the "2. VIDEO" accordion region before interacting with its fields
+    const videoAccordion = this.page.getByRole('region', { name: '2. VIDEO' });
+    await expect(videoAccordion).toBeVisible({ timeout: 15_000 });
+
+    // Video Title — text input adjacent to "Video Title" label (DOM-walk from label)
+    const videoTitleLabel = videoAccordion.getByText('Video Title', { exact: true });
+    await expect(videoTitleLabel).toBeVisible({ timeout: 15_000 });
+    const titleHandle = await videoTitleLabel.evaluateHandle((labelEl) => {
+      let container: HTMLElement | null = labelEl.parentElement;
+      while (container) {
+        const input = container.querySelector(
+          'input[type="text"]',
+        ) as HTMLInputElement | null;
+        if (input) return input;
+        container = container.parentElement;
+      }
+      return null;
+    });
+    const titleEl = titleHandle.asElement();
+    expect(titleEl).not.toBeNull();
+    await titleEl!.dblclick();
+    await titleEl!.fill(title);
+    await titleHandle.dispose();
+
+    // Video Length (In Minutes) — number input adjacent to its label
+    const lengthLabel = videoAccordion.getByText('Video Length (In Minutes)', { exact: true });
+    const lengthHandle = await lengthLabel.evaluateHandle((labelEl) => {
+      let container: HTMLElement | null = labelEl.parentElement;
+      while (container) {
+        const input = container.querySelector(
+          'input[type="number"]',
+        ) as HTMLInputElement | null;
+        if (input) return input;
+        container = container.parentElement;
+      }
+      return null;
+    });
+    const lengthEl = lengthHandle.asElement();
+    expect(lengthEl).not.toBeNull();
+    await lengthEl!.click();
+    await lengthEl!.fill(lengthMinutes);
+    await lengthHandle.dispose();
+
+    // Video Link — identified by its "https://..." placeholder (no ID used)
+    const videoLinkInput = videoAccordion.getByRole('textbox', { name: 'https://' });
+    await expect(videoLinkInput).toBeVisible({ timeout: 15_000 });
+    await videoLinkInput.click();
+    await videoLinkInput.fill(videoUrl);
+
+    // Video Description — textarea adjacent to "Video Description" label
+    const descLabel = videoAccordion.getByText('Video Description', { exact: true });
+    const descHandle = await descLabel.evaluateHandle((labelEl) => {
+      let container: HTMLElement | null = labelEl.parentElement;
+      while (container) {
+        const ta = container.querySelector('textarea') as HTMLTextAreaElement | null;
+        if (ta) return ta;
+        container = container.parentElement;
+      }
+      return null;
+    });
+    const descEl = descHandle.asElement();
+    expect(descEl).not.toBeNull();
+    await descEl!.click();
+    await descEl!.fill(description);
+    await descHandle.dispose();
+  }
 }

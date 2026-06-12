@@ -18,6 +18,7 @@ import {
 } from '../../../utils/csi/credentials';
 import {
   csiTr029CourseBgImagePath,
+  csiTr029VideoUrl,
   csiTrainingFailRetakeCourseName,
   csiUniqueCourseCode,
   csiUniqueCourseTitle,
@@ -257,6 +258,12 @@ test.describe('CSI · Training', () => {
       await csiTrainingPage.fillQuizDetails(`Quiz_${courseCode}`, '2', '100');
       await csiTrainingPage.fillQuizFirstQuestion('Question Test', '100');
       await csiTrainingPage.fillQuizAnswers('Correct', 'Incorrect');
+      await csiTrainingPage.addVideoLesson(
+        `Video_${courseCode}`,
+        '2',
+        csiTr029VideoUrl(),
+        'Desc',
+      );
       await csiTrainingPage.finishQuizLesson();
 
       await csiTrainingPage.uploadCourseCoverImage(csiTr029CourseBgImagePath);
