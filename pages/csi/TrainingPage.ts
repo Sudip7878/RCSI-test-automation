@@ -1060,4 +1060,296 @@ export class CsiTrainingPage extends BasePage {
     await expect(this.page.getByText('Users who missed course')).toBeVisible();
     await expect(this.page.getByText('Groups you managed')).toBeVisible();
   }
+
+  // --- TR-029: Super Admin creates course ---
+
+  async navigateToCourseEdit() {
+    await this.page.goto(`${CSI_BASE_URL}/courseLibrary`);
+    await expect(
+      this.page.getByRole('button', { name: '+ Create New Course', exact: true }),
+    ).toBeVisible({ timeout: 30_000 });
+    await this.page.getByRole('button', { name: '+ Create New Course', exact: true }).click();
+    // Wait until the Course Code input (placeholder 'AT-00XX') is ready before interacting
+    await expect(this.page.getByRole('textbox', { name: 'AT-00XX' })).toBeVisible({
+      timeout: 30_000,
+    });
+  }
+
+  async fillCourseCode(code: string) {
+    const input = this.page.getByRole('textbox', { name: 'AT-00XX' });
+    await input.click();
+    await input.fill(code);
+  }
+
+  async fillCoursePassScore(score: string) {
+    const label = this.page.getByText('Pass score', { exact: true });
+    await expect(label).toBeVisible({ timeout: 15_000 });
+    // Walk up the DOM from the label span to find the sibling number input
+    const handle = await label.evaluateHandle((labelEl) => {
+      let container: HTMLElement | null = labelEl.parentElement;
+      while (container) {
+        const input = container.querySelector(
+          'input[type="number"]',
+        ) as HTMLInputElement | null;
+        if (input) return input;
+        container = container.parentElement;
+      }
+      return null;
+    });
+    const element = handle.asElement();
+    expect(element).not.toBeNull();
+    await element!.click();
+    await element!.fill(score);
+    await handle.dispose();
+  }
+
+  async selectCourseFirstCategory() {
+    const label = this.page.getByText('Category', { exact: true });
+    await expect(label).toBeVisible({ timeout: 15_000 });
+    // Walk up to find the nearest <select> and pick the first real category (index 1, skipping the placeholder)
+    const handle = await label.evaluateHandle((labelEl) => {
+      let container: HTMLElement | null = labelEl.parentElement;
+      while (container) {
+        const select = container.querySelector('select') as HTMLSelectElement | null;
+        if (select) return select;
+        container = container.parentElement;
+      }
+      return null;
+    });
+    const element = handle.asElement();
+    expect(element).not.toBeNull();
+    await element!.selectOption({ index: 1 });
+    await handle.dispose();
+  }
+
+  async fillCourseTitleInLanguageSection(title: string) {
+    // Scope to the Language 1 accordion to avoid any page-level 'Title' text collision
+    const languageSection = this.page.locator('.lessonAccordion').first();
+    const label = languageSection.getByText('Title', { exact: true });
+    await expect(label).toBeVisible({ timeout: 15_000 });
+    const handle = await label.evaluateHandle((labelEl) => {
+      let container: HTMLElement | null = labelEl.parentElement;
+      while (container) {
+        const input = container.querySelector(
+          'input[type="text"]',
+        ) as HTMLInputElement | null;
+        if (input) return input;
+        container = container.parentElement;
+      }
+      return null;
+    });
+    const element = handle.asElement();
+    expect(element).not.toBeNull();
+    await element!.click();
+    await element!.fill(title);
+    await handle.dispose();
+  }
+
+  async fillCourseDescriptionInLanguageSection(description: string) {
+    // Scope to the Language 1 accordion to avoid any page-level 'Description' text collision
+    const languageSection = this.page.locator('.lessonAccordion').first();
+    const label = languageSection.getByText('Description', { exact: true });
+    await expect(label).toBeVisible({ timeout: 15_000 });
+    const handle = await label.evaluateHandle((labelEl) => {
+      let container: HTMLElement | null = labelEl.parentElement;
+      while (container) {
+        const textarea = container.querySelector(
+          'textarea',
+        ) as HTMLTextAreaElement | null;
+        if (textarea) return textarea;
+        container = container.parentElement;
+      }
+      return null;
+    });
+    const element = handle.asElement();
+    expect(element).not.toBeNull();
+    await element!.click();
+    await element!.fill(description);
+    await handle.dispose();
+  }
+
+  async uploadCourseCoverImage(imagePath: string) {
+    // The file input is hidden inside the cover image drop-area; set files programmatically
+    const fileInput = this.page.locator('.drop-area').first().locator('input[type="file"]');
+    await fileInput.setInputFiles(imagePath);
+  }
+
+  async submitCourseFormNextStep() {
+    const nextBtn = this.page.getByRole('button', { name: 'Next', exact: true });
+    await expect(nextBtn).toBeVisible({ timeout: 15_000 });
+    await nextBtn.click();
+  }
+
+  async publishCourse() {
+    const publishBtn = this.page.getByRole('button', { name: 'Publish', exact: true });
+    await expect(publishBtn).toBeVisible({ timeout: 30_000 });
+    await publishBtn.click();
+  }
+
+  async searchCourseAndExpectTitleVisible(courseTitle: string) {
+    await expect(this.myCourseSearchBox).toBeVisible({ timeout: 30_000 });
+    await this.myCourseSearchBox.click();
+    await this.myCourseSearchBox.fill(courseTitle);
+    await this.page.getByRole('button', { name: 'Search' }).first().click();
+    await expect(this.page.getByText(courseTitle, { exact: true })).toBeVisible({
+      timeout: 30_000,
+    });
+  }
+
+  // --- TR-029 Version 2: lesson + quiz steps (inserted after Description, before Next) ---
+
+  async addLessonAndSelectQuizType() {
+    // "Add lessons" is the initial button inside the Language 1 accordion
+    const addLessonsBtn = this.page
+      .locator('.lessonAccordion')
+      .first()
+      .getByRole('button', { name: 'Add lessons' });
+    await expect(addLessonsBtn).toBeVisible({ timeout: 15_000 });
+    await addLessonsBtn.click();
+
+    // After clicking "Add lessons", the "+ Add more lesson" button appears
+    const addMoreBtn = this.page.getByRole('button', { name: '+ Add more lesson' });
+    await expect(addMoreBtn).toBeVisible({ timeout: 15_000 });
+    await addMoreBtn.click();
+
+    // Select "Quiz" (value '1') from the lesson content type dropdown.
+    // The dropdown is identified by its placeholder option "Add Lesson Content" without using its ID.
+    const lessonDropdown = this.page
+      .locator('select')
+      .filter({ has: this.page.locator('option').filter({ hasText: 'Add Lesson Content' }) })
+      .last();
+    await expect(lessonDropdown).toBeVisible({ timeout: 15_000 });
+    await lessonDropdown.selectOption('1');
+  }
+
+  async fillLessonName(name: string) {
+    // The "Enter Lesson Name" placeholder uniquely identifies this textbox
+    const input = this.page.getByRole('textbox', { name: 'Enter Lesson Name' });
+    await expect(input).toBeVisible({ timeout: 15_000 });
+    await input.click();
+    await input.fill(name);
+  }
+
+  async fillQuizDetails(title: string, lengthMinutes: string, weight: string) {
+    // Quiz Title — text input adjacent to "Quiz Title" label (walk up from label to find input)
+    const quizTitleLabel = this.page.getByText('Quiz Title', { exact: true });
+    await expect(quizTitleLabel).toBeVisible({ timeout: 15_000 });
+    const titleHandle = await quizTitleLabel.evaluateHandle((labelEl) => {
+      let container: HTMLElement | null = labelEl.parentElement;
+      while (container) {
+        const input = container.querySelector(
+          'input[type="text"]',
+        ) as HTMLInputElement | null;
+        if (input) return input;
+        container = container.parentElement;
+      }
+      return null;
+    });
+    const titleEl = titleHandle.asElement();
+    expect(titleEl).not.toBeNull();
+    await titleEl!.click();
+    await titleEl!.fill(title);
+    await titleHandle.dispose();
+
+    // Quiz Length (In Minutes) — number input adjacent to its label
+    const lengthLabel = this.page.getByText('Quiz Length (In Minutes)', { exact: true });
+    const lengthHandle = await lengthLabel.evaluateHandle((labelEl) => {
+      let container: HTMLElement | null = labelEl.parentElement;
+      while (container) {
+        const input = container.querySelector(
+          'input[type="number"]',
+        ) as HTMLInputElement | null;
+        if (input) return input;
+        container = container.parentElement;
+      }
+      return null;
+    });
+    const lengthEl = lengthHandle.asElement();
+    expect(lengthEl).not.toBeNull();
+    await lengthEl!.click();
+    await lengthEl!.fill(lengthMinutes);
+    await lengthHandle.dispose();
+
+    // Quiz Weight — number input adjacent to "Quiz Weight" label
+    // Using exact: true so "Question Weight" label is not matched
+    const quizWeightLabel = this.page.getByText('Quiz Weight', { exact: true });
+    const weightHandle = await quizWeightLabel.evaluateHandle((labelEl) => {
+      let container: HTMLElement | null = labelEl.parentElement;
+      while (container) {
+        const input = container.querySelector(
+          'input[type="number"]',
+        ) as HTMLInputElement | null;
+        if (input) return input;
+        container = container.parentElement;
+      }
+      return null;
+    });
+    const weightEl = weightHandle.asElement();
+    expect(weightEl).not.toBeNull();
+    await weightEl!.click();
+    await weightEl!.fill(weight);
+    await weightHandle.dispose();
+  }
+
+  async fillQuizFirstQuestion(questionText: string, questionWeight: string) {
+    // Scope to <label> elements only with a full-string regex to avoid matching the
+    // "Question 1:" / "Question 2:" <span> nodes that Playwright also normalizes to "Question"
+    const questionLabel = this.page.locator('label').filter({ hasText: /^Question$/ });
+    await expect(questionLabel).toBeVisible({ timeout: 15_000 });
+    const questionHandle = await questionLabel.evaluateHandle((labelEl) => {
+      let container: HTMLElement | null = labelEl.parentElement;
+      while (container) {
+        const ta = container.querySelector('textarea') as HTMLTextAreaElement | null;
+        if (ta) return ta;
+        container = container.parentElement;
+      }
+      return null;
+    });
+    const questionEl = questionHandle.asElement();
+    expect(questionEl).not.toBeNull();
+    await questionEl!.click();
+    await questionEl!.fill(questionText);
+    await questionHandle.dispose();
+
+    // "Question Weight" — number input adjacent to its label
+    const qWeightLabel = this.page.getByText('Question Weight', { exact: true });
+    const qWeightHandle = await qWeightLabel.evaluateHandle((labelEl) => {
+      let container: HTMLElement | null = labelEl.parentElement;
+      while (container) {
+        const input = container.querySelector(
+          'input[type="number"]',
+        ) as HTMLInputElement | null;
+        if (input) return input;
+        container = container.parentElement;
+      }
+      return null;
+    });
+    const qWeightEl = qWeightHandle.asElement();
+    expect(qWeightEl).not.toBeNull();
+    await qWeightEl!.click();
+    await qWeightEl!.fill(questionWeight);
+    await qWeightHandle.dispose();
+  }
+
+  async fillQuizAnswers(firstAnswer: string, secondAnswer: string) {
+    // Answer choices are identified by .question-choice containers, avoiding IDs
+    const answerChoices = this.page.locator('.question-choice');
+
+    const firstInput = answerChoices.first().locator('input[type="text"]');
+    await expect(firstInput).toBeVisible({ timeout: 15_000 });
+    await firstInput.click();
+    await firstInput.fill(firstAnswer);
+
+    // Add a second answer option, then fill it
+    await this.page.getByRole('button', { name: '+ Add Answer' }).click();
+
+    const secondInput = answerChoices.nth(1).locator('input[type="text"]');
+    await expect(secondInput).toBeVisible({ timeout: 15_000 });
+    await secondInput.click();
+    await secondInput.fill(secondAnswer);
+  }
+
+  async finishQuizLesson() {
+    await this.page.getByRole('button', { name: 'Finish' }).click();
+  }
 }

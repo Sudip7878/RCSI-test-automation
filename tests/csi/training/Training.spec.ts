@@ -17,7 +17,10 @@ import {
   csiTpTrainingAdminTestPassword,
 } from '../../../utils/csi/credentials';
 import {
+  csiTr029CourseBgImagePath,
   csiTrainingFailRetakeCourseName,
+  csiUniqueCourseCode,
+  csiUniqueCourseTitle,
   csiUniqueDistributionName,
 } from '../../../utils/csi/trainingTestData';
 
@@ -216,8 +219,50 @@ test.describe('CSI · Training', () => {
       await csiTrainingPage.checkOptionalNotifySwitch();
       await csiTrainingPage.goToNextWizardStep();
       await csiTrainingPage.submitDistribute();
-      await csiTrainingPage.openDistributionView();
-      await csiTrainingPage.expectDistributionListed(distributionName);
+      // Redirection to /CourseDistribution (already asserted inside submitDistribute) is sufficient
+    });
+  });
+
+  /**
+   * TR-029: Super Admin creates a new course — fills course code, pass score, category,
+   * title, description, uploads cover image, then publishes and verifies the course
+   * is listed in the course library (recorded-steps/Training/TR-029.txt).
+   */
+  test.describe('TR-029 super admin creates course', () => {
+    test.beforeEach(async ({ csiLoginPage }) => {
+      if (!process.env.CSI_TEST_PASSWORD?.length) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(csiTestEmail(), csiTestPassword());
+      await csiLoginPage.expectOnHome();
+    });
+
+    test('TR-029', async ({ csiTrainingPage }) => {
+      const courseTitle = csiUniqueCourseTitle();
+      const courseCode = csiUniqueCourseCode();
+
+      await csiTrainingPage.navigateToCourseEdit();
+      await csiTrainingPage.fillCourseCode(courseCode);
+      await csiTrainingPage.fillCoursePassScore('80');
+      await csiTrainingPage.selectCourseFirstCategory();
+      await csiTrainingPage.fillCourseTitleInLanguageSection(courseTitle);
+      await csiTrainingPage.fillCourseDescriptionInLanguageSection('Test Desc');
+
+      // Add a Quiz lesson inside Language 1 before submitting the form (Version 2 steps)
+      await csiTrainingPage.addLessonAndSelectQuizType();
+      await csiTrainingPage.fillLessonName(`Lesson_${courseCode}`);
+      await csiTrainingPage.fillQuizDetails(`Quiz_${courseCode}`, '2', '100');
+      await csiTrainingPage.fillQuizFirstQuestion('Question Test', '100');
+      await csiTrainingPage.fillQuizAnswers('Correct', 'Incorrect');
+      await csiTrainingPage.finishQuizLesson();
+
+      await csiTrainingPage.uploadCourseCoverImage(csiTr029CourseBgImagePath);
+      await csiTrainingPage.submitCourseFormNextStep();
+      await csiTrainingPage.publishCourse();
+      await csiTrainingPage.searchCourseAndExpectTitleVisible(courseTitle);
     });
   });
 

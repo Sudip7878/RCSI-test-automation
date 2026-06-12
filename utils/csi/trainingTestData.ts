@@ -1,3 +1,5 @@
+import path from 'path';
+
 import training from '../../data/csi/training.json';
 
 /** Local part of the address, truncated at the first `.` (matches user-search field behavior). */
@@ -43,3 +45,20 @@ export const TR011_VIDEO_AFTER_SEEK_SETTLE_MS = 5_000;
 export const TR022_COURSE_CARD_INITIAL_WAIT_MS = 5_000;
 
 export const TR022_MY_COURSE_TAB_SETTLE_MS = 5_000;
+
+export function csiUniqueCourseTitle(prefix = 'TestCourse_'): string {
+  const worker = process.env.TEST_WORKER_INDEX ?? '0';
+  return `${prefix}${Date.now()}_${worker}`;
+}
+
+/** Course code max length is 45 chars; uses last 6 digits of timestamp to stay well within limit. */
+export function csiUniqueCourseCode(): string {
+  const worker = process.env.TEST_WORKER_INDEX ?? '0';
+  return `TC-${Date.now().toString().slice(-6)}_${worker}`;
+}
+
+/** Absolute path to the cover image used in TR-029 course creation. */
+export const csiTr029CourseBgImagePath = path.resolve(
+  __dirname,
+  '../../data/csi/training/course-bg.png',
+);
