@@ -1,11 +1,15 @@
 import * as os from 'os';
 import * as path from 'path';
-import { test } from '../../../fixtures/csi/testSetup';
+import { expect, test } from '../../../fixtures/csi/testSetup';
 import {
   csiOrgASystemOwnerTestEmail,
   csiOrgASystemOwnerTestPassword,
   csiOrgBSystemOwnerTestEmail,
   csiOrgBSystemOwnerTestPassword,
+  csiItAssetManagerTestEmail,
+  csiItAssetManagerTestPassword,
+  csiSystemOwnerTestEmail,
+  csiSystemOwnerTestPassword,
   csiTestEmail,
   csiTestPassword,
 } from '../../../utils/csi/credentials';
@@ -376,6 +380,197 @@ test.describe('CSI · IT Asset Management', () => {
       await csiItAssetManagementPage.clickDesktopComputersExpectClientMachineGrid();
       await csiItAssetManagementPage.clickViewOnClientMachineGridRowByAssetNameIa025(newName);
       await csiItAssetManagementPage.expectItAssetViewShowsTextIa025(assignedUserLabel);
+    });
+  });
+});
+
+/**
+ * IA-008: System Owner adds a client machine asset.
+ * Same flow as IA-001 but authenticated as CSI_SYSTEM_OWNER_TEST_EMAIL.
+ * (recorded-steps/ITAssetManagement/IA-008.txt)
+ */
+test.describe('CSI · IT Asset Management — system owner', () => {
+  test.describe.configure({ timeout: 180_000 });
+
+  test.beforeEach(async ({ csiLoginPage }) => {
+    if (!process.env.CSI_SYSTEM_OWNER_TEST_PASSWORD?.length) {
+      test.skip();
+      return;
+    }
+
+    await csiLoginPage.gotoLogin();
+    await csiLoginPage.signInWithEmailAndPassword(csiSystemOwnerTestEmail(), csiSystemOwnerTestPassword());
+    await csiLoginPage.expectOnHome();
+  });
+
+  test.describe('IA-008 system owner adds client machine asset', () => {
+    test('IA-008', async ({ csiItAssetManagementPage }) => {
+      const uniqueNumeric = csiItAssetUniqueNumeric();
+      const displayName = csiItAssetDisplayName(uniqueNumeric);
+      const modelNumber = uniqueNumeric;
+      const serialNumber = csiItAssetSerialFromModelNumber(modelNumber);
+
+      await csiItAssetManagementPage.openClientMachineList();
+      await csiItAssetManagementPage.startAddAsset();
+      await csiItAssetManagementPage.selectCategoryDesktopComputers();
+
+      const identityParams = {
+        displayName,
+        modelNumber,
+        serialNumber,
+        osVersion: csiItAssetOsVersion(),
+        ipAddress: csiItAssetIpAddress(),
+      };
+      await csiItAssetManagementPage.fillAssetIdentity(identityParams);
+
+      await csiItAssetManagementPage.fillAssetStateAndLocation(
+        { location: csiItAssetLocation() },
+        identityParams,
+      );
+
+      await csiItAssetManagementPage.fillSupplierAndCommercial(
+        {
+          website: csiItAssetWebsite(),
+          purchaseCost: csiItAssetPurchaseCost(),
+        },
+        identityParams,
+      );
+
+      await csiItAssetManagementPage.pickPurchaseDateToday();
+      await csiItAssetManagementPage.pickWarrantyOrEndDateOneMonthFromToday();
+      await csiItAssetManagementPage.saveNewAsset();
+
+      await csiItAssetManagementPage.expectAssetVisibleInGridAfterAcquisitionSort(displayName);
+    });
+  });
+});
+
+/**
+ * IA-015: IT Asset Manager edits an existing purchase order.
+ * Requires CSI_IT_ASSET_MANAGER_TEST_EMAIL login and CSI_IA015_PURCHASE_PURPOSE to identify the row.
+ * (recorded-steps/ITAssetManagement/IA-015.txt)
+ */
+test.describe('CSI · IT Asset Management — IT asset manager', () => {
+  test.describe.configure({ timeout: 300_000 });
+
+  test.beforeEach(async ({ csiLoginPage }) => {
+    if (!process.env.CSI_IT_ASSET_MANAGER_TEST_PASSWORD?.length) {
+      test.skip();
+      return;
+    }
+
+    await csiLoginPage.gotoLogin();
+    await csiLoginPage.signInWithEmailAndPassword(csiItAssetManagerTestEmail(), csiItAssetManagerTestPassword());
+    await csiLoginPage.expectOnHome();
+  });
+
+  /**
+   * IA-022: IT Asset Manager filters Client Machine grid by Asset State (In Use, Disposed),
+   * restores all filters, then sorts by Asset State both ways and verifies the total
+   * record count is unchanged after each sort.
+   * (recorded-steps/ITAssetManagement/IA-022.txt). Same login as IA-015.
+   */
+  test.describe('IA-022 filter and sort assets by state', () => {
+    test('IA-022', async ({ csiItAssetManagementPage }) => {
+      await csiItAssetManagementPage.openClientMachineListViaNav();
+
+      // Capture the unfiltered total immediately after the grid loads — before any
+      // scrolling or filtering — so both sort assertions compare against a stable baseline.
+      const totalRecordsBefore = await csiItAssetManagementPage.readAssetGridTotalRecordCount();
+
+      // Scroll to Asset State column and confirm it is present in the grid
+      await csiItAssetManagementPage.scrollToAndVerifyAssetStateColumnHeader();
+
+      // --- Filter 1: show In Use only ---
+      await csiItAssetManagementPage.openAssetStateColumnFilter();
+      await csiItAssetManagementPage.applyAssetStateColumnFilter(['In Use']);
+      await csiItAssetManagementPage.expectAllVisibleAssetStateCellsMatch('In Use');
+
+      // --- Filter 2: show Disposed only ---
+      await csiItAssetManagementPage.openAssetStateColumnFilter();
+      await csiItAssetManagementPage.applyAssetStateColumnFilter(['Disposed']);
+      await csiItAssetManagementPage.expectAllVisibleAssetStateCellsMatch('Disposed');
+
+      // --- Filter 3: restore all states ---
+      await csiItAssetManagementPage.openAssetStateColumnFilter();
+      await csiItAssetManagementPage.applyAssetStateColumnFilter(['Disposed', 'Expired', 'In Store', 'In Use']);
+
+      // --- Sort 1: first click → ascending; first row should be Disposed ---
+      await csiItAssetManagementPage.clickAssetStateColumnHeaderToSort();
+      await csiItAssetManagementPage.expectFirstAssetStateGridCellIs('Disposed');
+      expect(
+        await csiItAssetManagementPage.readAssetGridTotalRecordCount(),
+        'record count must not change after sort 1',
+      ).toBe(totalRecordsBefore);
+
+      // --- Sort 2: second click → descending; first row should be In Use ---
+      await csiItAssetManagementPage.clickAssetStateColumnHeaderToSort();
+      await csiItAssetManagementPage.expectFirstAssetStateGridCellIs('In Use');
+      expect(
+        await csiItAssetManagementPage.readAssetGridTotalRecordCount(),
+        'record count must not change after sort 2',
+      ).toBe(totalRecordsBefore);
+    });
+  });
+
+  /**
+   * IA-017: IT Asset Manager selects the first 10 assets on the Desktop Computers tab,
+   * opens Bulk Edit, toggles each asset's OS Version between 'Windows 11 24H2' and '11',
+   * saves, then verifies each row shows the updated value.
+   * (recorded-steps/ITAssetManagement/IA-017.txt). Same login as IA-015 and IA-022.
+   */
+  test.describe('IA-017 bulk update OS version', () => {
+    test('IA-017', async ({ csiItAssetManagementPage }) => {
+      await csiItAssetManagementPage.openClientMachineListViaNav();
+
+      // Read first 10 Asset IDs for post-save verification (grid at left scroll, Asset ID column visible)
+      const assetIds = await csiItAssetManagementPage.readClientMachineGridFirstNAssetIds(10);
+
+      // Check the row header checkboxes for the first 10 rows
+      await csiItAssetManagementPage.selectClientMachineGridFirstNRows(10);
+
+      // Open bulk edit form and wait for all 10 panels to render
+      await csiItAssetManagementPage.clickBulkEditAndWaitForForm(10);
+
+      // Toggle OS Version for each of the 10 panels; track new values for assertion
+      const newOsVersions = await csiItAssetManagementPage.fillBulkEditOsVersionToggle(10);
+
+      await csiItAssetManagementPage.saveBulkEditAndWaitForGrid();
+
+      // Verify updated OS Version in the grid by row position (same sort order after save)
+      await csiItAssetManagementPage.verifyOsVersionForFirstNRows(newOsVersions);
+    });
+  });
+
+  test.describe('IA-015 edit existing purchase order', () => {
+    test('IA-015', async ({ csiItAssetManagementPage }) => {
+      await csiItAssetManagementPage.gotoItAssetPurchaseListUrl();
+
+      // Read the first row's state at runtime — Purpose is the runtime identifier for this test run
+      const preState = await csiItAssetManagementPage.readFirstPurchaseGridRowState();
+      const { purpose } = preState;
+
+      await csiItAssetManagementPage.clickEditOnPurchaseGridRowByPurpose(purpose);
+      await csiItAssetManagementPage.waitForPurchaseEditFormReady();
+
+      // Swap supplier by position (1st ↔ 2nd); add options via popup if fewer than 2 exist
+      const newSupplierName = await csiItAssetManagementPage.swapPurchaseEditSupplierAndGetNewName();
+
+      // Delete first doc if 3 are present; otherwise upload Test Quotation.pdf
+      const newDocCount = await csiItAssetManagementPage.countAndHandlePurchaseDocuments(ia011QuotationPdfPath);
+
+      await csiItAssetManagementPage.clickPurchaseWizardNext();
+      await csiItAssetManagementPage.clickPurchaseWizardSearchAsset();
+      await csiItAssetManagementPage.selectFirstPurchaseWizardAssetRow();
+      await csiItAssetManagementPage.clickPurchaseWizardNext();
+      await csiItAssetManagementPage.clickPurchaseWizardSave();
+
+      await csiItAssetManagementPage.expectPurchaseGridRowAfterEdit(
+        purpose,
+        newSupplierName,
+        newDocCount,
+        preState.linkedCount + 1,
+      );
     });
   });
 });

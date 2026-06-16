@@ -553,3 +553,21 @@ export function csiCustomOrgOwnerTestPassword(): string {
   }
   return p;
 }
+
+/** `CSI_IT_ASSET_MANAGER_TEST_EMAIL` — IT Asset Manager role account for IA-015 and related tests. */
+export function csiItAssetManagerTestEmail(): string {
+  const e = process.env.CSI_IT_ASSET_MANAGER_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_IT_ASSET_MANAGER_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiItAssetManagerTestEmail}. */
+export function csiItAssetManagerTestPassword(): string {
+  const p = process.env.CSI_IT_ASSET_MANAGER_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_IT_ASSET_MANAGER_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
