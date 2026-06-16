@@ -70,3 +70,27 @@ export function csiTr029VideoUrl(): string {
     ? url
     : 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4';
 }
+
+/**
+ * TR-017 — existing distribution (with missed users) whose schedule is extended.
+ * Environment-specific; must match a distribution already present on the test env.
+ */
+export function csiTr017MissedDistributionName(): string {
+  const name = process.env.CSI_TR017_MISSED_DISTRIBUTION_NAME?.trim();
+  if (!name) {
+    throw new Error('Set CSI_TR017_MISSED_DISTRIBUTION_NAME in the environment (see .env.example).');
+  }
+  return name;
+}
+
+/** TR-017 — first missed course title in the distribution (default Advanced Phishing). */
+export function csiTr017MissedCourseOne(): string {
+  const name = process.env.CSI_TR017_MISSED_COURSE_1?.trim();
+  return name && name.length > 0 ? name : 'Advanced Phishing';
+}
+
+/** TR-017 — second missed course title in the distribution (default AI Vishing). */
+export function csiTr017MissedCourseTwo(): string {
+  const name = process.env.CSI_TR017_MISSED_COURSE_2?.trim();
+  return name && name.length > 0 ? name : 'AI Vishing';
+}

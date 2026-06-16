@@ -173,7 +173,53 @@ export class CsiTrainingPage extends BasePage {
     await expect(triggers[0]).toBeVisible({ timeout: 10_000 });
   }
 
-  /** `courseSlotIndex`: 0 = first `Search...` combobox, 1 = second. */
+
+  /**
+   * TR-024: Opens the first course Search... combobox, types the known course
+   * title into the VirtualSelect internal search box to filter the list, then
+   * clicks the matching option. Use this instead of selectCourseByVirtualSelectSearch
+   * when the exact course title is already known, because VirtualSelect only
+   * renders a visible subset of options and won't show an item unless you
+   * type to filter for it.
+   */
+  async searchAndSelectDistributionCourseByTitle(courseTitle: string) {
+    await this.waitForCourseSelectionStepReady();
+
+    for (let attempt = 0; attempt < COURSE_SEARCH_MAX_ATTEMPTS; attempt += 1) {
+      await this.openCourseSearchCombobox(0);
+
+      const searchBox = this.page.getByRole('textbox', { name: 'Search' });
+      const searchBoxVisible = await searchBox
+        .waitFor({ state: 'visible', timeout: 5_000 })
+        .then(() => true)
+        .catch(() => false);
+
+      if (!searchBoxVisible) {
+        await this.page.keyboard.press('Escape').catch(() => {});
+        await this.safeSleep(300);
+        continue;
+      }
+
+      await searchBox.fill(courseTitle);
+
+      const option = this.page.getByRole('option', { name: courseTitle });
+      const optionVisible = await option
+        .waitFor({ state: 'visible', timeout: 5_000 })
+        .then(() => true)
+        .catch(() => false);
+
+      if (optionVisible) {
+        await option.click();
+        return;
+      }
+
+      await this.page.keyboard.press('Escape').catch(() => {});
+      await this.safeSleep(300);
+    }
+
+    throw new Error(`TR-024: course dropdown did not show option after search: ${courseTitle}`);
+  }
+
   async selectCourseByVirtualSelectSearch(courseName: string, courseSlotIndex: number) {
     await this.waitForCourseSelectionStepReady();
 
@@ -663,6 +709,211 @@ export class CsiTrainingPage extends BasePage {
     });
   }
 
+  // ── TR-015: Training Admin sends manual reminder ──────────────────────────
+
+  /**
+   * TR-015: Navigates to Course Distribution and double-clicks the Distribution
+   * View radio (matching the recorded dblclick behaviour) so the Distribution
+   * Grid loads with the existing distributions.
+   */
+  async openCourseDistributionViewTab() {
+    await this.page.goto(`${CSI_BASE_URL}/CourseDistribution`);
+    await expect(this.distributionViewRadio).toBeVisible({ timeout: 30_000 });
+    await this.distributionViewRadio.dblclick();
+    // Wait for at least one distribution row to appear before proceeding
+    await expect(
+      this.page.getByRole('grid').getByRole('row').nth(1),
+    ).toBeVisible({ timeout: 30_000 });
+  }
+
+  /**
+   * TR-015: Clicks the Action cell (ellipsis popover) of the first row in the
+   * Distribution View grid, then clicks "View Detail" from the opened popover.
+   * The Action cell is the last gridcell in the first data row — matched by
+   * empty text content (no ID selector per refactor rule), consistent with the
+   * pattern used in searchDistributionAndOpenExtendSchedule.
+   */
+  async clickFirstDistributionRowActionAndViewDetail() {
+    const firstDataRow = this.page.getByRole('grid').getByRole('row').nth(1);
+    await expect(firstDataRow).toBeVisible({ timeout: 30_000 });
+    await firstDataRow.getByRole('gridcell').filter({ hasText: /^$/ }).click();
+
+    const viewDetailLink = this.page.getByRole('link', { name: /View Detail/ });
+    await expect(viewDetailLink).toBeVisible({ timeout: 15_000 });
+    await viewDetailLink.click();
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  /**
+   * TR-015: On the distribution detail page, waits for the "Action" section
+   * heading to confirm the page has loaded, clicks the "Send Reminder Email"
+   * link (opens the reminder modal), then clicks the "Send Reminder Email"
+   * confirm button, and asserts the "Successfully sent email" success message.
+   */
+  async sendManualReminderEmailAndExpectSuccess() {
+    // "Action" is rendered as a div.btn-primary inside a [data-popover] trigger,
+    // not a <button>, so getByRole('button') cannot reach it.
+    // Scope to the .popover-top that contains the Action label to avoid ID selectors.
+    const actionPopoverTrigger = this.page
+      .locator('.popover-top')
+      .filter({ has: this.page.locator('.btn-primary', { hasText: 'Action' }) });
+    await expect(actionPopoverTrigger).toBeVisible({ timeout: 30_000 });
+    await actionPopoverTrigger.click();
+
+    await this.page.getByRole('link', { name: /Send Reminder Email/ }).click();
+
+    const confirmButton = this.page.getByRole('button', { name: 'Send Reminder Email' });
+    await expect(confirmButton).toBeVisible({ timeout: 15_000 });
+    await confirmButton.click();
+
+    await expect(this.page.getByText('Successfully sent email')).toBeVisible({ timeout: 30_000 });
+  }
+
+  // ── TR-017: Training Admin extends schedule for missed users ──────────────
+
+  /**
+   * TR-017: On My Course, waits for the card list to load, opens the Missed tab,
+   * waits until at least one of the two missed courses is shown, then resolves the
+   * "current missed course": the only one visible, or — when both are visible — the
+   * one appearing first in the card list DOM order. Returns the resolved title.
+   */
+  async openMissedTabAndResolveCurrentMissedCourse(
+    courseOne: string,
+    courseTwo: string,
+  ): Promise<string> {
+    await this.openMyCourse();
+
+    const missedTab = this.page.getByRole('link', { name: 'Missed' });
+    await expect(missedTab).toBeVisible({ timeout: 60_000 });
+    await missedTab.click();
+
+    // Retry up to 3 times if the Missed tab content hasn't loaded.
+    // .MISSED badge is the reliable signal — same rationale as openMyCoursePassedTab:
+    // isVisible() checks instantly and ignores a timeout option, so waitFor is used.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const hasMissedContent = await this.page
+        .locator('.course-list .MISSED')
+        .first()
+        .waitFor({ state: 'visible', timeout: 3_000 })
+        .then(() => true)
+        .catch(() => false);
+      if (hasMissedContent) break;
+      await missedTab.click();
+    }
+
+    const courseOneText = this.page.getByText(courseOne, { exact: true });
+    const courseTwoText = this.page.getByText(courseTwo, { exact: true });
+    await expect(courseOneText.or(courseTwoText).first()).toBeVisible({ timeout: 60_000 });
+
+    const orderedTitles = await this.page
+      .locator('.course-list .course-card .ThemeGrid_Width8 span.bold.OSFillParent')
+      .allTextContents();
+
+    for (const raw of orderedTitles) {
+      const title = this.normalizeCourseTitle(raw);
+      if (title === courseOne || title === courseTwo) {
+        return title;
+      }
+    }
+
+    throw new Error(
+      `TR-017: neither "${courseOne}" nor "${courseTwo}" found in the Missed tab card list`,
+    );
+  }
+
+  /**
+   * TR-017: On the Course Distribution page, searches the distribution by name,
+   * switches to Distribution View, asserts the row is listed, opens its row action
+   * menu and clicks Extend Schedule. Search box is matched by role (no ID selector).
+   */
+  async searchDistributionAndOpenExtendSchedule(distributionName: string) {
+    const searchBox = this.page.getByRole('searchbox').first();
+    await expect(searchBox).toBeVisible({ timeout: 30_000 });
+    await searchBox.click();
+    await searchBox.fill(distributionName);
+
+    await this.openDistributionView();
+
+    const distributionRow = this.page.getByRole('row').filter({
+      has: this.page.getByRole('gridcell', { name: distributionName }),
+    });
+    await expect(distributionRow).toBeVisible({ timeout: 30_000 });
+
+    // The row's empty action gridcell holds the ellipsis action popover
+    await distributionRow.getByRole('gridcell').filter({ hasText: /^$/ }).click();
+
+    const extendScheduleLink = this.page.getByRole('link', { name: /Extend Schedule/ });
+    await expect(extendScheduleLink).toBeVisible({ timeout: 15_000 });
+    await extendScheduleLink.click();
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  /** TR-017: assert both missed courses are present on the Extend Schedule page (presence only). */
+  async expectExtendScheduleCoursesPresent(courseOne: string, courseTwo: string) {
+    await expect(this.page.getByRole('button', { name: courseOne })).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(this.page.getByRole('button', { name: courseTwo })).toBeVisible({
+      timeout: 30_000,
+    });
+  }
+
+  /**
+   * TR-017: Opens the given course's date picker, selects the earliest enabled day
+   * (nearest allowed date from today — past dates are disabled), confirms the
+   * extension, and waits for the success message.
+   */
+  async extendCourseEndDateToEarliestAllowed(courseName: string) {
+    const dateCombobox = this.page
+      .getByLabel(courseName)
+      .getByRole('combobox', { name: 'Select a date' });
+    await expect(dateCombobox).toBeVisible({ timeout: 30_000 });
+    await dateCombobox.click();
+
+    // Disabled days carry .flatpickr-disabled; the first non-disabled day in DOM
+    // order is the nearest allowed date from today.
+    const openCalendar = this.page.locator('.flatpickr-calendar.open');
+    await expect(openCalendar).toBeVisible({ timeout: 15_000 });
+    const earliestEnabledDay = openCalendar
+      .locator('.flatpickr-day:not(.flatpickr-disabled)')
+      .first();
+    await expect(earliestEnabledDay).toBeVisible({ timeout: 15_000 });
+    await earliestEnabledDay.click();
+
+    await this.page.getByRole('button', { name: 'Extend Schedule' }).click();
+
+    const confirmButton = this.page.getByRole('button', { name: 'Confirm' });
+    await expect(confirmButton).toBeVisible({ timeout: 15_000 });
+    await confirmButton.click();
+
+    await expect(this.page.getByText('Extended selected course end')).toBeVisible({
+      timeout: 30_000,
+    });
+  }
+
+  /** TR-017: navigate to My Course, click Ongoing with up to 3 retries at 3 s intervals, then assert the extended course is listed. */
+  async openOngoingTabAndExpectCourse(courseName: string) {
+    await this.openMyCourse();
+    const ongoingTab = this.page.getByRole('link', { name: 'Ongoing', exact: true });
+    await expect(ongoingTab).toBeVisible({ timeout: 60_000 });
+    await ongoingTab.click();
+
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const hasCard = await this.page
+        .locator('.course-list .course-card')
+        .first()
+        .waitFor({ state: 'visible', timeout: 3_000 })
+        .then(() => true)
+        .catch(() => false);
+      if (hasCard) break;
+      await ongoingTab.click();
+    }
+
+    await expect(this.page.getByText(courseName, { exact: true }).first()).toBeVisible({
+      timeout: 60_000,
+    });
+  }
+
   readonly exportCourseReportPdfButton = this.page.getByRole('button', { name: 'Export Page to PDF' });
 
   async openCourseReport() {
@@ -686,6 +937,40 @@ export class CsiTrainingPage extends BasePage {
     const downloadedPath = await download.path();
     expect(downloadedPath, 'course report PDF should be written to a temp path').toBeTruthy();
     return readFileSync(downloadedPath as string);
+  }
+
+  // ── TR-026: Super Admin views reports across orgs ─────────────────────────
+
+  /**
+   * TR-026: Opens the org VirtualSelect on the Course Report page, types to
+   * filter, and selects the matching org option. After selection the report
+   * data reloads; call downloadCourseReportPdf() next to wait for the export
+   * button to re-enable before downloading.
+   */
+  async selectOrgOnCourseReport(orgName: string) {
+    // Wait for the export button to be visible first — it is rendered as part of
+    // the same async load cycle as the org selector, so its visibility confirms
+    // the page chrome (including the VirtualSelect org dropdown) has been mounted.
+    await expect(this.exportCourseReportPdfButton).toBeVisible({ timeout: 60_000 });
+
+    const selectOrgTrigger = this.page.getByText('Select Organization', { exact: true });
+    await expect(selectOrgTrigger).toBeVisible({ timeout: 60_000 });
+    await selectOrgTrigger.click();
+
+    const searchBox = this.page.getByRole('textbox', { name: 'Search' });
+    await expect(searchBox).toBeVisible({ timeout: 10_000 });
+    await searchBox.fill(orgName);
+
+    const option = this.page.getByRole('option', { name: orgName });
+    await expect(option).toBeVisible({ timeout: 10_000 });
+    await option.click();
+  }
+
+  /** TR-026: Clears the org selector so a new org can be selected. */
+  async clearOrgSelectorOnCourseReport() {
+    const clearButton = this.page.getByRole('button', { name: 'Clear button' });
+    await expect(clearButton).toBeVisible({ timeout: 10_000 });
+    await clearButton.click();
   }
 
   readonly managerViewRadio = this.page.getByRole('radio', { name: 'Manager View' });
@@ -806,9 +1091,27 @@ export class CsiTrainingPage extends BasePage {
   async openMyCoursePassedTab() {
     await this.openMyCourse();
     const passedTab = this.page.getByRole('link', { name: 'Passed', exact: true });
-    await this.safeSleep(3000);
     await expect(passedTab).toBeVisible({ timeout: 60_000 });
     await passedTab.click();
+
+    // Retry up to 3 times if the Passed tab content hasn't loaded.
+    // Uses waitFor({ state: 'visible' }) rather than isVisible({ timeout }),
+    // because isVisible() checks instantaneously and ignores the timeout option —
+    // the loop would race through all retries before the tab has time to render.
+    // .COMPLETED is checked (not generic .course-card) because cards from the
+    // previously active tab remain in the DOM and would cause a generic card
+    // check to pass immediately.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const hasPassedContent = await this.page
+        .locator('.course-list .COMPLETED')
+        .first()
+        .waitFor({ state: 'visible', timeout: 3_000 })
+        .then(() => true)
+        .catch(() => false);
+      if (hasPassedContent) break;
+      await passedTab.click();
+    }
+
     await this.safeSleep(TR022_MY_COURSE_TAB_SETTLE_MS);
   }
 
@@ -1435,5 +1738,172 @@ export class CsiTrainingPage extends BasePage {
     await descEl!.click();
     await descEl!.fill(description);
     await descHandle.dispose();
+  }
+
+  // --- TR-032: Super Admin edits course ---
+
+  async openCourseEditFromCard(courseTitle: string) {
+    // Scope the "More Actions" click to the specific card that contains the course title
+    const courseCard = this.page.locator('.course-card').filter({
+      has: this.page.getByText(courseTitle, { exact: true }),
+    });
+    const moreActionsBtn = courseCard.getByText('More Actions', { exact: true });
+    await expect(moreActionsBtn).toBeVisible({ timeout: 15_000 });
+    await moreActionsBtn.click();
+
+    // Wait for the Edit entry in the submenu then click it (exact match avoids "Edit (courseEditNew)")
+    const editBtn = this.page.getByRole('button', { name: 'Edit', exact: true });
+    await expect(editBtn).toBeVisible({ timeout: 15_000 });
+    await editBtn.click();
+
+    // Wait for the edit form URL and the Language 1 accordion before interacting with fields
+    await this.page.waitForURL(/\/courseEdit/, { timeout: 30_000 });
+    await expect(this.page.locator('.lessonAccordion').first()).toBeVisible({ timeout: 15_000 });
+  }
+
+  async openLessonEditorFromEdit() {
+    const editLessonsBtn = this.page.getByRole('button', { name: 'Edit lessons' });
+    await expect(editLessonsBtn).toBeVisible({ timeout: 15_000 });
+    await editLessonsBtn.click();
+    // Confirm the lesson editor opened by waiting for the Quiz Title label
+    await expect(this.page.getByText('Quiz Title', { exact: true })).toBeVisible({
+      timeout: 15_000,
+    });
+  }
+
+  async updateQuizTitleOnly(newTitle: string) {
+    // Scope to the "1. QUIZ" region to avoid any stale or duplicate "Quiz Title" text
+    const quizAccordion = this.page.getByRole('region', { name: '1. QUIZ' });
+    const quizTitleLabel = quizAccordion.getByText('Quiz Title', { exact: true });
+    await expect(quizTitleLabel).toBeVisible({ timeout: 15_000 });
+    const titleHandle = await quizTitleLabel.evaluateHandle((labelEl) => {
+      let container: HTMLElement | null = labelEl.parentElement;
+      while (container) {
+        const input = container.querySelector(
+          'input[type="text"]',
+        ) as HTMLInputElement | null;
+        if (input) return input;
+        container = container.parentElement;
+      }
+      return null;
+    });
+    const titleEl = titleHandle.asElement();
+    expect(titleEl).not.toBeNull();
+    await titleEl!.click();
+    await titleEl!.fill(newTitle);
+    await titleHandle.dispose();
+  }
+
+  // ── TR-024: Completed course re-assigned ─────────────────────────────────
+
+  /**
+   * Navigates to My Course → Passed tab, waits for the first course card,
+   * verifies it carries a "Passed" status badge (no ID selector per refactor
+   * rule — scoped to `.course-list`), and returns the course title for reuse
+   * in the distribution step.
+   */
+  async openMyCoursePassedTabAndCaptureFirstCourseTitle(): Promise<string> {
+    await this.openMyCoursePassedTab();
+
+    const firstCard = this.page.locator('.course-list .course-card').first();
+    await expect(firstCard).toBeVisible({ timeout: 30_000 });
+
+    const titleSpan = firstCard.locator('span.bold.OSFillParent');
+    const courseTitle = (await titleSpan.textContent())?.trim() ?? '';
+
+    // Verify "Passed" badge in the same card without relying on an ID selector
+    await expect(firstCard.locator('.COMPLETED').getByText('Passed')).toBeVisible({
+      timeout: 10_000,
+    });
+
+    return courseTitle;
+  }
+
+  /**
+   * After the Passed tab is already open, asserts that the card for the given
+   * `courseTitle` is visible and its status badge reads "Passed".
+   * Scoped to `.course-list` to avoid any ID-based selectors.
+   */
+  async expectCourseOnPassedTabByTitle(courseTitle: string) {
+    const courseCard = this.page
+      .locator('.course-list .course-card')
+      .filter({ has: this.page.locator('span.bold.OSFillParent').filter({ hasText: courseTitle }) });
+
+    await expect(courseCard).toBeVisible({ timeout: 30_000 });
+    await expect(courseCard.locator('.COMPLETED').getByText('Passed')).toBeVisible({
+      timeout: 10_000,
+    });
+  }
+
+  // ── TR-020: User self-registers from library ──────────────────────────────
+
+  /** Navigate to the course library and wait for cards to load. */
+  async openCourseLibraryPage() {
+    await this.page.goto(`${CSI_BASE_URL}/courseLibrary`);
+    await expect(this.page.locator('.course-card').first()).toBeVisible({ timeout: 30_000 });
+  }
+
+  /**
+   * Finds the first course card with a "Get Course" button (paginating if
+   * all visible courses on the current page are already registered), stores
+   * the course title, clicks the button, and returns the title for later
+   * assertion (recorded-steps/Training/TR-020.txt).
+   */
+  async findAndClickGetCourseCourse(): Promise<string> {
+    // Safe upper-bound; the real max comes from the last pagination button
+    const MAX_PAGES = 20;
+
+    for (let i = 0; i < MAX_PAGES; i++) {
+      await expect(this.page.locator('.course-card').first()).toBeVisible({ timeout: 15_000 });
+
+      const firstUnregisteredCard = this.page
+        .locator('.course-card')
+        .filter({ has: this.page.getByRole('button', { name: 'Get Course' }) })
+        .first();
+
+      const found = await firstUnregisteredCard
+        .isVisible({ timeout: 2_000 })
+        .catch(() => false);
+
+      if (found) {
+        // Title lives in the card header (white bold text, 20 px)
+        const titleSpan = firstUnregisteredCard.locator('.card-background-content span.bold.OSFillParent');
+        const courseTitle = (await titleSpan.textContent())?.trim() ?? '';
+        await firstUnregisteredCard.getByRole('button', { name: 'Get Course' }).click();
+        return courseTitle;
+      }
+
+      // Every course on this page is already registered — try the next page
+      const nextPageBtn = this.page.getByRole('button', { name: /go to next page/i });
+      const isNextEnabled = await nextPageBtn.isEnabled().catch(() => false);
+      if (!isNextEnabled) break;
+      await nextPageBtn.click();
+      await this.safeSleep(1_500);
+    }
+
+    throw new Error('TR-020: no unregistered course found in course library after checking all pages');
+  }
+
+  /**
+   * Verifies the "successfully registered" success message and clicks
+   * "Go to My Course" to navigate to the My Course page.
+   */
+  async expectCourseRegistrationSuccessAndGoToMyCourse() {
+    await expect(
+      this.page.getByText('You have successfully registered to this course.'),
+    ).toBeVisible({ timeout: 30_000 });
+    await this.page.getByRole('button', { name: 'Go to My Course' }).click();
+  }
+
+  /**
+   * After landing on the My Course page, clicks the "Ongoing" tab and
+   * verifies that the given course title is listed (scrolling is handled
+   * automatically by Playwright's visibility assertion).
+   */
+  async clickOngoingTabAndExpectCourseTitle(courseTitle: string) {
+    const ongoingLink = this.page.getByRole('link', { name: 'Ongoing', exact: true });
+    await expect(ongoingLink).toBeVisible({ timeout: 30_000 });
+    await ongoingLink.click();
+    await expect(this.page.getByText(courseTitle, { exact: true })).toBeVisible({ timeout: 30_000 });
   }
 }
