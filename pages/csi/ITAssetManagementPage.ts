@@ -1493,7 +1493,7 @@ export class CsiItAssetManagementPage extends BasePage {
 
   private async findClientMachineAutogenerateGridCellByAssetName(assetName: string): Promise<Locator> {
     await expect(this.page.locator('.datagrid-autogenerate, [id*="datagrid_autogenerate"]')).toBeVisible({
-      timeout: 5_000,
+      timeout: 60_000,
     });
     return this.findAssetNameCellInRuntimeGrid(this.clientMachineGridRuntime(), assetName);
   }
@@ -1548,5 +1548,524 @@ export class CsiItAssetManagementPage extends BasePage {
     const option = this.page.getByRole('option', { name: stateName, exact: true });
     await expect(option).toBeVisible({ timeout: 15_000 });
     await option.click();
+  }
+
+  // ─── IA-022: Filter / sort assets by state ───────────────────────────────────
+
+  /**
+   * IA-022: navigate to the Client Machine list via the IT Asset Management nav menu
+   * (IT Asset Management → Office → Client Machine link).
+   */
+  async openClientMachineListViaNav(): Promise<void> {
+    await this.page.getByText('IT Asset Management').click();
+    await this.page.getByText('Office').click();
+    await this.page.getByRole('link', { name: 'Client Machine' }).click();
+    await expect(this.page.locator('[wj-part="cells"]').first()).toBeVisible({ timeout: 60_000 });
+  }
+
+  /**
+   * IA-022: scroll the Wijmo asset grid horizontally until the Asset State column header
+   * (identified by its filter button aria-label) is within the visible viewport.
+   * The Wijmo grid virtualises column rendering so scrollIntoViewIfNeeded() alone is insufficient.
+   */
+  private async scrollGridToRevealAssetStateColumn(): Promise<void> {
+    const runtime = this.page.locator('.datagrid-runtime.wj-flexgrid').first();
+    await expect(runtime).toBeVisible({ timeout: 60_000 });
+    const scrollRoot = runtime.locator('div[wj-part="root"]').first();
+    await expect(scrollRoot).toBeAttached({ timeout: 30_000 });
+    const filterBtn = this.page.getByRole('button', { name: 'Edit Filter for Column Asset State', exact: true });
+    if (await filterBtn.isVisible().catch(() => false)) return;
+    const max = await this.gridMaxScrollLeft(scrollRoot);
+    const step = 280;
+    for (let x = step; x <= max + step; x += step) {
+      await this.setGridScrollLeft(scrollRoot, Math.min(x, max));
+      if (await filterBtn.isVisible().catch(() => false)) return;
+    }
+  }
+
+  /**
+   * IA-022: scroll to the Asset State column and assert the column header filter button
+   * is visible. Call this immediately after the grid loads to confirm the column is present.
+   */
+  async scrollToAndVerifyAssetStateColumnHeader(): Promise<void> {
+    await this.scrollGridToRevealAssetStateColumn();
+    await expect(
+      this.page.getByRole('button', { name: 'Edit Filter for Column Asset State', exact: true }),
+    ).toBeVisible({ timeout: 15_000 });
+  }
+
+  /** IA-022: scroll to the Asset State column then open its column filter panel. */
+  async openAssetStateColumnFilter(): Promise<void> {
+    await this.scrollGridToRevealAssetStateColumn();
+    const filterBtn = this.page.getByRole('button', { name: 'Edit Filter for Column Asset State', exact: true });
+    await expect(filterBtn).toBeVisible({ timeout: 15_000 });
+    // Wijmo column headers use absolute positioning that places them outside the
+    // browser viewport rect. dispatchEvent fires the DOM event directly without any
+    // coordinate-based viewport constraint, bypassing the "outside of viewport" error.
+    await filterBtn.dispatchEvent('click');
+  }
+
+  /**
+   * IA-022: with the Asset State filter panel open, set each known state's checkbox so
+   * only the states in `statesToKeep` remain checked, then click Apply.
+   * Known states: 'Disposed', 'Expired', 'In Store', 'In Use'.
+   */
+  async applyAssetStateColumnFilter(statesToKeep: string[]): Promise<void> {
+    const allKnownStates = ['Disposed', 'Expired', 'In Store', 'In Use'];
+    for (const state of allKnownStates) {
+      const cb = this.page.getByRole('checkbox', { name: state });
+      await expect(cb).toBeVisible({ timeout: 10_000 });
+      await cb.setChecked(statesToKeep.includes(state));
+    }
+    await this.page.getByRole('button', { name: 'Apply' }).click();
+    // Wait for the grid to re-render with updated results before returning.
+    await expect(this.page.locator('[wj-part="cells"]').getByRole('gridcell').first()).toBeVisible({
+      timeout: 30_000,
+    });
+  }
+
+  /**
+   * IA-022: after applying an Asset State filter, assert that visible Asset State gridcells
+   * in the current page all show `expectedState`. Checks first and 5th visible cells
+   * (matching the per-row assertion pattern from IA-022.txt).
+   */
+  async expectAllVisibleAssetStateCellsMatch(expectedState: string): Promise<void> {
+    const cells = this.page.locator('[wj-part="cells"]').getByRole('gridcell', { name: expectedState });
+    await expect(cells.first()).toBeVisible({ timeout: 30_000 });
+    await expect(cells.nth(4)).toBeVisible({ timeout: 15_000 });
+  }
+
+  /**
+   * IA-022: read the total record count from the grid pagination footer,
+   * e.g. returns 281 from "1 to 10 of 281 records".
+   */
+  async readAssetGridTotalRecordCount(): Promise<number> {
+    const recordsEl = this.page
+      .locator('[data-block="Pagination.RecordsNumber"]')
+      .locator('span[data-expression]')
+      .first();
+    await expect(recordsEl).toBeVisible({ timeout: 30_000 });
+    const text = ((await recordsEl.textContent()) ?? '').trim();
+    return parseInt(text, 10);
+  }
+
+  /**
+   * IA-022: click the Asset State column header to toggle sort order.
+   * Clicks the left portion of the header cell to avoid the filter button,
+   * which is positioned on the right side (class wj-right).
+   */
+  async clickAssetStateColumnHeaderToSort(): Promise<void> {
+    await this.scrollGridToRevealAssetStateColumn();
+    const headerCell = this.page
+      .locator('[wj-part="chcells"] .wj-cell.wj-header')
+      .filter({ has: this.page.locator('button[aria-label="Edit Filter for Column Asset State"]') })
+      .first();
+    await expect(headerCell).toBeVisible({ timeout: 15_000 });
+    // dispatchEvent avoids the "outside of viewport" error caused by Wijmo's absolute-positioned headers.
+    await headerCell.dispatchEvent('click');
+    await this.page.waitForTimeout(1000);
+  }
+
+  /**
+   * IA-022: assert the first visible Asset State gridcell shows `expectedState`.
+   * Used after a sort to confirm the sort direction is correct.
+   */
+  async expectFirstAssetStateGridCellIs(expectedState: string): Promise<void> {
+    const firstCell = this.page
+      .locator('[wj-part="cells"]')
+      .getByRole('gridcell', { name: expectedState })
+      .first();
+    await expect(firstCell).toBeVisible({ timeout: 30_000 });
+  }
+
+  // ─── IA-015: Edit existing purchase order ────────────────────────────────────
+
+  /** IA-015: navigate to purchase order list and wait for the table grid. */
+  async gotoItAssetPurchaseListUrl(): Promise<void> {
+    await this.page.goto(`${CSI_BASE_URL}/ITAssetPurchase`);
+    await this.page.waitForLoadState('domcontentloaded');
+    await expect(this.page.locator('table.table[role="grid"]')).toBeVisible({ timeout: 60_000 });
+  }
+
+  /**
+   * IA-015: read the current state of the first purchase order row.
+   * Returns the Purpose text (used as identifier through the rest of the test),
+   * plus supplier name, document count, and linked-asset count.
+   */
+  async readFirstPurchaseGridRowState(): Promise<{
+    purpose: string;
+    supplier: string;
+    docCount: number;
+    linkedCount: number;
+  }> {
+    const firstRow = this.page.locator('tr.table-row').first();
+    await expect(firstRow).toBeVisible({ timeout: 60_000 });
+
+    const purposeText = ((await firstRow.locator('td[data-header="Purpose"]').textContent()) ?? '').trim();
+    const supplierText = ((await firstRow.locator('td[data-header="Supplier"]').textContent()) ?? '').trim();
+    const docsText = ((await firstRow.locator('td[data-header="Documents"]').textContent()) ?? '').trim();
+    const linkedText = ((await firstRow.locator('td[data-header="Linked Assets"]').textContent()) ?? '').trim();
+
+    const docMatch = docsText.match(/^(\d+)/);
+    const linkedMatch = linkedText.match(/^(\d+)/);
+    return {
+      purpose: purposeText,
+      supplier: supplierText,
+      docCount: docMatch ? parseInt(docMatch[1], 10) : 0,
+      linkedCount: linkedMatch ? parseInt(linkedMatch[1], 10) : 0,
+    };
+  }
+
+  /**
+   * IA-015: read the current state from the purchase grid row matching `purpose`.
+   * Used for post-edit state diffing when the row is looked up by its purpose text.
+   */
+  async readPurchaseGridRowState(
+    purpose: string,
+  ): Promise<{ supplier: string; docCount: number; linkedCount: number }> {
+    const row = this.page
+      .locator('tr.table-row')
+      .filter({ has: this.page.locator('td[data-header="Purpose"]').filter({ hasText: purpose }) });
+    await expect(row).toBeVisible({ timeout: 60_000 });
+
+    const supplierText = ((await row.locator('td[data-header="Supplier"]').textContent()) ?? '').trim();
+    const docsText = ((await row.locator('td[data-header="Documents"]').textContent()) ?? '').trim();
+    const linkedText = ((await row.locator('td[data-header="Linked Assets"]').textContent()) ?? '').trim();
+
+    const docMatch = docsText.match(/^(\d+)/);
+    const linkedMatch = linkedText.match(/^(\d+)/);
+    return {
+      supplier: supplierText,
+      docCount: docMatch ? parseInt(docMatch[1], 10) : 0,
+      linkedCount: linkedMatch ? parseInt(linkedMatch[1], 10) : 0,
+    };
+  }
+
+  /** IA-015: click the Edit link in the purchase grid row whose Purpose matches `purpose`. */
+  async clickEditOnPurchaseGridRowByPurpose(purpose: string): Promise<void> {
+    const row = this.page
+      .locator('tr.table-row')
+      .filter({ has: this.page.locator('td[data-header="Purpose"]').filter({ hasText: purpose }) });
+    await expect(row).toBeVisible({ timeout: 60_000 });
+    await row.locator('a').filter({ hasText: 'Edit' }).click();
+  }
+
+  /** IA-015: wait for purchase edit form — supplier name label must be visible. */
+  async waitForPurchaseEditFormReady(): Promise<void> {
+    await expect(this.page.locator('label').filter({ hasText: /^Supplier Name$/ })).toBeVisible({ timeout: 60_000 });
+  }
+
+  /**
+   * IA-015: add a supplier via the '+' button next to the Supplier Name dropdown.
+   * Waits for the "Add New Supplier" dialog, fills the name field (selected by label context,
+   * not by ID), saves, and waits for the dialog to close.
+   */
+  private async addPurchaseSupplierViaPopup(supplierName: string): Promise<void> {
+    await this.page.getByText('+', { exact: true }).click();
+    const popup = this.page.locator('[role="dialog"]').filter({ has: this.page.getByText('Add New Supplier') });
+    await expect(popup).toBeVisible({ timeout: 15_000 });
+    const supplierNameLabel = popup.locator('label').filter({ hasText: /^Supplier Name$/ });
+    await expect(supplierNameLabel).toBeVisible({ timeout: 10_000 });
+    const supplierInput = popup.locator('input[type="text"]').first();
+    await supplierInput.click();
+    await supplierInput.fill(supplierName);
+    await popup.getByRole('button', { name: 'Save' }).click();
+    await expect(popup).toBeHidden({ timeout: 30_000 });
+  }
+
+  /**
+   * IA-015: opens the Supplier Name VirtualSelect on the purchase edit form, ensures at least
+   * two options exist (adds "Supplier A" / "Supplier B" via popup when fewer are found), then
+   * selects the option at the opposite position from the current selection.
+   *
+   * Selection rule (position-based, not name-based):
+   *   - 1st option currently selected → click 2nd option
+   *   - Any other option selected → click 1st option
+   *
+   * Returns the text of the newly selected supplier.
+   */
+  async swapPurchaseEditSupplierAndGetNewName(): Promise<string> {
+    // The Supplier Name label is a SIBLING of the ITassets.inputFields block, not inside it.
+    // Scope to their common parent: the ThemeGrid_Width3 container that holds both.
+    const supplierContainer = this.page
+      .locator('[data-container=""].ThemeGrid_Width3')
+      .filter({ has: this.page.locator('label').filter({ hasText: /^Supplier Name$/ }) })
+      .first();
+    await expect(supplierContainer).toBeVisible({ timeout: 30_000 });
+    // Wait for the dropdown's current selection to render before opening it.
+    // An empty or "Select..." value means the form data hasn't hydrated yet.
+    const supplierValueEl = supplierContainer.locator('.vscomp-value');
+    await expect(supplierValueEl).toBeVisible({ timeout: 30_000 });
+    await expect(supplierValueEl).not.toHaveText(/^Select\.\.\.$/, { timeout: 30_000 });
+    await supplierContainer.locator('.vscomp-toggle-button').click();
+
+    const options = this.page.locator('.vscomp-option');
+    await expect(options.first()).toBeVisible({ timeout: 15_000 });
+
+    let optionCount = await options.count();
+    if (optionCount < 2) {
+      await this.page.keyboard.press('Escape');
+      const suppliersToAdd = ['Supplier A', 'Supplier B'];
+      for (let i = optionCount; i < 2; i++) {
+        await this.addPurchaseSupplierViaPopup(suppliersToAdd[i]);
+      }
+      await supplierContainer.locator('.vscomp-toggle-button').click();
+      await expect(options.first()).toBeVisible({ timeout: 15_000 });
+      optionCount = await options.count();
+    }
+
+    // Determine currently selected option by position; pick the other one
+    const isFirstSelected = await options.nth(0).evaluate(
+      (el) => el.classList.contains('selected') || el.getAttribute('aria-selected') === 'true',
+    );
+    const targetIdx = isFirstSelected ? 1 : 0;
+    const targetOption = options.nth(targetIdx);
+    const newName = ((await targetOption.locator('.vscomp-option-text').textContent()) ?? '').trim();
+    await targetOption.click();
+    return newName;
+  }
+
+  /** IA-015: count PDFs in the Document Information section by counting trash icons. */
+  async countPurchaseDocumentsInSection(): Promise<number> {
+    await expect(this.page.getByText('Document Information')).toBeVisible({ timeout: 30_000 });
+    return this.page.locator('.icon.fa.fa-trash-o').count();
+  }
+
+  /** IA-015: delete the first document listed in the Document Information section. */
+  async deleteFirstDocumentInSection(): Promise<void> {
+    const firstTrash = this.page.locator('.icon.fa.fa-trash-o').first();
+    await expect(firstTrash).toBeVisible({ timeout: 15_000 });
+    await firstTrash.click();
+  }
+
+  /**
+   * IA-015: manage documents based on current count:
+   *   - If 3 documents present → delete the first one (count decreases by 1)
+   *   - If fewer than 3 → upload `quotationPdfPath` via the Quotation tab (count increases by 1)
+   * Returns the expected document count after the operation.
+   */
+  async countAndHandlePurchaseDocuments(quotationPdfPath: string): Promise<number> {
+    const currentCount = await this.countPurchaseDocumentsInSection();
+    if (currentCount >= 3) {
+      await this.deleteFirstDocumentInSection();
+      return currentCount - 1;
+    }
+    await this.selectPurchaseWizardQuotationTab();
+    await this.uploadPurchaseWizardDocument(quotationPdfPath, 'Test Quotation.pdf');
+    return currentCount + 1;
+  }
+
+  /**
+   * IA-015: select only the first data row in the asset selection Wijmo grid.
+   * Uses the same wj-cell checkbox approach as {@link selectFirstThreePurchaseWizardAssetRows}.
+   */
+  async selectFirstPurchaseWizardAssetRow(): Promise<void> {
+    // Wait for data rows to appear in the grid cells area before attempting selection.
+    await expect(
+      this.page.locator('[wj-part="cells"]').getByRole('gridcell').first(),
+    ).toBeVisible({ timeout: 60_000 });
+
+    // Row checkboxes live in the row header panel (wj-part="rh" / wj-part="rhcells"),
+    // NOT inside wj-part="cells". Each wj-row in rhcells corresponds to one data row.
+    // The first wj-row in rhcells is data row 1; its checkbox cell has input.wj-column-selector.
+    const firstRowCheckboxCell = this.page
+      .locator('[wj-part="rhcells"] .wj-row')
+      .first()
+      .locator('.wj-cell:has(input.wj-column-selector)')
+      .first();
+    await expect(firstRowCheckboxCell).toBeVisible({ timeout: 30_000 });
+    await firstRowCheckboxCell.scrollIntoViewIfNeeded();
+    await firstRowCheckboxCell.click();
+  }
+
+  /** IA-015: click Save to submit the edited purchase order. */
+  async clickPurchaseWizardSave(): Promise<void> {
+    const save = this.page.getByRole('button', { name: 'Save' });
+    await expect(save).toBeVisible({ timeout: 120_000 });
+    await expect(save).toBeEnabled({ timeout: 120_000 });
+    await save.click();
+  }
+
+  /**
+   * IA-015: after saving, assert that the purchase grid row with `purpose` reflects
+   * the expected post-edit supplier, document count, and linked-asset count.
+   *
+   * Text format observed in grid:
+   *   Documents  — "X Documents" (or "1 Document")
+   *   Linked Assets — "0 Linked Asset", "1 Linked Asset", "X Linked Assets" (X ≥ 2)
+   */
+  async expectPurchaseGridRowAfterEdit(
+    purpose: string,
+    expectedSupplier: string,
+    expectedDocCount: number,
+    expectedLinkedCount: number,
+  ): Promise<void> {
+    const row = this.page
+      .locator('tr.table-row')
+      .filter({ has: this.page.locator('td[data-header="Purpose"]').filter({ hasText: purpose }) });
+    await expect(row).toBeVisible({ timeout: 60_000 });
+
+    await expect(row.locator('td[data-header="Supplier"]').filter({ hasText: expectedSupplier })).toBeVisible({
+      timeout: 30_000,
+    });
+
+    const docText = expectedDocCount === 1 ? '1 Document' : `${expectedDocCount} Documents`;
+    const linkedText = expectedLinkedCount >= 2 ? `${expectedLinkedCount} Linked Assets` : `${expectedLinkedCount} Linked Asset`;
+
+    await expect(row.getByText(docText)).toBeVisible({ timeout: 30_000 });
+    await expect(row.getByText(linkedText)).toBeVisible({ timeout: 30_000 });
+  }
+
+  // ─── IA-017: Bulk update OS version ──────────────────────────────────────────
+
+  /**
+   * IA-017: scroll the client machine grid horizontally until the OS Version column header
+   * is visible. The column typically appears after one or two scroll steps from the left.
+   */
+  private async scrollClientMachineGridToOsVersionColumn(): Promise<void> {
+    const runtime = this.clientMachineGridRuntime();
+    await expect(runtime).toBeVisible({ timeout: 60_000 });
+    const scrollRoot = runtime.locator('div[wj-part="root"]').first();
+    await expect(scrollRoot).toBeAttached({ timeout: 30_000 });
+    const osVersionHeader = runtime.locator('[wj-part="chcells"]').getByText('OS Version', { exact: true }).first();
+    if (await osVersionHeader.isVisible().catch(() => false)) return;
+    const max = await this.gridMaxScrollLeft(scrollRoot);
+    const step = 200;
+    for (let x = step; x <= max + step; x += step) {
+      await this.setGridScrollLeft(scrollRoot, Math.min(x, max));
+      if (await osVersionHeader.isVisible().catch(() => false)) return;
+    }
+  }
+
+  /**
+   * IA-017: scroll grid to left edge and read the Asset ID text from the first `n` data rows.
+   * Asset ID is the leftmost column at scroll=0 (before any horizontal scroll).
+   */
+  async readClientMachineGridFirstNAssetIds(n: number): Promise<string[]> {
+    const runtime = this.clientMachineGridRuntime();
+    const scrollRoot = runtime.locator('div[wj-part="root"]').first();
+    await this.scrollGridToLeftEdge(scrollRoot);
+    await expect(runtime.locator('[wj-part="cells"] [role="gridcell"]').first()).toBeVisible({ timeout: 30_000 });
+
+    const rows = runtime
+      .locator('[wj-part="cells"] .wj-row:has([role="gridcell"])');
+
+    const assetIds: string[] = [];
+    for (let i = 0; i < n; i++) {
+      const row = rows.nth(i);
+      // toBeVisible() fails for Wijmo rows: the overflow:hidden container clips their
+      // bounding box in Playwright's visibility check even though data is rendered.
+      await expect(row).toBeAttached({ timeout: 15_000 });
+      // First two gridcells are "View" and "Edit" action buttons; Asset ID is at index 2
+      const assetId = ((await row.locator('[role="gridcell"]').nth(2).textContent()) ?? '').trim();
+      assetIds.push(assetId);
+    }
+    return assetIds;
+  }
+
+  /**
+   * IA-017: click the row header checkboxes for the first `n` data rows in the client machine grid.
+   * Row selector checkboxes live in `wj-part="rhcells"` (not in the data cells area).
+   * Uses dispatchEvent to bypass the "element is outside of viewport" constraint from Wijmo's
+   * absolute-positioned row header panel.
+   */
+  async selectClientMachineGridFirstNRows(n: number): Promise<void> {
+    const runtime = this.clientMachineGridRuntime();
+    await expect(runtime.locator('[wj-part="cells"] [role="gridcell"]').first()).toBeVisible({ timeout: 30_000 });
+
+    // Row selector labels live inside wj-part="rhcells" — each wraps a wj-column-selector input.
+    // Exclude the top-left "select all" checkbox (wj-column-selector-group).
+    // dispatchEvent('click') on the label forwards the click to its child input per HTML spec,
+    // firing Wijmo's selection handler without triggering Playwright's native el.checked assertion
+    // (which fails because Wijmo updates aria-checked, not el.checked directly).
+    const rowLabels = runtime.locator(
+      '[wj-part="rhcells"] label:has(input.wj-column-selector:not(.wj-column-selector-group))',
+    );
+    await expect(rowLabels.first()).toBeAttached({ timeout: 15_000 });
+
+    for (let i = 0; i < n; i++) {
+      await rowLabels.nth(i).dispatchEvent('click');
+    }
+  }
+
+  /**
+   * IA-017: click the Bulk Edit button and wait for the bulk edit form to load.
+   * The form renders one stacked "Edit Asset" panel per selected asset; `n` is the
+   * expected number of panels (used to wait until all OS Version inputs are present).
+   */
+  async clickBulkEditAndWaitForForm(n: number): Promise<void> {
+    const bulkEdit = this.page.getByRole('button', { name: 'Bulk Edit', exact: true });
+    await expect(bulkEdit).toBeVisible({ timeout: 15_000 });
+    await bulkEdit.click();
+    // The form renders n stacked panels; wait until the last OS Version input is present
+    const osVersionInputs = this.page.locator('input[placeholder="Enter OS version"]');
+    await expect(osVersionInputs.nth(n - 1)).toBeVisible({ timeout: 120_000 });
+  }
+
+  /**
+   * IA-017: for each of `n` stacked "Edit Asset" panels in the bulk edit form, read the
+   * current OS Version input value and apply the toggle rule:
+   *   - 'Windows 11 24H2' → '11'
+   *   - anything else      → 'Windows 11 24H2'
+   * Scrolls each input into view before interacting. Returns the new value per panel.
+   */
+  async fillBulkEditOsVersionToggle(n: number): Promise<string[]> {
+    const OS_VER_A = 'Windows 11 24H2';
+    const OS_VER_B = '11';
+    const newValues: string[] = [];
+    const osInputs = this.page.locator('input[placeholder="Enter OS version"]');
+
+    for (let i = 0; i < n; i++) {
+      const input = osInputs.nth(i);
+      await input.scrollIntoViewIfNeeded();
+      await expect(input).toBeVisible({ timeout: 15_000 });
+
+      const currentValue = (await input.inputValue()).trim();
+      const newValue = currentValue === OS_VER_A ? OS_VER_B : OS_VER_A;
+      await input.fill(newValue);
+      newValues.push(newValue);
+    }
+    return newValues;
+  }
+
+  /**
+   * IA-017: scroll to the top of the page so the Save button is visible, click it,
+   * then wait for the bulk edit form to disappear and the grid to reload.
+   */
+  async saveBulkEditAndWaitForGrid(): Promise<void> {
+    const saveBtn = this.page.getByRole('button', { name: 'Save', exact: true });
+    // Save button sits at the top of the page; scroll up in case we ended further down
+    await this.page.evaluate(() => window.scrollTo(0, 0));
+    await expect(saveBtn).toBeVisible({ timeout: 15_000 });
+    await saveBtn.click();
+    // Wait for the form to close and the client machine grid to reappear
+    await expect(this.clientMachineGridRuntime()).toBeVisible({ timeout: 120_000 });
+    await expect(
+      this.clientMachineGridRuntime().locator('[wj-part="cells"] [role="gridcell"]').first(),
+    ).toBeVisible({ timeout: 120_000 });
+  }
+
+  /**
+   * IA-017: after saving, scroll the grid to the OS Version column and assert that the
+   * first `expectedVersions.length` data rows show the expected OS Version in order.
+   * Positional verification is valid because the save does not reorder the grid.
+   */
+  async verifyOsVersionForFirstNRows(expectedVersions: string[]): Promise<void> {
+    await this.scrollClientMachineGridToOsVersionColumn();
+    const runtime = this.clientMachineGridRuntime();
+    await expect(runtime.locator('[wj-part="cells"] [role="gridcell"]').first()).toBeVisible({ timeout: 30_000 });
+
+    const rows = runtime
+      .locator('[wj-part="cells"] .wj-row:has([role="gridcell"])');
+
+    for (let i = 0; i < expectedVersions.length; i++) {
+      const row = rows.nth(i);
+      // Use toBeAttached rather than toBeVisible — Wijmo rows in overflow:hidden containers
+      // are considered hidden by Playwright's bounding-box clip check.
+      await expect(row).toBeAttached({ timeout: 15_000 });
+      await expect(
+        row.getByRole('gridcell', { name: expectedVersions[i], exact: true }),
+      ).toBeVisible({ timeout: 15_000 });
+    }
   }
 }

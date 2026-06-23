@@ -67,6 +67,24 @@ export function csiOrgUserTestPassword(): string {
   return p;
 }
 
+/** AM-033: subject user for role/module access checks (`CSI_USER_TEST_*`). */
+export function csiUserTestEmail(): string {
+  const e = process.env.CSI_USER_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_USER_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiUserTestEmail}. */
+export function csiUserTestPassword(): string {
+  const p = process.env.CSI_USER_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_USER_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
 /** TR-010: user with passed course(s) on My Course (`CSI_TEST_PASSING_USER_TEST_*`). */
 export function csiTestPassingUserTestEmail(): string {
   const e = process.env.CSI_TEST_PASSING_USER_TEST_EMAIL?.trim();
@@ -189,6 +207,24 @@ export function csiPhisingVictimTestPassword(): string {
   const p = process.env.CSI_PHISING_VICTIM_TEST_PASSWORD;
   if (p == null || p.length === 0) {
     throw new Error('Set CSI_PHISING_VICTIM_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
+/** PH-011: user who must not engage with phishing email (`CSI_PHISING_NON_VICTIM_TEST_*`). */
+export function csiPhisingNonVictimTestEmail(): string {
+  const e = process.env.CSI_PHISING_NON_VICTIM_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_PHISING_NON_VICTIM_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiPhisingNonVictimTestEmail}. */
+export function csiPhisingNonVictimTestPassword(): string {
+  const p = process.env.CSI_PHISING_NON_VICTIM_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_PHISING_NON_VICTIM_TEST_PASSWORD in the environment (see .env.example).');
   }
   return p;
 }
@@ -367,6 +403,171 @@ export function csiOrgBIncidentReporterTestPassword(): string {
   const p = process.env.CSI_ORG_B_INCIDNET_REPORTER_TEST_PASSWORD;
   if (p == null || p.length === 0) {
     throw new Error('Set CSI_ORG_B_INCIDNET_REPORTER_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
+/**
+ * AM-054: user account that starts in Inactive state; the test reactivates it, verifies
+ * login succeeds, then deactivates it again (`CSI_ORG_INACTIVE_USER_TEST_EMAIL`).
+ * Keep Inactive when not running the test.
+ */
+export function csiOrgInactiveUserTestEmail(): string {
+  const e = process.env.CSI_ORG_INACTIVE_USER_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_ORG_INACTIVE_USER_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiOrgInactiveUserTestEmail}. */
+export function csiOrgInactiveUserTestPassword(): string {
+  const p = process.env.CSI_ORG_INACTIVE_USER_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_ORG_INACTIVE_USER_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
+/**
+ * AM-041: display name of the group manager used when searching in the group creation form.
+ * This is the name as it appears in the manager search dropdown (e.g. "Dax Manning12").
+ */
+export function csiGroupManagerName(): string {
+  const n = process.env.CSI_GROUP_MANAGER_NAME?.trim();
+  if (n == null || n.length === 0) {
+    throw new Error('Set CSI_GROUP_MANAGER_NAME in the environment (see .env.example).');
+  }
+  return n;
+}
+
+/** AM-041: group manager email used for the second login to verify group visibility. */
+export function csiGroupManagerEmail(): string {
+  const e = process.env.CSI_GROUP_MANAGER_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_GROUP_MANAGER_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiGroupManagerEmail}. */
+export function csiGroupManagerPassword(): string {
+  const p = process.env.CSI_GROUP_MANAGER_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_GROUP_MANAGER_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
+/** AM-041: email of the user to be added as a group member. */
+export function csiGroupMemberEmail(): string {
+  const e = process.env.CSI_GROUP_MEMBER_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_GROUP_MEMBER_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** AM-021: Avotech org manager who verifies the super-admin-created user appears in their user list (`CSI_AVOTECH_MANAGER_TEST_EMAIL`). */
+export function csiAvotechManagerTestEmail(): string {
+  const e = process.env.CSI_AVOTECH_MANAGER_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_AVOTECH_MANAGER_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiAvotechManagerTestEmail}. */
+export function csiAvotechManagerTestPassword(): string {
+  const p = process.env.CSI_AVOTECH_MANAGER_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_AVOTECH_MANAGER_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
+/** AM-020: admin user who adds a user to any org (`CSI_ADMIN_TEST_EMAIL`). */
+export function csiAdminTestEmail(): string {
+  const e = process.env.CSI_ADMIN_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_ADMIN_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiAdminTestEmail}. */
+export function csiAdminTestPassword(): string {
+  const p = process.env.CSI_ADMIN_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_ADMIN_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
+/**
+ * AM-061: account used for the change-password test. The account alternates between two known
+ * passwords (PASSWORD_1 / PASSWORD_2); the test tries PASSWORD_1 first and falls back to
+ * PASSWORD_2 if the login is rejected, then changes to the other one.
+ * Keep the account in a consistent state (either password is valid before running).
+ */
+export function csiOrgPasswordChangeUserTestEmail(): string {
+  const e = process.env.CSI_ORG_PASSWORD_CHANGE_USER_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_ORG_PASSWORD_CHANGE_USER_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** AM-061: first of the two alternating passwords for the password-change test account. */
+export function csiOrgPasswordChangeUserTestPassword1(): string {
+  const p = process.env.CSI_ORG_PASSWORD_CHANGE_USER_TEST_PASSWORD_1;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_ORG_PASSWORD_CHANGE_USER_TEST_PASSWORD_1 in the environment (see .env.example).');
+  }
+  return p;
+}
+
+/** AM-061: second of the two alternating passwords for the password-change test account. */
+export function csiOrgPasswordChangeUserTestPassword2(): string {
+  const p = process.env.CSI_ORG_PASSWORD_CHANGE_USER_TEST_PASSWORD_2;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_ORG_PASSWORD_CHANGE_USER_TEST_PASSWORD_2 in the environment (see .env.example).');
+  }
+  return p;
+}
+
+/** SB-057: custom-themed org owner (`CSI_CUSTOM_ORG_OWNER_TEST_*`). */
+export function csiCustomOrgOwnerTestEmail(): string {
+  const e = process.env.CSI_CUSTOM_ORG_OWNER_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_CUSTOM_ORG_OWNER_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiCustomOrgOwnerTestEmail}. */
+export function csiCustomOrgOwnerTestPassword(): string {
+  const p = process.env.CSI_CUSTOM_ORG_OWNER_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_CUSTOM_ORG_OWNER_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
+/** `CSI_IT_ASSET_MANAGER_TEST_EMAIL` — IT Asset Manager role account for IA-015 and related tests. */
+export function csiItAssetManagerTestEmail(): string {
+  const e = process.env.CSI_IT_ASSET_MANAGER_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_IT_ASSET_MANAGER_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiItAssetManagerTestEmail}. */
+export function csiItAssetManagerTestPassword(): string {
+  const p = process.env.CSI_IT_ASSET_MANAGER_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_IT_ASSET_MANAGER_TEST_PASSWORD in the environment (see .env.example).');
   }
   return p;
 }
