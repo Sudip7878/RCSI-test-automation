@@ -4,6 +4,8 @@ import {
   csiPhisingAdminTestPassword,
   csiPhisingVictimTestEmail,
   csiPhisingVictimTestPassword,
+  csiSystemOwnerTestEmail,
+  csiSystemOwnerTestPassword,
   csiTestEmail,
   csiTestPassword,
 } from '../../../utils/csi/credentials';
@@ -56,6 +58,39 @@ test.describe('CSI · Phising', () => {
         await csiPhisingPage.openPhishingDashboard();
         await csiPhisingPage.expectPh020PhishingDashboardSectionsVisible();
       });
+    });
+  });
+
+  /** PH-002: same creation flow as PH-001 but executed under a System Owner role. */
+  test.describe('PH-002 system owner creates phishing test', () => {
+    test.beforeEach(async ({ csiLoginPage }) => {
+      if (
+        !process.env.CSI_SYSTEM_OWNER_TEST_PASSWORD?.length ||
+        !process.env.CSI_SYSTEM_OWNER_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      const email = csiSystemOwnerTestEmail();
+      const password = csiSystemOwnerTestPassword();
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(email, password);
+      await csiLoginPage.expectOnHome();
+    });
+
+    test('PH-002', async ({ csiPhisingPage }) => {
+      const loginEmail = csiSystemOwnerTestEmail();
+      const searchToken = csiPhisingUserSearchToken(loginEmail);
+      const testName = csiUniquePhisingTestName();
+
+      await csiPhisingPage.openPhisingTestCreation();
+      await csiPhisingPage.selectFirstAttackTemplateAndContinue();
+      await csiPhisingPage.chooseIndividualsAndSelectLoginUser(loginEmail, searchToken);
+      await csiPhisingPage.fillPhisingTestDetailsAndContinue(testName);
+      await csiPhisingPage.finalizeAndDistribute();
+      await csiPhisingPage.expectPhisingTestCreated(testName);
     });
   });
 
