@@ -3,6 +3,8 @@ import { test } from '../../../fixtures/csi/testSetup';
 import {
   csiSecurityReportAdminTestEmail,
   csiSecurityReportAdminTestPassword,
+  csiSystemOwnerTestEmail,
+  csiSystemOwnerTestPassword,
   csiTestEmail,
   csiTestPassword,
 } from '../../../utils/csi/credentials';
@@ -109,6 +111,45 @@ test.describe('CSI · Security Report', () => {
     await csiSecurityReportPage.tryClickClearAfterGridSettled();
     await csiSecurityReportPage.openFirstPendingAttackSurfaceRequestDetails();
     await csiSecurityReportPage.approveRequestedDataWithUploadedPdf(pdfPath, CSI_ATTACK_SURFACE_REPORT_FILENAME);
+  });
+
+  /** SR-006: System Owner submits an attack surface scan request; CSI_TEST approves it with a fixture PDF. */
+  test.describe('SR-006 — System Owner requests scan', () => {
+    test.beforeEach(async ({ csiLoginPage }) => {
+      if (
+        !process.env.CSI_SYSTEM_OWNER_TEST_PASSWORD?.length ||
+        !process.env.CSI_SYSTEM_OWNER_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiSystemOwnerTestEmail(),
+        csiSystemOwnerTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+    });
+
+    test('SR-006', async ({ csiSecurityReportPage, csiLoginPage }) => {
+      const pdfPath = csiAttackSurfaceReportPdfPath();
+      test.skip(!fs.existsSync(pdfPath), `Missing fixture PDF: ${pdfPath}`);
+
+      await csiSecurityReportPage.openAttackSurface();
+      await csiSecurityReportPage.submitNewAttackSurfaceRequestFlow();
+      await csiLoginPage.logoutViaHeaderMenu();
+      await csiLoginPage.expectEmailStepVisible();
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(csiTestEmail(), csiTestPassword());
+      await csiLoginPage.expectOnHome();
+
+      await csiSecurityReportPage.openAttackSurface();
+      await csiSecurityReportPage.tryClickClearAfterGridSettled();
+      await csiSecurityReportPage.openFirstPendingAttackSurfaceRequestDetails();
+      await csiSecurityReportPage.approveRequestedDataWithUploadedPdf(pdfPath, CSI_ATTACK_SURFACE_REPORT_FILENAME);
+    });
   });
 
   test.describe('SR-010 — dark web scan request', () => {

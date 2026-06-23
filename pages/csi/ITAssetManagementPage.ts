@@ -69,6 +69,20 @@ export class CsiItAssetManagementPage extends BasePage {
   }
 
   private async clickFirstVisibleOption(): Promise<void> {
+    // Wait for at least one real (non-placeholder, visible) option to appear before scanning
+    await this.page.waitForFunction(
+      (ph: string) => {
+        const re = new RegExp(ph, 'i');
+        return Array.from(document.querySelectorAll('[role="option"]')).some((el) => {
+          const label = (el.textContent ?? '').replace(/\s+/g, ' ').trim();
+          if (label.length === 0 || re.test(label)) return false;
+          const s = window.getComputedStyle(el as HTMLElement);
+          return s.display !== 'none' && s.visibility !== 'hidden';
+        });
+      },
+      '^(select|choose|please|--|…|\\.\\.\\.)$',
+      { timeout: 15_000 },
+    );
     const clicked = await this.page.getByRole('option').evaluateAll((options) => {
       const placeholder = /^(select|choose|please|--|…|\.\.\.)$/i;
       for (const node of options) {
@@ -2067,5 +2081,1347 @@ export class CsiItAssetManagementPage extends BasePage {
         row.getByRole('gridcell', { name: expectedVersions[i], exact: true }),
       ).toBeVisible({ timeout: 15_000 });
     }
+  }
+
+  // ─── IA-029: Reassign asset user ─────────────────────────────────────────────
+
+  private clientMachineGridRuntimeIa029(): Locator {
+    return this.page.locator('.datagrid-runtime.wj-flexgrid').first();
+  }
+
+  private async scrollClientMachineGridToLeftEdgeIa029(): Promise<void> {
+    const runtime = this.clientMachineGridRuntimeIa029();
+    const scrollRoot = runtime.locator('div[wj-part="root"]').first();
+    await expect(scrollRoot).toBeAttached({ timeout: 30_000 });
+    await this.scrollGridToLeftEdge(scrollRoot);
+  }
+
+  private async scrollGridToRevealUserColumn(): Promise<void> {
+    const runtime = this.clientMachineGridRuntimeIa029();
+    await expect(runtime).toBeVisible({ timeout: 60_000 });
+    const scrollRoot = runtime.locator('div[wj-part="root"]').first();
+    await expect(scrollRoot).toBeAttached({ timeout: 30_000 });
+    const filterBtn = this.page.getByRole('button', { name: 'Edit Filter for Column User', exact: true });
+    if (await filterBtn.isVisible().catch(() => false)) {
+      return;
+    }
+    const max = await this.gridMaxScrollLeft(scrollRoot);
+    const step = 280;
+    for (let x = step; x <= max + step; x += step) {
+      await this.setGridScrollLeft(scrollRoot, Math.min(x, max));
+      await this.page.waitForTimeout(80);
+      if (await filterBtn.isVisible().catch(() => false)) {
+        return;
+      }
+    }
+    await this.setGridScrollLeft(scrollRoot, max);
+    await expect(filterBtn).toBeVisible({ timeout: 15_000 });
+  }
+
+  /** IA-029: read User column text for the first data row (empty string when unassigned). */
+  async readFirstClientMachineGridRowUserIa029(): Promise<string> {
+    await this.scrollGridToRevealUserColumn();
+    const runtime = this.clientMachineGridRuntimeIa029();
+    await expect(runtime.locator('[wj-part="cells"] [role="gridcell"]').first()).toBeVisible({
+      timeout: 30_000,
+    });
+    const userText = await runtime.evaluate((grid) => {
+      const headerCells = Array.from(grid.querySelectorAll('[wj-part="chcells"] .wj-cell'));
+      let userHeaderLeft: number | null = null;
+      for (const header of headerCells) {
+        const label = (header.textContent ?? '').replace(/\s+/g, ' ').trim();
+        if (label === 'User') {
+          userHeaderLeft = (header as HTMLElement).offsetLeft;
+          break;
+        }
+      }
+      if (userHeaderLeft == null) {
+        return '';
+      }
+      const firstRow = grid.querySelector('[wj-part="cells"] .wj-row');
+      if (!firstRow) {
+        return '';
+      }
+      for (const cell of Array.from(firstRow.querySelectorAll('.wj-cell[role="gridcell"]'))) {
+        const el = cell as HTMLElement;
+        if (Math.abs(el.offsetLeft - userHeaderLeft) < 12) {
+          return (el.textContent ?? '').replace(/\s+/g, ' ').trim();
+        }
+      }
+      return '';
+    });
+    return userText;
+  }
+
+  /**
+   * IA-029: scroll grid to left edge so the Edit action column is visible, then click Edit
+   * on the first data row. Uses dispatchEvent to bypass Wijmo's absolute-positioning
+   * viewport constraint (same pattern as IA-017 row checkboxes).
+   */
+  async clickEditOnFirstClientMachineAssetRowIa029(): Promise<void> {
+    const runtime = this.clientMachineGridRuntimeIa029();
+    await expect(runtime).toBeVisible({ timeout: 60_000 });
+    await this.scrollClientMachineGridToLeftEdgeIa029();
+
+    const cells = runtime.locator('[wj-part="cells"]').first();
+    await expect(cells).toBeAttached({ timeout: 30_000 });
+    const editBtn = cells.getByRole('button', { name: 'Edit', exact: true }).first();
+    await expect(editBtn).toBeAttached({ timeout: 30_000 });
+    await editBtn.dispatchEvent('click');
+  }
+
+  private itAssetEditUserFieldBlock(): Locator {
+    return this.page
+      .locator('div[data-block="ITassets.inputFields"]')
+      .filter({ has: this.page.locator('label').filter({ hasText: /^User$/ }) })
+      .first();
+  }
+
+  private async openItAssetEditUserDropdownIa029(): Promise<void> {
+    const field = this.itAssetEditUserFieldBlock();
+    await expect(field).toBeVisible({ timeout: 30_000 });
+    await field.getByText('User', { exact: true }).click();
+    const toggle = field.locator('.vscomp-toggle-button');
+    if (await toggle.isVisible().catch(() => false)) {
+      await toggle.click();
+    } else {
+      await field.getByRole('combobox', { name: 'Select an option' }).click();
+    }
+    await this.page.waitForFunction(
+      () =>
+        Array.from(document.querySelectorAll('.vscomp-dropbox')).some((el) => {
+          const s = window.getComputedStyle(el);
+          return s.display !== 'none' && s.visibility !== 'hidden' && s.opacity !== '0';
+        }),
+      { timeout: 15_000 },
+    );
+  }
+
+  private async readNonPlaceholderUserOptionLabelsIa029(): Promise<string[]> {
+    return this.page.getByRole('option').evaluateAll((options) => {
+      const placeholder = /^(select|choose|please|--|…|\.\.\.)$/i;
+      const labels: string[] = [];
+      for (const node of options) {
+        const label = (node.textContent ?? '').replace(/\s+/g, ' ').trim();
+        if (label.length === 0 || placeholder.test(label)) {
+          continue;
+        }
+        labels.push(label);
+      }
+      return labels;
+    });
+  }
+
+  /**
+   * IA-029: pick reassignment target from User VirtualSelect —
+   * no selection / selected ≠ 1st option → pick 1st option; selected = 1st option → pick 2nd option.
+   * The currently-displayed value is read from .vscomp-value scoped to the User field block so
+   * it cannot be confused with any other dropdown on the page.
+   */
+  async reassignUserOnItAssetEditFormIa029(initialGridUser: string): Promise<string> {
+    await this.page.waitForTimeout(3000);
+
+    // Read the displayed value from the User field's toggle BEFORE opening so the element
+    // is still scoped inside the field block (unambiguous — not affected by other dropdowns).
+    const field = this.itAssetEditUserFieldBlock();
+    const currentDisplayValue = await field
+      .locator('.vscomp-value')
+      .textContent()
+      .then((t) => (t ?? '').replace(/\s+/g, ' ').trim())
+      .catch(() => '');
+
+    await this.openItAssetEditUserDropdownIa029();
+
+    const optionLabels = await this.readNonPlaceholderUserOptionLabelsIa029();
+    if (optionLabels.length === 0) {
+      throw new Error('IA-029: no assignable User options in dropdown');
+    }
+
+    const firstOption = optionLabels[0].replace(/\s+/g, ' ').trim();
+
+    let targetLabel: string;
+    if (currentDisplayValue.length === 0 || currentDisplayValue !== firstOption) {
+      targetLabel = optionLabels[0];
+    } else {
+      targetLabel = optionLabels.length > 1 ? optionLabels[1] : optionLabels[0];
+    }
+
+    await this.page.getByRole('option', { name: targetLabel, exact: true }).click();
+    return targetLabel;
+  }
+
+  /** IA-029: after save, first row shows the same Asset ID and the reassigned User. */
+  async expectClientMachineGridFirstRowShowsAssetIdAndUserIa029(
+    assetId: string,
+    userName: string,
+  ): Promise<void> {
+    const runtime = this.clientMachineGridRuntimeIa029();
+    await expect(runtime.locator('[wj-part="cells"]').first()).toBeVisible({ timeout: 60_000 });
+
+    await this.scrollClientMachineGridToLeftEdgeIa029();
+    await expect(
+      runtime.locator('[wj-part="cells"]').getByRole('gridcell', { name: assetId, exact: true }).first(),
+    ).toBeVisible({ timeout: 30_000 });
+
+    await this.scrollGridToRevealUserColumn();
+    await expect(
+      runtime.locator('[wj-part="cells"]').getByRole('gridcell', { name: userName, exact: true }).first(),
+    ).toBeVisible({ timeout: 30_000 });
+  }
+
+  // ---------------------------------------------------------------------------
+  // IA-002: Add assets across all categories via UI
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Returns the `[data-block="ITassets.inputFields"]` block that contains a label
+   * with the given exact text. Used to scope dropdowns and inputs unambiguously when
+   * multiple identical "Select..." placeholders coexist on the same form page.
+   */
+  private fieldBlockByLabelIa002(labelText: string): Locator {
+    return this.page
+      .locator('[data-block="ITassets.inputFields"]')
+      .filter({ has: this.page.getByText(labelText, { exact: true }) });
+  }
+
+  /**
+   * Opens the VirtualSelect combobox (role="combobox") inside the label block
+   * identified by `labelText`.
+   */
+  private async openVscompByLabelIa002(labelText: string): Promise<void> {
+    const trigger = this.fieldBlockByLabelIa002(labelText).first().locator('[role="combobox"]').first();
+    await expect(trigger).toBeVisible({ timeout: 15_000 });
+    await trigger.click();
+  }
+
+  /**
+   * Returns the text or number input inside the label block for `labelText`.
+   * Targets only inputs wrapped in `span.input-text` or `span.input-number`
+   * so date-picker flatpickr inputs are excluded.
+   */
+  private textInputByLabelIa002(labelText: string): Locator {
+    return this.fieldBlockByLabelIa002(labelText)
+      .first()
+      .locator('span.input-text input, span.input-number input')
+      .first();
+  }
+
+  /**
+   * Returns the `.input-with-icon-input` wrapper inside the label block for `labelText`.
+   * Pass this to `setFlatpickrDateDirectOnWrapper`.
+   */
+  private datepickerWrapperByLabelIa002(labelText: string): Locator {
+    return this.fieldBlockByLabelIa002(labelText).first().locator('.input-with-icon-input').first();
+  }
+
+  /** Returns a Date object that is exactly 6 months from today. */
+  private sixMonthsFromTodayIa002(): Date {
+    const d = new Date();
+    d.setMonth(d.getMonth() + 6);
+    return d;
+  }
+
+  /**
+   * Waits for `assetName` to appear as a gridcell in the first visible
+   * `.datagrid-runtime`, paginating through pages as needed.
+   */
+  async waitForAssetNameInGridIa002(assetName: string): Promise<void> {
+    const runtime = this.page.locator('.datagrid-runtime').first();
+    await expect(runtime).toBeVisible({ timeout: 60_000 });
+
+    const namePattern = new RegExp(`^\\s*${escapeRegExp(assetName)}\\s*$`);
+    const maxNextClicks = await this.readMaxNextClicksFromAutogeneratePagination();
+
+    for (let i = 0; i <= maxNextClicks; i++) {
+      const cell = runtime
+        .locator('[wj-part="cells"]')
+        .getByRole('gridcell')
+        .filter({ hasText: namePattern })
+        .first();
+
+      if (await cell.isVisible().catch(() => false)) {
+        return;
+      }
+
+      if (i < maxNextClicks) {
+        const next = this.autogeneratePaginationNextButton();
+        const visible = await next.isVisible().catch(() => false);
+        const disabled = visible ? await next.isDisabled().catch(() => true) : true;
+        if (!visible || disabled) break;
+        await next.click();
+        await this.page.waitForTimeout(600);
+      }
+    }
+
+    // Final assertion after exhausting pagination
+    const cell = runtime
+      .locator('[wj-part="cells"]')
+      .getByRole('gridcell')
+      .filter({ hasText: namePattern })
+      .first();
+    await expect(cell).toBeVisible({ timeout: 30_000 });
+  }
+
+  // IA-002: navigate to each asset category list and click Add Asset
+
+  async navigateToNetworkDeviceListAndStartAddIa002(): Promise<void> {
+    await this.page.getByText('IT Asset Management', { exact: true }).click();
+    await this.page.getByText('Office').click();
+    await this.page.getByRole('link', { name: 'Network devices' }).click();
+    await expect(this.page.getByText('Network Switches')).toBeVisible({ timeout: 30_000 });
+    await this.page.getByText('Network Switches').click();
+    await this.page.waitForTimeout(3000);
+    await expect(this.addAssetButton.first()).toBeVisible({ timeout: 30_000 });
+    await this.addAssetButton.first().click();
+    await this.page.waitForTimeout(5000);
+  }
+
+  async navigateToPhysicalServerListAndStartAddIa002(): Promise<void> {
+    await this.page.getByText('IT Asset Management', { exact: true }).click();
+    await this.page.getByText('Server', { exact: true }).click();
+    await this.page.getByRole('link', { name: 'Physical' }).click();
+    await expect(this.addAssetButton.first()).toBeVisible({ timeout: 30_000 });
+    await this.addAssetButton.first().click();
+    await this.page.waitForTimeout(5000);
+  }
+
+  async navigateToBackupStorageListAndStartAddIa002(): Promise<void> {
+    await this.page.getByText('IT Asset Management', { exact: true }).click();
+    await this.page.getByText('Server', { exact: true }).click();
+    await this.page.getByRole('link', { name: 'Backup/Storage' }).click();
+    await expect(this.page.getByText('Network Attached Storage')).toBeVisible({ timeout: 30_000 });
+    await this.page.getByText('Network Attached Storage').click();
+    await expect(this.addAssetButton.first()).toBeVisible({ timeout: 30_000 });
+    await this.addAssetButton.first().click();
+    await this.page.waitForTimeout(5000);
+  }
+
+  async navigateToSoftwareListAndStartAddIa002(): Promise<void> {
+    await this.page.getByText('IT Asset Management', { exact: true }).click();
+    await this.page.getByRole('link', { name: 'Software' }).click();
+    await expect(this.addAssetButton.first()).toBeVisible({ timeout: 30_000 });
+    await this.addAssetButton.first().click();
+    await this.page.waitForTimeout(5000);
+  }
+
+  async navigateToSaaSListAndStartAddIa002(): Promise<void> {
+    await this.page.getByText('IT Asset Management', { exact: true }).click();
+    await this.page.getByText('Cloud', { exact: true }).click();
+    await this.page.getByRole('link', { name: 'Service' }).click();
+    await expect(this.page.getByText('SaaS')).toBeVisible({ timeout: 30_000 });
+    await this.page.getByText('SaaS').click();
+    await expect(this.addAssetButton.first()).toBeVisible({ timeout: 30_000 });
+    await this.addAssetButton.first().click();
+    await this.page.waitForTimeout(5000);
+  }
+
+  async navigateToPaaSListAndStartAddIa002(): Promise<void> {
+    await this.page.getByText('IT Asset Management', { exact: true }).click();
+    await this.page.getByText('Cloud', { exact: true }).click();
+    await this.page.getByRole('link', { name: 'Service' }).click();
+    await expect(this.page.getByText('PaaS')).toBeVisible({ timeout: 30_000 });
+    await this.page.getByText('PaaS').click();
+    await expect(this.addAssetButton.first()).toBeVisible({ timeout: 30_000 });
+    await this.addAssetButton.first().click();
+    await this.page.waitForTimeout(5000);
+  }
+
+  async navigateToIaaSListAndStartAddIa002(): Promise<void> {
+    await this.page.getByText('IT Asset Management', { exact: true }).click();
+    await this.page.getByText('Cloud', { exact: true }).click();
+    await this.page.getByRole('link', { name: 'Service' }).click();
+    await expect(this.page.getByText('IaaS')).toBeVisible({ timeout: 30_000 });
+    await this.page.getByText('IaaS').click();
+    await expect(this.addAssetButton.first()).toBeVisible({ timeout: 30_000 });
+    await this.addAssetButton.first().click();
+    await this.page.waitForTimeout(5000);
+  }
+
+  // IA-002: form fillers per asset category
+
+  /**
+   * Fills and saves the Network Switch asset form.
+   * Manufacturer dropdown → first option (Cisco); Vendor Name → first option;
+   * Currency → HKD; dates: Acquisition = today, Expiry/Warranty = 6 months.
+   */
+  async fillAndSaveNetworkSwitchAssetIa002(
+    assetName: string,
+    modelNumber: string,
+    serialNumber: string,
+    ipAddress: string,
+  ): Promise<void> {
+    const nameInput = this.page.locator('[id*="Input_assetsName"]').first();
+    await expect(nameInput).toBeVisible({ timeout: 30_000 });
+    await nameInput.click();
+    await nameInput.fill(assetName);
+
+    await this.openVscompByLabelIa002('Manufacturer');
+    await this.clickFirstVisibleOption();
+
+    const modelInput = this.textInputByLabelIa002('Model Number');
+    await modelInput.click();
+    await modelInput.fill(modelNumber);
+
+    const osInput = this.textInputByLabelIa002('OS');
+    await osInput.click();
+    await osInput.fill('Windows');
+
+    const osVersionInput = this.textInputByLabelIa002('OS Version');
+    await osVersionInput.click();
+    await osVersionInput.fill('11');
+
+    const serialInput = this.textInputByLabelIa002('Serial Number');
+    await serialInput.click();
+    await serialInput.fill(serialNumber);
+
+    const ipInput = this.textInputByLabelIa002('IP Address');
+    await ipInput.click();
+    await ipInput.fill(ipAddress);
+
+    await this.openVscompByLabelIa002('Vendor Name');
+    await this.clickFirstVisibleOption();
+
+    await this.openVscompByLabelIa002('Currency');
+    await this.page.getByRole('option', { name: 'HKD', exact: true }).click();
+
+    const costInput = this.textInputByLabelIa002('Purchase Cost');
+    await costInput.click();
+    await costInput.fill('100');
+
+    await this.setFlatpickrDateDirectOnWrapper(
+      this.datepickerWrapperByLabelIa002('Acquisition Date'),
+      new Date(),
+    );
+    await this.setFlatpickrDateDirectOnWrapper(
+      this.datepickerWrapperByLabelIa002('Expiry Date'),
+      this.sixMonthsFromTodayIa002(),
+    );
+    await this.setFlatpickrDateDirectOnWrapper(
+      this.datepickerWrapperByLabelIa002('Warranty Expiry Date'),
+      this.sixMonthsFromTodayIa002(),
+    );
+
+    await this.saveButton.click();
+  }
+
+  /**
+   * Fills and saves the Physical Server asset form.
+   * Manufacturer is a plain text input (not dropdown) for this category.
+   * Vendor Name → first option; Currency → HKD;
+   * Expiry Date (Basic Info) and Acquisition/Warranty Expiry (Provision) → today/6 months.
+   */
+  async fillAndSavePhysicalServerAssetIa002(assetName: string, modelNumber: string): Promise<void> {
+    const nameInput = this.page.locator('[id*="Input_assetsName"]').first();
+    await expect(nameInput).toBeVisible({ timeout: 30_000 });
+    await nameInput.click();
+    await nameInput.fill(assetName);
+
+    const mfgInput = this.textInputByLabelIa002('Manufacturer');
+    await mfgInput.click();
+    await mfgInput.fill('LG');
+
+    const modelInput = this.textInputByLabelIa002('Model Number');
+    await modelInput.click();
+    await modelInput.fill(modelNumber);
+
+    const osInput = this.textInputByLabelIa002('OS');
+    await osInput.click();
+    await osInput.fill('Linux');
+
+    const osVersionInput = this.textInputByLabelIa002('OS Version');
+    await osVersionInput.click();
+    await osVersionInput.fill('22.4');
+
+    // Expiry Date sits in the Basic Information section for Physical assets
+    await this.setFlatpickrDateDirectOnWrapper(
+      this.datepickerWrapperByLabelIa002('Expiry Date'),
+      this.sixMonthsFromTodayIa002(),
+    );
+
+    await this.openVscompByLabelIa002('Vendor Name');
+    await this.clickFirstVisibleOption();
+
+    await this.openVscompByLabelIa002('Currency');
+    await this.page.getByRole('option', { name: 'HKD', exact: true }).click();
+
+    const costInput = this.textInputByLabelIa002('Purchase Cost');
+    await costInput.click();
+    await costInput.fill('100');
+
+    await this.setFlatpickrDateDirectOnWrapper(
+      this.datepickerWrapperByLabelIa002('Acquisition Date'),
+      new Date(),
+    );
+    await this.setFlatpickrDateDirectOnWrapper(
+      this.datepickerWrapperByLabelIa002('Warranty Expiry Date'),
+      this.sixMonthsFromTodayIa002(),
+    );
+
+    await this.saveButton.click();
+  }
+
+  /**
+   * Fills and saves the Backup/Storage (NAS) asset form.
+   * Device Type → NAS; Connectivity → first option (Ethernet);
+   * Interface → first option (Network File System); Vendor Name → first option;
+   * Currency → HKD; dates: Acquisition = today, Expiry/Warranty = 6 months.
+   */
+  async fillAndSaveBackupStorageAssetIa002(assetName: string): Promise<void> {
+    const nameInput = this.page.locator('[id*="Input_assetsName"]').first();
+    await expect(nameInput).toBeVisible({ timeout: 30_000 });
+    await nameInput.click();
+    await nameInput.fill(assetName);
+
+    const deviceNameInput = this.textInputByLabelIa002('Device Name');
+    await deviceNameInput.click();
+    await deviceNameInput.fill('Storage');
+
+    await this.openVscompByLabelIa002('Device Type');
+    await this.page.getByRole('option', { name: 'NAS', exact: true }).click();
+
+    const modelMfgInput = this.textInputByLabelIa002('Model/Manufacturer');
+    await modelMfgInput.click();
+    await modelMfgInput.fill('Sandisk');
+
+    const capacityInput = this.textInputByLabelIa002('Capacity');
+    await capacityInput.click();
+    await capacityInput.fill('5000');
+
+    await this.openVscompByLabelIa002('Connectivity');
+    await this.clickFirstVisibleOption();
+
+    await this.openVscompByLabelIa002('Interface');
+    await this.clickFirstVisibleOption();
+
+    await this.openVscompByLabelIa002('Vendor Name');
+    await this.clickFirstVisibleOption();
+
+    await this.openVscompByLabelIa002('Currency');
+    await this.page.getByRole('option', { name: 'HKD', exact: true }).click();
+
+    const costInput = this.textInputByLabelIa002('Purchase Cost');
+    await costInput.click();
+    await costInput.fill('100');
+
+    await this.setFlatpickrDateDirectOnWrapper(
+      this.datepickerWrapperByLabelIa002('Acquisition Date'),
+      new Date(),
+    );
+    await this.setFlatpickrDateDirectOnWrapper(
+      this.datepickerWrapperByLabelIa002('Expiry Date'),
+      this.sixMonthsFromTodayIa002(),
+    );
+    await this.setFlatpickrDateDirectOnWrapper(
+      this.datepickerWrapperByLabelIa002('Warranty Expiry Date'),
+      this.sixMonthsFromTodayIa002(),
+    );
+
+    await this.saveButton.click();
+  }
+
+  /**
+   * Fills and saves the Software asset form.
+   * All four dropdowns (Manufacturer, Software Name, Type, Category) select first option;
+   * Cost = 100; Version = '11'.
+   */
+  async fillAndSaveSoftwareAssetIa002(assetName: string): Promise<void> {
+    const nameInput = this.page.locator('[id*="Input_assetsName"]').first();
+    await expect(nameInput).toBeVisible({ timeout: 30_000 });
+    await nameInput.click();
+    await nameInput.fill(assetName);
+
+    await this.openVscompByLabelIa002('Manufacturer');
+    await this.clickFirstVisibleOption();
+
+    await this.openVscompByLabelIa002('Software Name');
+    await this.clickFirstVisibleOption();
+
+    await this.openVscompByLabelIa002('Type');
+    await this.clickFirstVisibleOption();
+
+    const costInput = this.textInputByLabelIa002('Cost');
+    await costInput.click();
+    await costInput.fill('100');
+
+    const versionInput = this.textInputByLabelIa002('Version');
+    await versionInput.click();
+    await versionInput.fill('11');
+
+    await this.openVscompByLabelIa002('Category');
+    await this.clickFirstVisibleOption();
+
+    await this.saveButton.click();
+  }
+
+  /**
+   * Fills and saves the SaaS asset form.
+   * Provider Name → first option (Alibaba Cloud); License Type → first option (Subscription).
+   */
+  async fillAndSaveSaaSAssetIa002(assetName: string): Promise<void> {
+    const nameInput = this.page.locator('[id*="Input_assetsName"]').first();
+    await expect(nameInput).toBeVisible({ timeout: 30_000 });
+    await nameInput.click();
+    await nameInput.fill(assetName);
+
+    await this.openVscompByLabelIa002('Provider Name');
+    await this.clickFirstVisibleOption();
+
+    const bundleInput = this.textInputByLabelIa002('Bundle/Application Name');
+    await bundleInput.click();
+    await bundleInput.fill('Bundle');
+
+    const includedAppInput = this.textInputByLabelIa002('Included Application');
+    await includedAppInput.click();
+    await includedAppInput.fill('Application');
+
+    await this.openVscompByLabelIa002('License Type');
+    await this.clickFirstVisibleOption();
+
+    const licenseQtyInput = this.textInputByLabelIa002('License Quantity/User Limit');
+    await licenseQtyInput.click();
+    await licenseQtyInput.fill('200');
+
+    await this.saveButton.click();
+  }
+
+  /**
+   * Fills and saves the PaaS asset form.
+   * Provider Name → first option (Alibaba Cloud); Resource Name → 'PaaS'.
+   * After save, clicks 'PaaS' in the sidebar to reload the grid.
+   */
+  async fillAndSavePaaSAssetIa002(assetName: string): Promise<void> {
+    const nameInput = this.page.locator('[id*="Input_assetsName"]').first();
+    await expect(nameInput).toBeVisible({ timeout: 30_000 });
+    await nameInput.click();
+    await nameInput.fill(assetName);
+
+    await this.openVscompByLabelIa002('Provider Name');
+    await this.clickFirstVisibleOption();
+
+    const resourceNameInput = this.textInputByLabelIa002('Resource Name');
+    await resourceNameInput.click();
+    await resourceNameInput.fill('PaaS');
+
+    await this.saveButton.click();
+
+    // Wait for the Cloud > Service list grid to fully render before clicking the PaaS tab.
+    // The grid is present at [data-block="Structures.Grid"]#ItAssetTable → .datagrid-runtime → wj-part="cells".
+    const serviceGrid = this.page.locator('[data-block="Structures.Grid"]#ItAssetTable .datagrid-runtime');
+    await expect(serviceGrid).toBeVisible({ timeout: 60_000 });
+    await expect(serviceGrid.locator('[wj-part="cells"]')).toBeAttached({ timeout: 30_000 });
+
+    // Re-click the PaaS tab to load the PaaS-specific data grid.
+    await expect(this.page.getByText('PaaS', { exact: true })).toBeVisible({ timeout: 30_000 });
+    await this.page.getByText('PaaS', { exact: true }).click();
+  }
+
+  /**
+   * Fills and saves the IaaS asset form.
+   * Provider Name → first option (Alibaba Cloud); Platform Name → 'IaaS'.
+   * After save, clicks 'IaaS' in the sidebar to reload the grid.
+   */
+  async fillAndSaveIaaSAssetIa002(assetName: string): Promise<void> {
+    const nameInput = this.page.locator('[id*="Input_assetsName"]').first();
+    await expect(nameInput).toBeVisible({ timeout: 30_000 });
+    await nameInput.click();
+    await nameInput.fill(assetName);
+
+    await this.openVscompByLabelIa002('Provider Name');
+    await this.clickFirstVisibleOption();
+
+    const platformNameInput = this.textInputByLabelIa002('Platform Name');
+    await platformNameInput.click();
+    await platformNameInput.fill('IaaS');
+
+    await this.saveButton.click();
+
+    // Wait for the Cloud > Service list grid to fully render before clicking the IaaS tab.
+    const serviceGrid = this.page.locator('[data-block="Structures.Grid"]#ItAssetTable .datagrid-runtime');
+    await expect(serviceGrid).toBeVisible({ timeout: 60_000 });
+    await expect(serviceGrid.locator('[wj-part="cells"]')).toBeAttached({ timeout: 30_000 });
+
+    // Re-click the IaaS tab to load the IaaS-specific data grid.
+    await expect(this.page.getByText('IaaS', { exact: true })).toBeVisible({ timeout: 30_000 });
+    await this.page.getByText('IaaS', { exact: true }).click();
+  }
+
+  // ---------------------------------------------------------------------------
+  // IA-032: Link Software to Hardware (install software on client machine)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Waits for the Client Machine grid to be ready and clicks Edit on the first row.
+   * Uses `.datagrid-runtime` (same selector as IA-016) because the nav-based landing
+   * page does not wrap the grid in `.datagrid-autogenerate`.
+   */
+  async clickEditOnFirstClientMachineGridRowIa032(): Promise<void> {
+    const runtime = this.page.locator('.datagrid-runtime').first();
+    await expect(runtime).toBeVisible({ timeout: 60_000 });
+    const cells = runtime.locator('[wj-part="cells"]').first();
+    await expect(cells).toBeAttached({ timeout: 30_000 });
+    const editBtn = cells.getByRole('button', { name: 'Edit', exact: true }).first();
+    await expect(editBtn).toBeVisible({ timeout: 60_000 });
+    await editBtn.click();
+    // Wait for the edit form and all its async data fetches (e.g. Software Suite Name options) to settle
+    await this.page.waitForLoadState('networkidle', { timeout: 30_000 });
+  }
+
+  /**
+   * Opens the Software Suite Name VirtualSelect on the asset edit form and selects
+   * the first available option. Returns the selected option label for downstream
+   * verification.
+   *
+   * The Software Suite Name field lives in `[data-block="ITassets.softwareDetailSection"]`,
+   * not in `[data-block="ITassets.inputFields"]` like the standard fields, so it is
+   * scoped by its own block type to avoid ambiguous "Select…" placeholder matching.
+   */
+  async selectFirstOptionInSoftwareSuiteNameDropdownIa032(): Promise<string> {
+    const softwareSection = this.page.locator('[data-block="ITassets.softwareDetailSection"]');
+    const trigger = softwareSection.locator('[role="combobox"]').first();
+    await expect(trigger).toBeVisible({ timeout: 15_000 });
+    await trigger.click();
+
+    // Wait for the dropdown list to appear and read the first real (non-placeholder) option
+    const placeholder = /^(select|choose|please|--|…|\.\.\.)$/i;
+    await this.page.waitForFunction(
+      (phPattern: string) => {
+        const re = new RegExp(phPattern, 'i');
+        return Array.from(document.querySelectorAll('[role="option"]')).some((el) => {
+          const label = (el.textContent ?? '').replace(/\s+/g, ' ').trim();
+          if (label.length === 0 || re.test(label)) return false;
+          const s = window.getComputedStyle(el as HTMLElement);
+          return s.display !== 'none' && s.visibility !== 'hidden';
+        });
+      },
+      placeholder.source,
+      { timeout: 30_000 },
+    );
+
+    const optionText = await this.page.getByRole('option').evaluateAll((options) => {
+      const ph = /^(select|choose|please|--|…|\.\.\.)$/i;
+      for (const node of options) {
+        const label = (node.textContent ?? '').replace(/\s+/g, ' ').trim();
+        if (label.length === 0 || ph.test(label)) continue;
+        const s = window.getComputedStyle(node as HTMLElement);
+        if (s.display === 'none' || s.visibility === 'hidden') continue;
+        const rect = (node as HTMLElement).getBoundingClientRect();
+        if (rect.width === 0 && rect.height === 0) continue;
+        return label;
+      }
+      return null;
+    });
+
+    if (!optionText) {
+      throw new Error('IA-032: no selectable options found in Software Suite Name dropdown');
+    }
+
+    // Click the matched option
+    await this.page.getByRole('option', { name: optionText, exact: true }).first().click();
+    return optionText;
+  }
+
+  /**
+   * Waits for the Client Machine grid to reload after an edit save and clicks
+   * View on the first visible row.
+   */
+  async clickViewOnFirstClientMachineGridRowIa032(): Promise<void> {
+    const runtime = this.page.locator('.datagrid-runtime').first();
+    await expect(runtime).toBeVisible({ timeout: 60_000 });
+    const cells = runtime.locator('[wj-part="cells"]').first();
+    await expect(cells).toBeAttached({ timeout: 30_000 });
+    const viewBtn = cells.getByRole('button', { name: 'View', exact: true }).first();
+    await expect(viewBtn).toBeVisible({ timeout: 60_000 });
+    await viewBtn.click();
+  }
+
+  /**
+   * In the asset read-only view, asserts that the Software Suite Name field
+   * shows `softwareName` (i.e. is not "N/A").
+   * The value is rendered in an `ITassets.displayFields` block beside the label.
+   */
+  async expectSoftwareSuiteNameIsLinkedInAssetViewIa032(softwareName: string): Promise<void> {
+    const viewMain = this.page.getByRole('main');
+    await expect(viewMain.getByText('Software Suite Name').first()).toBeVisible({ timeout: 30_000 });
+
+    const displayBlock = viewMain
+      .locator('[data-block="ITassets.displayFields"]')
+      .filter({ has: this.page.getByText('Software Suite Name') })
+      .first();
+    // The value span inside displayFields; must not be "N/A"
+    const valueSpan = displayBlock.locator('span[data-expression]').last();
+    await expect(valueSpan).not.toHaveText('N/A', { timeout: 10_000 });
+    await expect(viewMain.getByText(softwareName, { exact: true })).toBeVisible({ timeout: 10_000 });
+  }
+
+  // ---------------------------------------------------------------------------
+  // IA-037: Add new Manufacturer value via Settings and verify in edit dropdown
+  // ---------------------------------------------------------------------------
+
+  /**
+   * IA-037: Navigate to IT Asset Management → Settings via the hub menu.
+   * Waits for the domcontentloaded state after the Settings link is clicked.
+   */
+  async navigateToItAssetManagementSettingsIa037(): Promise<void> {
+    await this.page.getByText('IT Asset Management').click();
+    await this.page.getByRole('link', { name: 'Settings' }).click();
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  /**
+   * IA-037: From the IT Asset Management Settings page, drill into
+   * Client Machine → Manufacturer. Waits for the "+ Add a new Value" link
+   * to confirm the Manufacturer field detail page has loaded.
+   */
+  async openManufacturerFieldSettingsIa037(): Promise<void> {
+    await this.page.getByText('Client Machine').click();
+    await this.page.waitForLoadState('domcontentloaded');
+    await this.page.getByText('Manufacturer').click();
+    await expect(this.page.getByRole('link', { name: '+ Add a new Value' })).toBeVisible({
+      timeout: 60_000,
+    });
+  }
+
+  /**
+   * IA-037: Add a new custom dropdown value for Manufacturer in both the English
+   * and Traditional Chinese language tabs, then save.
+   *
+   * Anchors to `form[id="fieldForm"]` (the stable form ID on the settings value-add
+   * panel) rather than the generated input IDs, which are volatile across deployments.
+   * Both language tabs receive the same `value` string per the recorded steps.
+   */
+  async addNewManufacturerValueIa037(value: string): Promise<void> {
+    await this.page.getByRole('link', { name: '+ Add a new Value' }).click();
+
+    const settingsForm = this.page.locator('form[id="fieldForm"]');
+    await expect(settingsForm).toBeVisible({ timeout: 30_000 });
+
+    // English (default) section — first enabled text input inside the settings form
+    const englishInput = settingsForm.locator('input[type="text"]:not([disabled])').first();
+    await expect(englishInput).toBeVisible({ timeout: 15_000 });
+    await englishInput.click();
+    await englishInput.fill(value);
+
+    // Traditional Chinese section — click the language tab, then fill its input.
+    // The Chinese input is the last text input inside the form (index _1 vs English _0).
+    await this.page.getByText('Traditional Chinese').click();
+    const chineseInput = settingsForm.locator('input[type="text"]').last();
+    await expect(chineseInput).toBeVisible({ timeout: 15_000 });
+    await chineseInput.click();
+    await chineseInput.fill(value);
+
+    // Save the new value and wait for the network round-trip to complete
+    await this.page.getByRole('link', { name: /save/i }).click();
+    await this.page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
+  }
+
+  /**
+   * IA-037: Click the "Home" nav link and wait for the redirect to the app home
+   * page to complete before navigating further.
+   * Home is identified by URL pathname: /, /Home, /Avotech, or /Avotech/Home.
+   */
+  async navigateHomeAndWaitIa037(): Promise<void> {
+    await this.page.getByText('Home').click();
+    await this.page.waitForURL(
+      (url) => {
+        const p = url.pathname.replace(/\/$/, '') || '/';
+        return ['/', '/Home', '/home', '/Avotech', '/Avotech/Home', '/Avotech/home'].includes(p);
+      },
+      { timeout: 30_000 },
+    );
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  /**
+   * IA-037: On the Client Machine edit form, locate the Manufacturer dropdown by
+   * its label text, click the toggle button (current selection) to open the options
+   * list, and return the pre-selected manufacturer name.
+   *
+   * Uses the 'Manufacturer' label as a structural anchor — avoids the brittle
+   * vscomp wrapper ID that changes across environments and deployments.
+   */
+  async openManufacturerDropdownOnEditFormIa037(): Promise<string> {
+    // Scope to the Manufacturer field container identified by its label and toggle button.
+    // The outermost [data-container] matching both criteria is the correct field block.
+    const manufacturerBlock = this.addAssetFormScope()
+      .locator('[data-container]')
+      .filter({ has: this.page.locator('label').filter({ hasText: /^Manufacturer$/ }) })
+      .filter({ has: this.page.locator('.vscomp-toggle-button') })
+      .first();
+
+    await expect(manufacturerBlock).toBeVisible({ timeout: 30_000 });
+
+    // Read the currently-selected value before opening (while toggle is still collapsed)
+    const currentValue = (
+      (await manufacturerBlock.locator('.vscomp-value').first().textContent()) ?? ''
+    )
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    // Click the toggle button to expand the dropdown options list
+    await manufacturerBlock.locator('.vscomp-toggle-button').first().click();
+
+    // Wait for the vscomp options panel to become visible
+    await this.page.waitForFunction(
+      () =>
+        Array.from(document.querySelectorAll('.vscomp-dropbox')).some((el) => {
+          const s = window.getComputedStyle(el);
+          return s.display !== 'none' && s.visibility !== 'hidden' && s.opacity !== '0';
+        }),
+      { timeout: 15_000 },
+    );
+
+    return currentValue;
+  }
+
+  /**
+   * IA-037: With the Manufacturer dropdown open, assert that `manufacturerName` is
+   * present in the options list. Scrolls the options container when the entry is
+   * below the visible fold (vscomp virtualises option rendering with a max-height).
+   * Does NOT click or select the option — presence check only per recorded steps.
+   */
+  async expectManufacturerOptionVisibleInDropdownIa037(manufacturerName: string): Promise<void> {
+    const dropbox = this.page.locator('.vscomp-dropbox').first();
+    await expect(dropbox).toBeVisible({ timeout: 15_000 });
+
+    const optionText = this.page
+      .locator('.vscomp-option-text')
+      .filter({ hasText: new RegExp(`^\\s*${escapeRegExp(manufacturerName)}\\s*$`) });
+
+    // Scroll the options list to reveal entries below the visible fold if needed
+    const isAlreadyVisible = await optionText.first().isVisible().catch(() => false);
+    if (!isAlreadyVisible) {
+      await dropbox.locator('.vscomp-options-container').first().evaluate((el) => {
+        el.scrollTop = el.scrollHeight;
+      });
+    }
+
+    await expect(optionText.first()).toBeVisible({ timeout: 15_000 });
+  }
+
+  // ---------------------------------------------------------------------------
+  // IA-039: Custom field with Track History — create, edit (V1→V2→V3), verify history, delete
+  // ---------------------------------------------------------------------------
+
+  /**
+   * IA-039: Navigate to IT Asset Management → Settings → Client Machine via the hub nav.
+   * Waits for the "+ Add a new Master List" button to confirm the settings page is ready.
+   */
+  async navigateToCustomFieldSettingsClientMachineIa039(): Promise<void> {
+    await this.page.getByText('IT Asset Management').click();
+    await this.page.getByRole('link', { name: 'Settings' }).click();
+    await this.page.waitForLoadState('domcontentloaded');
+    await this.page.getByText('Client Machine').click();
+    await expect(this.page.getByRole('button', { name: '+ Add a new Master List' })).toBeVisible({
+      timeout: 60_000,
+    });
+  }
+
+  /**
+   * IA-039: Click "+ Add a new Master List" and fill the custom field form:
+   * - Label and Placeholder text inputs anchored by their `<label>` text (avoids brittle generated IDs)
+   * - "Basic Field" segment confirmed selected (default)
+   * - "Track History of data" Yes radio located by its section label anchor
+   * - Traditional Chinese tab populated via "Set other language with same value"
+   * - Saved via the Save link in the form header
+   *
+   * Uses `form[id="fieldForm"]` as the stable scope for all interactions.
+   */
+  async addCustomFieldWithHistoryTrackingIa039(label: string, placeholder: string): Promise<void> {
+    await this.page.getByRole('button', { name: '+ Add a new Master List' }).click();
+
+    const addFieldForm = this.page.locator('form[id="fieldForm"]');
+    await expect(addFieldForm).toBeVisible({ timeout: 30_000 });
+
+    // Label field — scoped to the container holding the "Label" label element
+    const labelContainer = addFieldForm
+      .locator('[data-container]')
+      .filter({ has: this.page.locator('label[data-label]').filter({ hasText: /^Label$/ }) })
+      .first();
+    const labelInput = labelContainer.locator('input[type="text"]').first();
+    await expect(labelInput).toBeVisible({ timeout: 15_000 });
+    await labelInput.click();
+    await labelInput.fill(label);
+
+    // Placeholder field — scoped to the container holding the "Placeholder" label element
+    const placeholderContainer = addFieldForm
+      .locator('[data-container]')
+      .filter({ has: this.page.locator('label[data-label]').filter({ hasText: /^Placeholder$/ }) })
+      .first();
+    const placeholderInput = placeholderContainer.locator('input[type="text"]').first();
+    await expect(placeholderInput).toBeVisible({ timeout: 15_000 });
+    await placeholderInput.click();
+    await placeholderInput.fill(placeholder);
+
+    // Confirm "Basic Field" segment is active (default selection)
+    await this.page.getByText('Basic Field').click();
+
+    // Type field — scope to the Type section by its label anchor, then click the 'Text' type button.
+    // All type buttons start with class "not-selected typeBtn"; none is pre-selected by default.
+    // The OSBlockWidget wrapper for 'Text' carries style="height:0px" (OutSystems rendering quirk),
+    // so target the inner span via the section container to guarantee a reliable click.
+    const typeSection = addFieldForm
+      .locator('[data-container]')
+      .filter({ has: this.page.locator('label[data-label]').filter({ hasText: /^Type$/ }) })
+      .first();
+    await typeSection.getByText('Text', { exact: true }).click();
+
+    // Required Field — left at its default "No" (value="False" checked); no interaction needed.
+
+    // Track History — use :has(> label[data-label]) to match only the direct-parent container
+    // (not ancestor wrappers) so the value="True" radio input is unambiguously scoped here.
+    const trackHistorySection = addFieldForm
+      .locator('[data-container]:has(> label[data-label])')
+      .filter({ has: this.page.locator('label[data-label]').filter({ hasText: /^Track History of data$/ }) })
+      .first();
+    await expect(trackHistorySection).toBeVisible({ timeout: 15_000 });
+    await trackHistorySection.locator('input[type="radio"][value="True"]').first().click();
+
+    // Apply the same value to the Traditional Chinese language tab
+    await this.page.getByRole('button', { name: 'Set other language with same' }).click();
+
+    // Save the new custom field via the form header Save link
+    await this.page.getByRole('link', { name: /save/i }).click();
+    await this.page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
+  }
+
+  /**
+   * IA-039: Wait for the Client Machine grid to be ready and return the Asset ID
+   * text from the first data row. Asset ID sits at gridcell index 2 (View and Edit
+   * action buttons occupy indices 0 and 1).
+   */
+  async readFirstClientMachineGridRowAssetIdIa039(): Promise<string> {
+    const runtime = this.clientMachineGridRuntimeIa029();
+    await expect(runtime).toBeVisible({ timeout: 60_000 });
+    const scrollRoot = runtime.locator('div[wj-part="root"]').first();
+    await this.scrollGridToLeftEdge(scrollRoot);
+    await expect(runtime.locator('[wj-part="cells"] [role="gridcell"]').first()).toBeVisible({
+      timeout: 30_000,
+    });
+    const firstRow = runtime.locator('[wj-part="cells"] .wj-row:has([role="gridcell"])').first();
+    await expect(firstRow).toBeAttached({ timeout: 15_000 });
+    return ((await firstRow.locator('[role="gridcell"]').nth(2).textContent()) ?? '').trim();
+  }
+
+  /**
+   * IA-039: Locate the grid row whose Asset ID column matches `assetId` and click
+   * its Edit button. Scrolls to the left edge first to ensure the action column is
+   * within the rendered area. Uses `dispatchEvent('click')` to bypass Wijmo's
+   * absolute-positioning viewport constraint (same pattern as IA-029).
+   */
+  async clickEditOnClientMachineGridRowByAssetIdIa039(assetId: string): Promise<void> {
+    const runtime = this.clientMachineGridRuntimeIa029();
+    await expect(runtime).toBeVisible({ timeout: 60_000 });
+    const scrollRoot = runtime.locator('div[wj-part="root"]').first();
+    await this.scrollGridToLeftEdge(scrollRoot);
+    await expect(runtime.locator('[wj-part="cells"] [role="gridcell"]').first()).toBeVisible({
+      timeout: 30_000,
+    });
+
+    const rows = runtime.locator('[wj-part="cells"] .wj-row:has([role="gridcell"])');
+    const count = await rows.count();
+    for (let i = 0; i < count; i++) {
+      const row = rows.nth(i);
+      await expect(row).toBeAttached({ timeout: 10_000 });
+      const idText = ((await row.locator('[role="gridcell"]').nth(2).textContent()) ?? '').trim();
+      if (idText === assetId) {
+        const editBtn = row.getByRole('button', { name: 'Edit', exact: true }).first();
+        await expect(editBtn).toBeAttached({ timeout: 10_000 });
+        await editBtn.dispatchEvent('click');
+        return;
+      }
+    }
+    throw new Error(`IA-039: Asset ID "${assetId}" not found in Client Machine grid`);
+  }
+
+  /**
+   * IA-039: On the asset edit form, locate the custom text field and fill it with `value`.
+   *
+   * The Settings "Placeholder" value becomes the visible `<label>` text on the asset edit
+   * form — NOT the HTML `placeholder` attribute (which is always empty in the rendered markup).
+   * Scopes to the `[data-container]` block that contains both `label[data-label]` matching
+   * `fieldPlaceholder` AND an `input[type="text"]`, then fills the input directly.
+   * Clears existing content with Ctrl+A before typing.
+   */
+  async fillCustomTextFieldOnEditFormIa039(fieldLabel: string, fieldPlaceholder: string, value: string): Promise<void> {
+    const labelPattern = new RegExp(`^${fieldPlaceholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`);
+
+    // Anchor on the matching label[data-label], navigate two levels up via XPath
+    // (label → label-container [data-container] → outer field block [data-container]),
+    // then find input[data-input] within that block. This avoids the broad ancestor
+    // container issue where the outer form container also satisfies the filter and
+    // .first() resolves to the Asset Name input instead of the custom field input.
+    const textbox = this.page
+      .locator('label[data-label]')
+      .filter({ hasText: labelPattern })
+      .locator('xpath=../..//input[@data-input]')
+      .first();
+
+    await expect(textbox).toBeVisible({ timeout: 30_000 });
+    await textbox.scrollIntoViewIfNeeded();
+    await textbox.click();
+    await textbox.press('Control+a');
+    await textbox.fill(value);
+  }
+
+  /**
+   * IA-039: Locate the grid row whose Asset ID column matches `assetId` and click
+   * its View button. Mirrors `clickEditOnClientMachineGridRowByAssetIdIa039` but
+   * targets the View action instead of Edit.
+   */
+  async clickViewOnClientMachineGridRowByAssetIdIa039(assetId: string): Promise<void> {
+    const runtime = this.clientMachineGridRuntimeIa029();
+    await expect(runtime).toBeVisible({ timeout: 60_000 });
+    const scrollRoot = runtime.locator('div[wj-part="root"]').first();
+    await this.scrollGridToLeftEdge(scrollRoot);
+    await expect(runtime.locator('[wj-part="cells"] [role="gridcell"]').first()).toBeVisible({
+      timeout: 30_000,
+    });
+
+    const rows = runtime.locator('[wj-part="cells"] .wj-row:has([role="gridcell"])');
+    const count = await rows.count();
+    for (let i = 0; i < count; i++) {
+      const row = rows.nth(i);
+      await expect(row).toBeAttached({ timeout: 10_000 });
+      const idText = ((await row.locator('[role="gridcell"]').nth(2).textContent()) ?? '').trim();
+      if (idText === assetId) {
+        const viewBtn = row.getByRole('button', { name: 'View', exact: true }).first();
+        await expect(viewBtn).toBeAttached({ timeout: 10_000 });
+        await viewBtn.dispatchEvent('click');
+        return;
+      }
+    }
+    throw new Error(`IA-039: Asset ID "${assetId}" not found in Client Machine grid`);
+  }
+
+  /**
+   * IA-039: On the asset View page, click the "View {fieldLabel} History" link
+   * to open the history dialog for the given custom field.
+   */
+  async clickViewCustomFieldHistoryLinkIa039(fieldPlaceholder: string): Promise<void> {
+    // Wait for the asset view page to be ready — the Edit button is the reliable anchor
+    // (same pattern as expectItAssetDetailViewShowsAssetState).
+    const viewMain = this.page
+      .getByRole('main')
+      .filter({ has: this.page.getByRole('button', { name: 'Edit', exact: true }) });
+    await expect(viewMain).toBeVisible({ timeout: 30_000 });
+    // The link text is "View {placeholder} History" — the app renders the placeholder text
+    // (not the field label) in the history link span.
+    // Scope via a[data-link] + inner span[data-expression] to avoid accessible-name resolution issues.
+    const historyLink = this.page
+      .locator('a[data-link]')
+      .filter({ has: this.page.locator('span[data-expression]', { hasText: `View ${fieldPlaceholder} History` }) })
+      .first();
+    await expect(historyLink).toBeVisible({ timeout: 15_000 });
+    await historyLink.click();
+  }
+
+  /**
+   * IA-039: Verify that every value in `values` is visible inside the history dialog.
+   * All assertions are scoped to the dialog element to avoid false matches elsewhere.
+   */
+  async expectCustomFieldHistoryDialogShowsValuesIa039(values: string[]): Promise<void> {
+    const dialog = this.page.getByRole('dialog');
+    await expect(dialog).toBeVisible({ timeout: 15_000 });
+    for (const value of values) {
+      await expect(dialog.getByText(value)).toBeVisible({ timeout: 10_000 });
+    }
+  }
+
+  /**
+   * IA-039: Close the field history dialog by clicking its × icon.
+   * Waits for the dialog to disappear to confirm the close completed.
+   */
+  async closeHistoryDialogIa039(): Promise<void> {
+    const dialog = this.page.getByRole('dialog');
+    await dialog.locator('.icon.fa.fa-times').click();
+    await expect(dialog).not.toBeVisible({ timeout: 10_000 });
+  }
+
+  /**
+   * IA-039: Cleanup — navigate home, return to Client Machine Settings, scroll the
+   * field list until the custom field with `fieldLabel` is visible, click it to select
+   * it, click the trash icon to initiate deletion, then confirm with the Delete button.
+   */
+  async deleteCustomFieldFromSettingsIa039(fieldLabel: string): Promise<void> {
+    await this.navigateHomeAndWaitIa037();
+    await this.navigateToCustomFieldSettingsClientMachineIa039();
+
+    // The field list container has an id prefixed with "fieldList"
+    const fieldList = this.page.locator('[id^="fieldList"]').first();
+    await expect(fieldList).toBeVisible({ timeout: 30_000 });
+
+    // The custom field is appended at the bottom of the list; scroll to reveal it
+    const fieldEntry = fieldList.getByText(fieldLabel, { exact: true }).first();
+    await fieldEntry.scrollIntoViewIfNeeded();
+    await expect(fieldEntry).toBeVisible({ timeout: 15_000 });
+    await fieldEntry.click();
+
+    // Trash icon appears in the field properties panel after the field is selected
+    const trashIcon = this.page.locator('.icon.fa.fa-trash-o').first();
+    await expect(trashIcon).toBeVisible({ timeout: 30_000 });
+    await trashIcon.click();
+
+    const deleteBtn = this.page.getByRole('button', { name: 'Delete' });
+    await expect(deleteBtn).toBeVisible({ timeout: 15_000 });
+    await deleteBtn.click();
+    await this.page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
+  }
+
+  // ---------------------------------------------------------------------------
+  // IA-044: IT Asset Admin creates, edits, and validates a custom Number field
+  // ---------------------------------------------------------------------------
+
+  /**
+   * IA-044: Click "+ Add a new Master List" and fill the custom field form as a
+   * Basic Field with Text type (no Track History change).
+   * Label and Placeholder inputs are anchored by their <label> text to avoid brittle
+   * generated IDs. Applies the same value to Traditional Chinese via the button.
+   */
+  async addCustomFieldBasicTextIa044(label: string, placeholder: string): Promise<void> {
+    await this.page.getByRole('button', { name: '+ Add a new Master List' }).click();
+
+    const addFieldForm = this.page.locator('form[id="fieldForm"]');
+    await expect(addFieldForm).toBeVisible({ timeout: 30_000 });
+
+    // Label field — anchored by the "Label" <label> element inside the form
+    const labelContainer = addFieldForm
+      .locator('[data-container]')
+      .filter({ has: this.page.locator('label[data-label]').filter({ hasText: /^Label$/ }) })
+      .first();
+    const labelInput = labelContainer.locator('input[type="text"]').first();
+    await expect(labelInput).toBeVisible({ timeout: 15_000 });
+    await labelInput.click();
+    await labelInput.fill(label);
+
+    // Placeholder field — anchored by the "Placeholder" <label> element inside the form
+    const placeholderContainer = addFieldForm
+      .locator('[data-container]')
+      .filter({ has: this.page.locator('label[data-label]').filter({ hasText: /^Placeholder$/ }) })
+      .first();
+    const placeholderInput = placeholderContainer.locator('input[type="text"]').first();
+    await expect(placeholderInput).toBeVisible({ timeout: 15_000 });
+    await placeholderInput.click();
+    await placeholderInput.fill(placeholder);
+
+    // Apply same value to the Traditional Chinese language tab
+    await this.page.getByRole('button', { name: 'Set other language with same' }).click();
+
+    // Confirm the Basic Field segment is active (default selection)
+    await this.page.getByText('Basic Field').click();
+
+    // Type: Text — scoped to the Type section to avoid matching other spans named "Text"
+    const typeSection = addFieldForm
+      .locator('[data-container]')
+      .filter({ has: this.page.locator('label[data-label]').filter({ hasText: /^Type$/ }) })
+      .first();
+    await typeSection.getByText('Text', { exact: true }).click();
+
+    await this.page.getByRole('link', { name: /save/i }).click();
+    await this.page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
+  }
+
+  /**
+   * IA-044: Open the custom field identified by `originalLabel` from the field list,
+   * then edit it: rename to `newLabel`, change the Segment to "Vendor Field", and
+   * change the Type to "Number". Waits 3 seconds after saving so the settings page
+   * finishes persisting before any subsequent navigation.
+   */
+  async editCustomFieldLabelSegmentTypeIa044(originalLabel: string, newLabel: string): Promise<void> {
+    const fieldList = this.page.locator('[id^="fieldList"]').first();
+    await expect(fieldList).toBeVisible({ timeout: 30_000 });
+
+    const fieldEntry = fieldList.getByText(originalLabel, { exact: true }).first();
+    await fieldEntry.scrollIntoViewIfNeeded();
+    await expect(fieldEntry).toBeVisible({ timeout: 15_000 });
+    await fieldEntry.click();
+
+    const editFieldForm = this.page.locator('form[id="fieldForm"]');
+    await expect(editFieldForm).toBeVisible({ timeout: 30_000 });
+
+    // Update the Label value — clear existing content first
+    const labelContainer = editFieldForm
+      .locator('[data-container]')
+      .filter({ has: this.page.locator('label[data-label]').filter({ hasText: /^Label$/ }) })
+      .first();
+    const labelInput = labelContainer.locator('input[type="text"]').first();
+    await expect(labelInput).toBeVisible({ timeout: 15_000 });
+    await labelInput.click();
+    await labelInput.press('Control+a');
+    await labelInput.fill(newLabel);
+
+    // Change Segment from Basic Field to Vendor Field
+    await editFieldForm.getByText('Vendor Field').click();
+
+    // Change Type to Number — scoped to the Type section
+    const typeSection = editFieldForm
+      .locator('[data-container]')
+      .filter({ has: this.page.locator('label[data-label]').filter({ hasText: /^Type$/ }) })
+      .first();
+    await typeSection.getByText('Number', { exact: true }).click();
+
+    await this.page.getByRole('link', { name: /save/i }).click();
+    await this.page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
+
+    // Wait for the settings page to fully persist before navigating away
+    await this.page.waitForTimeout(3_000);
+  }
+
+  /**
+   * IA-044: Wait for the Client Machine grid and click the Edit button on the first
+   * data row via dispatchEvent to bypass Wijmo's absolute-positioning viewport constraint.
+   * Own copy of the first-row edit pattern per IA-044 recorded-steps note (line 74).
+   */
+  async clickEditOnFirstClientMachineGridRowIa044(): Promise<void> {
+    const runtime = this.clientMachineGridRuntimeIa029();
+    await expect(runtime).toBeVisible({ timeout: 60_000 });
+    const scrollRoot = runtime.locator('div[wj-part="root"]').first();
+    await expect(scrollRoot).toBeAttached({ timeout: 30_000 });
+    await this.scrollGridToLeftEdge(scrollRoot);
+
+    const cells = runtime.locator('[wj-part="cells"]').first();
+    await expect(cells).toBeAttached({ timeout: 30_000 });
+    const editBtn = cells.getByRole('button', { name: 'Edit', exact: true }).first();
+    await expect(editBtn).toBeAttached({ timeout: 30_000 });
+    await editBtn.dispatchEvent('click');
+  }
+
+  /**
+   * IA-044: On the asset edit form, locate the Number-type custom field by its label
+   * and verify integer validation in two steps:
+   *  1. Save with an empty value → assert "Enter a valid integer." error is shown.
+   *  2. Fill with `numericValue` → save successfully → assert the grid is visible
+   *     (confirms the redirect back to the Client Machine grid after save).
+   */
+  async fillCustomNumberFieldIa044(fieldLabel: string, placeholder: string, numericValue: string): Promise<void> {
+    // The Settings "Placeholder" value becomes the visible <label> text on the asset edit form.
+    // HTML input placeholder attribute is empty; locate by label proximity instead.
+    const labelPattern = new RegExp(`^${placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`);
+    const fieldBlock = this.page
+      .locator('[data-container]')
+      .filter({ has: this.page.locator('label[data-label]').filter({ hasText: labelPattern }) })
+      .filter({ has: this.page.locator('input[type="text"]') })
+      .first();
+
+    await expect(fieldBlock).toBeVisible({ timeout: 30_000 });
+    await fieldBlock.scrollIntoViewIfNeeded();
+
+    const numberInput = fieldBlock.locator('input[type="text"]').first();
+    await expect(numberInput).toBeVisible({ timeout: 15_000 });
+
+    // Empty value → save → integer validation error
+    await numberInput.click();
+    await numberInput.fill('');
+    await this.saveButton.click();
+    await expect(this.page.getByText('Enter a valid integer.')).toBeVisible({ timeout: 15_000 });
+
+    // Fill with valid integer and save
+    await numberInput.click();
+    await numberInput.fill(numericValue);
+    await this.saveButton.click();
+
+    // Verify redirect back to the Client Machine grid
+    await expect(this.clientMachineGridRuntimeIa029().locator('[wj-part="cells"]').first()).toBeVisible({
+      timeout: 60_000,
+    });
   }
 }

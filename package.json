@@ -14,7 +14,8 @@
     "generate:incident-report-comment-pdf": "node architecture/script/generate-incident-report-comment-document-pdf.cjs",
     "generate:attack-surface-report-pdf": "node architecture/script/generate-attack-surface-report-pdf.cjs",
     "generate:dark-web-report-pdfs": "node architecture/script/generate-dark-web-report-pdfs.cjs",
-    "generate:sb052-kt-docx": "node architecture/generate-sb052-knowledge-transfer-docx.cjs"
+    "generate:sb052-kt-docx": "node architecture/generate-sb052-knowledge-transfer-docx.cjs",
+    "generate:ia004-ia017-ia022-kt-docx": "node architecture/generate-ia004-ia017-ia022-knowledge-transfer-docx.cjs"
   },
   "repository": {
     "type": "git",

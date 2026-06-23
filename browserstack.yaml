@@ -4,7 +4,7 @@ platforms:
     browserName: chrome
     browserVersion: latest
 
-browserstackLocal: true
+browserstackLocal: false
 buildName: "Avotech-Regression-TestSuite"
 
 video: true

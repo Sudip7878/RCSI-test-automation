@@ -166,6 +166,38 @@ export class CsiIncidentReportPage extends BasePage {
     );
   }
 
+  /**
+   * IR-017: click Incident Response; verify redirect to Blackpanda auth (external domain) AND
+   * confirm 'Phone number' field is absent for at least 5 seconds on the redirected page.
+   */
+  async clickIncidentResponseAndExpectBlackpandaAuthRedirectNoPhoneNumber() {
+    const link = this.page.getByRole('link', { name: 'Incident Response' });
+    await expect(link).toBeVisible({ timeout: 60_000 });
+
+    await link.click();
+
+    const popup = await this.page
+      .context()
+      .waitForEvent('page', { timeout: 10_000 })
+      .catch(() => null);
+    const authPage = popup ?? this.page;
+
+    await authPage.waitForURL(
+      (url) => {
+        try {
+          return new URL(url).hostname === CSI_BLACKPANDA_AUTH_HOST;
+        } catch {
+          return false;
+        }
+      },
+      { timeout: 120_000, waitUntil: 'domcontentloaded' },
+    );
+
+    // External site must not expose a phone number input field (5-second observation window).
+    await authPage.waitForTimeout(5_000);
+    await expect(authPage.getByText('Phone number', { exact: true })).not.toBeVisible({ timeout: 1_000 });
+  }
+
   async startNewIncidentForm() {
     await expect(this.addNewIncidentButton).toBeVisible();
     await this.addNewIncidentButton.click();
