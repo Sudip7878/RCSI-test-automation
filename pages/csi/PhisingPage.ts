@@ -107,6 +107,12 @@ export class CsiPhisingPage extends BasePage {
     await this.clickDateInOpenDatepicker(new Date());
   }
 
+  private async clickNDaysAheadInOpenDatepicker(days: number) {
+    const target = new Date();
+    target.setDate(target.getDate() + days);
+    await this.clickDateInOpenDatepicker(target);
+  }
+
   private async selectDurationPreferringDay() {
     const durationTrigger = this.page.getByText('Duration', { exact: true });
     await expect(durationTrigger).toBeVisible({ timeout: 15_000 });
@@ -121,6 +127,21 @@ export class CsiPhisingPage extends BasePage {
     }
 
     await this.clickFirstVisibleListboxOption();
+  }
+
+  /**
+   * Fills the Test Duration field regardless of whether the form renders it as a number
+   * input (e.g. PH-003: `<input type="number" id="Input_duration">`) or as a dropdown.
+   * When the number input is present it fills the value `1`; otherwise it falls back to
+   * {@link selectDurationPreferringDay}.
+   */
+  private async fillTestDurationInput() {
+    const numberInput = this.page.locator('#Input_duration');
+    if (await numberInput.isVisible().catch(() => false)) {
+      await numberInput.fill('1');
+      return;
+    }
+    await this.selectDurationPreferringDay();
   }
 
   /** PH-011: time input beside “Schedule time” text (plain text, not an associated label — getByLabel fails). */
@@ -365,7 +386,7 @@ export class CsiPhisingPage extends BasePage {
       await this.clickTomorrowInOpenDatepicker();
     }
 
-    await this.selectDurationPreferringDay();
+    await this.fillTestDurationInput();
 
     await expect(this.nextButton).toBeVisible({ timeout: 15_000 });
     await this.nextButton.click();
@@ -464,6 +485,53 @@ export class CsiPhisingPage extends BasePage {
     await this.distributeButton.click();
   }
 
+  /**
+   * PH-008: fills test name, sets schedule start date to day 7 of the inclusive window
+   * (today + 6 days), and selects duration. Differs from {@link fillPhisingTestDetailsAndContinue}
+   * only in the schedule date offset.
+   */
+  async fillPhisingTestDetailsAndContinueForPh008(testName: string) {
+    const testNameInput = this.page.getByRole('textbox', {
+      name: /Example: HSBC Phishing Test/i,
+    });
+    await expect(testNameInput).toBeVisible({ timeout: 30_000 });
+    await testNameInput.click();
+    await testNameInput.fill(testName);
+
+    const dateCombobox = this.campaignScheduleDateCombobox();
+    await expect(dateCombobox).toBeVisible({ timeout: 15_000 });
+    await dateCombobox.click();
+    // Schedule start date: 7-day window inclusive of today means today + 6 days
+    await this.clickNDaysAheadInOpenDatepicker(6);
+
+    await this.fillTestDurationInput();
+
+    await expect(this.nextButton).toBeVisible({ timeout: 15_000 });
+    await this.nextButton.click();
+  }
+
+  /**
+   * PH-008: the review/settings step that precedes Distribute exposes a "Delayed course rule"
+   * section. Select "After a specific date", fill in the pre-computed `delayedDate`
+   * (YYYY-MM-DD, today + 6 days = day 7 inclusive), then proceed through Next → Distribute.
+   */
+  async finalizeWithDelayedCourseRuleAndDistribute(delayedDate: string) {
+    const afterSpecificDateRadio = this.page.getByRole('radio', { name: 'After a specific date' });
+    await expect(afterSpecificDateRadio).toBeVisible({ timeout: 30_000 });
+    await afterSpecificDateRadio.check();
+
+    // Date textbox becomes visible after the radio is selected
+    const dateTextbox = this.page.getByRole('textbox', { name: 'Date' });
+    await expect(dateTextbox).toBeVisible({ timeout: 15_000 });
+    await dateTextbox.fill(delayedDate);
+
+    await expect(this.nextButton).toBeVisible({ timeout: 15_000 });
+    await this.nextButton.click();
+
+    await expect(this.distributeButton).toBeVisible({ timeout: 30_000 });
+    await this.distributeButton.click();
+  }
+
   async expectPhisingTestCreated(testName: string) {
     await expect(this.page.getByText(testName, { exact: true })).toBeVisible({ timeout: 60_000 });
   }
@@ -544,6 +612,64 @@ export class CsiPhisingPage extends BasePage {
     await expect(this.page.getByRole('textbox', { name: /Email Display Name/ })).toBeVisible({
       timeout: 60_000,
     });
+  }
+
+  /** PH-021: navigate directly to the phishing dashboard (Avotech org scoped). */
+  private async openPh021PhishingDashboard() {
+    await this.page.goto(`${CSI_BASE_URL}/Avotech/phishingDashboard`);
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  /**
+   * PH-021: open the org selector by clicking its trigger text (either the "Select Organization"
+   * placeholder on first open, or the currently selected org name on subsequent switches),
+   * search for orgName, click the matching option, then wait for the report DOM to update.
+   */
+  private async ph021OpenOrgSelectorAndPick(triggerText: string, orgName: string) {
+    await this.page.getByText(triggerText).click();
+
+    const search = this.page.getByRole('textbox', { name: 'Search' });
+    await expect(search).toBeVisible({ timeout: 10_000 });
+    await search.fill(orgName);
+
+    const option = this.page.getByRole('option', { name: orgName, exact: true });
+    await expect(option).toBeVisible({ timeout: 10_000 });
+    await option.click();
+
+    // Wait for the report structure to re-render after the org switch
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  /**
+   * PH-021: verify that the core phishing report sections are visible for the currently
+   * selected org. Mirrors the section structure checked in {@link expectPh020PhishingDashboardSectionsVisible}.
+   */
+  private async expectPh021ReportSectionsVisible() {
+    await expect(this.page.getByText('Phishing Resistance Score')).toBeVisible({ timeout: 30_000 });
+    await expect(this.page.getByText('Organization performance')).toBeVisible({ timeout: 15_000 });
+    await expect(this.page.getByText('Phishing Resistance Summary')).toBeVisible({ timeout: 15_000 });
+    await expect(this.page.getByRole('columnheader', { name: 'Test name' })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(this.page.getByRole('columnheader', { name: 'Users number' })).toBeVisible({
+      timeout: 15_000,
+    });
+  }
+
+  /**
+   * PH-021: Super Admin selects Org A in the phishing report org selector, verifies report
+   * sections are visible, then switches to Org B and repeats the visibility check
+   * (recorded-steps/Phising/PH-021.txt).
+   */
+  async expectPh021SuperAdminViewsResultsAcrossOrgs(orgAName: string, orgBName: string) {
+    await this.openPh021PhishingDashboard();
+
+    // Org A (Avotech) is pre-selected by default on this URL — verify sections immediately
+    await this.expectPh021ReportSectionsVisible();
+
+    // Switch to Org B and verify again
+    await this.ph021OpenOrgSelectorAndPick(orgAName, orgBName);
+    await this.expectPh021ReportSectionsVisible();
   }
 
   async createAndPublishPh024EmailTemplate(params: {

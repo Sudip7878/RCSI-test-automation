@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-const DEFAULT_CSI_BASE_URL = 'https://csi-tst.avotech.com';
+const DEFAULT_CSI_BASE_URL = 'https://rcsi-tst.avotech.com';
 
 const raw = process.env.CSI_BASE_URL?.trim();
 const normalized = (raw && raw.length > 0 ? raw : DEFAULT_CSI_BASE_URL).replace(/\/$/, '');
