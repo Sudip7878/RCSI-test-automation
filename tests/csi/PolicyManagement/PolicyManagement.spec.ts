@@ -135,6 +135,22 @@ test.describe('CSI · Policy Management', () => {
   });
 
   /**
+   * PM-019: Employee who has missed the acknowledgement deadline can still open the overdue
+   * policy from MyPolicies → To be Acknowledged and reach the Acknowledge confirmation step.
+   * Uses the default `CSI_TEST_EMAIL` login (root beforeEach).
+   */
+  test.describe('PM-019 employee with overdue policy can initiate acknowledgement', () => {
+    test('PM-019', async ({ csiPolicyManagementPage }) => {
+      await csiPolicyManagementPage.gotoMyPolicies();
+      await csiPolicyManagementPage.openToBeAcknowledgedTab();
+      await csiPolicyManagementPage.waitForAcknowledgementPolicyCardsAfterTab();
+      await csiPolicyManagementPage.clickViewOnFirstOverdueAcknowledgementCard();
+      await csiPolicyManagementPage.clickAcknowledgePolicyButton();
+      await csiPolicyManagementPage.expectAcknowledgeConfirmButtonVisible();
+    });
+  });
+
+  /**
    * PM-024: same published-policy major-update wizard as PM-026 through `Policy Updated` (no review / approve / version-2).
    * Needs `Update Version 1` on Published Policies (see {@link CsiPolicyManagementPage.clickFirstPublishedRowUpdateVersionOne}).
    */

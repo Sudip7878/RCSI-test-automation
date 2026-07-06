@@ -359,6 +359,44 @@ export class CsiPolicyManagementPage extends BasePage {
     await viewButtons[0].click();
   }
 
+  /**
+   * PM-019: find the first policy card that contains the 'overdue' indicator text and click its
+   * View button. The overdue text lives inside the card container, so we traverse up to it via
+   * XPath and scope the button lookup to that card only.
+   */
+  async clickViewOnFirstOverdueAcknowledgementCard() {
+    const overdueText = this.page.getByText('overdue').first();
+    await expect(overdueText).toBeVisible({ timeout: 60_000 });
+    const viewBtn = overdueText
+      .locator('xpath=ancestor::div[contains(@class,"card")]')
+      .getByRole('button', { name: 'View' });
+    await expect(viewBtn).toBeVisible({ timeout: 15_000 });
+    await viewBtn.click();
+  }
+
+  /**
+   * PM-019: click the 'Acknowledge Policy' button on the policy detail page.
+   * Kept separate from {@link completePolicyAcknowledgementExpectSuccess} so PM-019 can stop
+   * before the final confirmation click.
+   */
+  async clickAcknowledgePolicyButton() {
+    const btn = this.page.getByRole('button', { name: 'Acknowledge Policy' });
+    await expect(btn).toBeVisible({ timeout: 60_000 });
+    await btn.click();
+  }
+
+  /**
+   * PM-019: assert the 'Acknowledge' confirmation button is presented after clicking
+   * 'Acknowledge Policy'. Does not click the button — the test verifies visibility only
+   * (the employee missed the deadline but the action is still reachable).
+   */
+  async expectAcknowledgeConfirmButtonVisible() {
+    await this.safeSleep(3000);
+    await expect(
+      this.page.getByRole('button', { name: 'Acknowledge' }),
+    ).toBeVisible({ timeout: 30_000 });
+  }
+
   async completePolicyAcknowledgementExpectSuccess() {
     const acknowledgePolicy = this.page.getByRole('button', { name: 'Acknowledge Policy' });
     await expect(acknowledgePolicy).toBeVisible({ timeout: 60_000 });
