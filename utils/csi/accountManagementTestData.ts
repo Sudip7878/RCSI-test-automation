@@ -23,3 +23,9 @@ export function csiGroupTitleAm041(): string {
   const worker = process.env.TEST_WORKER_INDEX ?? '0';
   return `Test Group ${Date.now()}_${worker}`;
 }
+
+/** AM-043 fallback group name when the group grid has no rows. */
+export function csiDuplicateGroupFallbackTitleAm043(): string {
+  const worker = process.env.TEST_WORKER_INDEX ?? '0';
+  return `Duplicate Group ${Date.now()}_${worker}`;
+}

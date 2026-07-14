@@ -2,9 +2,12 @@ import { expect, test } from '../../../fixtures/csi/testSetup';
 import path from 'node:path';
 
 import {
+  buildBulkUsersForInvalidHeaderAm029,
   buildBulkUsersFromSystemOwnerEmail,
+  buildBulkUsersWithDuplicateLoginEmailAm030,
   buildBulkUsersWithInvalidDomainAm028,
   writeBulkUsersToTemplateXlsx,
+  writeInvalidHeaderBulkUsersToTemplateXlsx,
 } from '../../../utils/csi/accountManagementBulkUpload';
 import {
   expectNoEmailIntersection,
@@ -31,9 +34,19 @@ import {
   buildAm021UserProfile,
 } from '../../../utils/csi/am009OrganizationTestData';
 import {
+  am015OrganizationFormSteps,
+  buildAm015OrganizationProfile,
+} from '../../../utils/csi/am015OrganizationTestData';
+import {
+  buildInvalidFormatOwnerEmailAm016,
+} from '../../../utils/csi/am016OrganizationTestData';
+import { AM003_INVALID_SIGNUP_EMAILS } from '../../../utils/csi/am003AccountManagementTestData';
+import { buildExternalDomainUserEmailAm026 } from '../../../utils/csi/am026AccountManagementTestData';
+import {
   csiAccountManagementEmailLocalPart,
   csiAccountManagementFirstName,
   csiAccountManagementLastName,
+  csiDuplicateGroupFallbackTitleAm043,
   csiGroupTitleAm041,
 } from '../../../utils/csi/accountManagementTestData';
 import {
@@ -72,6 +85,48 @@ import { writeLastUserNumber } from '../../../utils/csi/userCounter';
 test.describe('CSI · Account Management', () => {
   test.describe.configure({ timeout: 120_000 });
 
+  /**
+   * AM-002: sign-up with an already registered email — open /signup without logging in,
+   * enter `CSI_TEST_EMAIL`, click "Next Step", and expect "Email already exist"
+   * (recorded-steps/AccountManagement/AM-002.txt).
+   */
+  test.describe('AM-002 sign-up with already registered email', () => {
+    test('AM-002', async ({ csiAccountManagementPage }) => {
+      if (!process.env.CSI_TEST_EMAIL?.trim()?.length) {
+        test.skip();
+        return;
+      }
+
+      const registeredEmail = csiTestEmail();
+
+      await csiAccountManagementPage.openSignupAm002();
+      await csiAccountManagementPage.fillSignupEmailAm002(registeredEmail);
+      await csiAccountManagementPage.submitSignupEmailStepAm002();
+      await csiAccountManagementPage.expectSignupRegisteredEmailErrorAm002();
+    });
+  });
+
+  /**
+   * AM-003: sign-up with invalid email format — open /signup without logging in,
+   * submit malformed addresses and an empty field; expect validation messages per
+   * recorded-steps/AccountManagement/AM-003.txt.
+   */
+  test.describe('AM-003 sign-up with invalid email format', () => {
+    test('AM-003', async ({ csiAccountManagementPage }) => {
+      await csiAccountManagementPage.openSignupAm003();
+
+      for (const invalidEmail of AM003_INVALID_SIGNUP_EMAILS) {
+        await csiAccountManagementPage.fillSignupEmailAm003(invalidEmail);
+        await csiAccountManagementPage.submitSignupEmailStepAm003();
+        await csiAccountManagementPage.expectSignupInvalidEmailErrorAm003();
+      }
+
+      await csiAccountManagementPage.clearSignupEmailAm003();
+      await csiAccountManagementPage.submitSignupEmailStepAm003();
+      await csiAccountManagementPage.expectSignupRequiredEmailErrorAm003();
+    });
+  });
+
   test.describe('AM-019 manual add user', () => {
     test.beforeEach(async ({ csiLoginPage }) => {
       if (
@@ -107,6 +162,47 @@ test.describe('CSI · Account Management', () => {
       await csiAccountManagementPage.checkFirstTwoRoleAssignments();
       await csiAccountManagementPage.submitCreateNewUser();
       await csiAccountManagementPage.expectUserCreatedSuccess();
+    });
+  });
+
+  /**
+   * AM-026: add user outside org domain — identical flow to AM-019 but appends `@external.com`
+   * to the email local part; Create New User must show "Invalid email" instead of success
+   * (recorded-steps/AccountManagement/AM-026.txt).
+   */
+  test.describe('AM-026 add user outside org domain', () => {
+    test.beforeEach(async ({ csiLoginPage }) => {
+      if (
+        !process.env.CSI_ORG_TEST_PASSWORD?.length ||
+        !process.env.CSI_ORG_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      const email = csiOrgTestEmail();
+      const password = csiOrgTestPassword();
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(email, password);
+      await csiLoginPage.expectOnHome();
+    });
+
+    test('AM-026', async ({ csiAccountManagementPage }) => {
+      const firstName = csiAccountManagementFirstName();
+      const lastName = csiAccountManagementLastName();
+      const email = buildExternalDomainUserEmailAm026(firstName, lastName);
+
+      await csiAccountManagementPage.openUserList();
+      await csiAccountManagementPage.startAddUserManually();
+      await csiAccountManagementPage.fillNewUserIdentityAm026({
+        firstName,
+        lastName,
+        email,
+      });
+      await csiAccountManagementPage.checkFirstTwoRoleAssignments();
+      await csiAccountManagementPage.submitCreateNewUser();
+      await csiAccountManagementPage.expectInvalidEmailOnCreateUserAm026();
     });
   });
 
@@ -311,6 +407,138 @@ test.describe('CSI · Account Management', () => {
   });
 
   /**
+   * AM-029: bulk upload with two wrong file formats — same wizard entry as AM-027 but logged
+   * in as `CSI_ADMIN_TEST_EMAIL` (recorded-steps/AccountManagement/AM-029.txt).
+   * 1st attempt uploads the downloaded template unmodified (no rows filled in); 2nd attempt
+   * fills 5 rows exactly like AM-027 but overwrites the header's first cell with "Invalid
+   * Header". Both attempts must show the missing-fields banner instead of reaching the
+   * row-review ("Fix problematic user data") step — no users are ever created, so the bulk
+   * row builder here is read-only and never advances `storage/userCounter.json`.
+   */
+  test.describe('AM-029 bulk upload wrong file format', () => {
+    test.describe.configure({ timeout: 180_000 });
+
+    test.beforeEach(async ({ csiLoginPage }) => {
+      if (
+        !process.env.CSI_ADMIN_TEST_PASSWORD?.length ||
+        !process.env.CSI_ADMIN_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(csiAdminTestEmail(), csiAdminTestPassword());
+      await csiLoginPage.expectOnHome();
+    });
+
+    test('AM-029', async ({ csiAccountManagementPage }) => {
+      const adminEmail = csiAdminTestEmail();
+      const cacheDir = path.resolve(__dirname, '../../../playwright/.cache/account-management');
+
+      await csiAccountManagementPage.openUserListWithSearchReady();
+      await csiAccountManagementPage.startAddUsersByExcelUpload();
+
+      // 1st wrong format — upload the downloaded template as-is, with no rows filled in
+      const emptyTemplatePath = path.join(cacheDir, 'Employee_Import_Template.am029.empty.xlsx');
+      await csiAccountManagementPage.downloadBulkImportTemplateTo(emptyTemplatePath);
+      await csiAccountManagementPage.uploadCompletedTemplate(emptyTemplatePath);
+      await csiAccountManagementPage.continueAfterTemplateUpload();
+      await csiAccountManagementPage.expectBulkUploadMissingFieldsMessageAm029();
+
+      // Back to the upload step, then reload — Download Template / Upload UI must reappear
+      await csiAccountManagementPage.goBackAndReloadBulkUploadFormAm029();
+
+      // 2nd wrong format — 5 fully-filled rows (same pattern as AM-027) but with a corrupted
+      // header on the first column
+      const invalidHeaderDownloadPath = path.join(
+        cacheDir,
+        'Employee_Import_Template.am029.downloaded.xlsx',
+      );
+      await csiAccountManagementPage.downloadBulkImportTemplateTo(invalidHeaderDownloadPath);
+
+      const invalidHeaderRows = buildBulkUsersForInvalidHeaderAm029(adminEmail, 5, 'QA');
+      const invalidHeaderEditedPath = path.join(
+        cacheDir,
+        'Employee_Import_Template.am029.invalidHeader.xlsx',
+      );
+      writeInvalidHeaderBulkUsersToTemplateXlsx(
+        invalidHeaderDownloadPath,
+        invalidHeaderRows,
+        invalidHeaderEditedPath,
+      );
+
+      await csiAccountManagementPage.uploadCompletedTemplate(invalidHeaderEditedPath);
+      await csiAccountManagementPage.continueAfterTemplateUpload();
+      await csiAccountManagementPage.expectBulkUploadMissingFieldsMessageAm029();
+    });
+  });
+
+  /**
+   * AM-030: add duplicate user — manual add (AM-019 flow) then bulk upload (AM-027 flow from
+   * "Add New User") both reuse `CSI_ORG_TEST_EMAIL`; neither path creates a user
+   * (recorded-steps/AccountManagement/AM-030.txt).
+   */
+  test.describe('AM-030 add duplicate user', () => {
+    test.describe.configure({ timeout: 180_000 });
+
+    test.beforeEach(async ({ csiLoginPage }) => {
+      if (
+        !process.env.CSI_ORG_TEST_PASSWORD?.length ||
+        !process.env.CSI_ORG_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      const email = csiOrgTestEmail();
+      const password = csiOrgTestPassword();
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(email, password);
+      await csiLoginPage.expectOnHome();
+    });
+
+    test('AM-030', async ({ csiAccountManagementPage }) => {
+      const loginEmail = csiOrgTestEmail();
+      const firstName = csiAccountManagementFirstName();
+      const lastName = csiAccountManagementLastName();
+      const cacheDir = path.resolve(__dirname, '../../../playwright/.cache/account-management');
+
+      // Phase 1 — manual add with the login email (local part only; app auto-fills the domain)
+      await csiAccountManagementPage.openUserList();
+      await csiAccountManagementPage.startAddUserManually();
+      await csiAccountManagementPage.fillNewUserIdentityWithLoginEmailAm030({
+        firstName,
+        lastName,
+        loginEmail,
+      });
+      await csiAccountManagementPage.checkFirstTwoRoleAssignments();
+      await csiAccountManagementPage.submitCreateNewUser();
+      await csiAccountManagementPage.expectDuplicateEmailOnManualAddUserAm030();
+
+      await csiAccountManagementPage.reloadUserListAndWaitForAddNewUserAm030();
+
+      // Phase 2 — bulk upload: every row reuses the full login email (no userCounter advance)
+      await csiAccountManagementPage.startAddUsersByExcelUpload();
+
+      const downloadedTemplatePath = path.join(
+        cacheDir,
+        'Employee_Import_Template.am030.downloaded.xlsx',
+      );
+      await csiAccountManagementPage.downloadBulkImportTemplateTo(downloadedTemplatePath);
+
+      const duplicateRows = buildBulkUsersWithDuplicateLoginEmailAm030(loginEmail, 5, 'QA');
+      const editedTemplatePath = path.join(cacheDir, 'Employee_Import_Template.am030.edited.xlsx');
+      writeBulkUsersToTemplateXlsx(downloadedTemplatePath, duplicateRows, editedTemplatePath);
+
+      await csiAccountManagementPage.uploadCompletedTemplate(editedTemplatePath);
+      await csiAccountManagementPage.continueAfterTemplateUpload();
+      await csiAccountManagementPage.expectBulkUploadDuplicateUsersRejectedAm030();
+    });
+  });
+
+  /**
    * AM-041: system owner creates a group, assigns a manager by display-name search, adds a
    * member by email, saves; then verifies the group is visible in the group manager's group
    * list (recorded-steps/AccountManagement/AM-041.txt).
@@ -419,6 +647,62 @@ test.describe('CSI · Account Management', () => {
 
       await csiAccountManagementPage.openGroupListWithSearchReadyAm041();
       await csiAccountManagementPage.searchAndExpectGroupInGridAm041(groupTitle);
+    });
+  });
+
+  /**
+   * AM-043: system owner creates a group using the current first group-grid name. If the grid
+   * is empty for 15 seconds, seed it with a unique fallback group before creating the duplicate.
+   */
+  test.describe('AM-043 system owner creates group with duplicate name', () => {
+    test.describe.configure({ timeout: 240_000 });
+
+    test.beforeEach(async ({ csiLoginPage }) => {
+      if (
+        !process.env.CSI_SYSTEM_OWNER_TEST_PASSWORD?.length ||
+        !process.env.CSI_SYSTEM_OWNER_TEST_EMAIL?.trim()?.length ||
+        !process.env.CSI_GROUP_MANAGER_NAME?.trim()?.length ||
+        !process.env.CSI_GROUP_MANAGER_EMAIL?.trim()?.length ||
+        !process.env.CSI_GROUP_MANAGER_PASSWORD?.length ||
+        !process.env.CSI_GROUP_MEMBER_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiSystemOwnerTestEmail(),
+        csiSystemOwnerTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+    });
+
+    test('AM-043', async ({ csiLoginPage, csiAccountManagementPage }) => {
+      const managerName = csiGroupManagerName();
+      const memberEmail = csiGroupMemberEmail();
+
+      await csiAccountManagementPage.openGroupList();
+      let groupTitle = await csiAccountManagementPage.firstGroupNameOrUndefinedAm043();
+
+      if (!groupTitle) {
+        const fallbackGroupTitle = csiDuplicateGroupFallbackTitleAm043();
+        await csiAccountManagementPage.startCreateGroupAm041(fallbackGroupTitle);
+        await csiAccountManagementPage.selectGroupManagerAm041(managerName);
+        await csiAccountManagementPage.addGroupMemberByEmailAm041(memberEmail);
+        await csiAccountManagementPage.saveGroupCreationAm041();
+
+        await csiAccountManagementPage.openGroupList();
+        groupTitle = await csiAccountManagementPage.firstGroupNameOrUndefinedAm043();
+        if (!groupTitle) {
+          throw new Error('AM-043: no group name was available after creating the fallback group');
+        }
+      }
+
+      await csiAccountManagementPage.startCreateGroupAm041(groupTitle);
+      await csiAccountManagementPage.selectGroupManagerAm041(managerName);
+      await csiAccountManagementPage.addGroupMemberByEmailAm041(memberEmail);
+      await csiAccountManagementPage.saveGroupCreationAm041();
     });
   });
 
@@ -587,6 +871,77 @@ test.describe('CSI · Account Management', () => {
       await csiAccountManagementPage.expectOrganizationRecordCreated();
       await csiAccountManagementPage.dismissOrganizationRecordCreatedNotice();
       writeLastUserNumber(profile.suffix);
+    });
+  });
+
+  /**
+   * AM-015: create organization with existing name `TestCorp` — same flow as AM-010; duplicate
+   * org names are allowed and creation succeeds (recorded-steps/AccountManagement/AM-015.txt).
+   * Uses `CSI_TEST_*` credentials and advances `storage/userCounter.json` on success.
+   */
+  test.describe('AM-015 create organization with existing name', () => {
+    test.describe.configure({ timeout: 180_000 });
+
+    test.beforeEach(async ({ csiLoginPage }) => {
+      if (!process.env.CSI_TEST_PASSWORD?.length) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(csiTestEmail(), csiTestPassword());
+      await csiLoginPage.expectOnHome();
+    });
+
+    test('AM-015', async ({ csiAccountManagementPage }) => {
+      const profile = buildAm015OrganizationProfile(csiTestEmail());
+
+      await csiAccountManagementPage.openOrganizationList();
+      await csiAccountManagementPage.startAddOrganization({ waitBeforeAddMs: 5_000 });
+      await csiAccountManagementPage.fillNewOrganizationFromSteps(am015OrganizationFormSteps(profile));
+      await csiAccountManagementPage.submitCreateOrganization();
+      await csiAccountManagementPage.expectOrganizationCreatedAm015();
+      writeLastUserNumber(profile.suffix);
+    });
+  });
+
+  /**
+   * AM-016: create organization with invalid system-owner email — same wizard as AM-010 but
+   * rejects malformed owner email (recorded-steps/AccountManagement/AM-016.txt).
+   * Uses `CSI_TEST_*` credentials; does not advance `storage/userCounter.json` (org is not created).
+   */
+  test.describe('AM-016 assign invalid email as system owner', () => {
+    test.describe.configure({ timeout: 180_000 });
+
+    test.beforeEach(async ({ csiLoginPage }) => {
+      if (!process.env.CSI_TEST_PASSWORD?.length) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(csiTestEmail(), csiTestPassword());
+      await csiLoginPage.expectOnHome();
+    });
+
+    test('AM-016', async ({ csiAccountManagementPage }) => {
+      const profile = buildAm009OrganizationProfile(csiTestEmail());
+      const invalidFormatEmail = buildInvalidFormatOwnerEmailAm016(profile.ownerEmail);
+
+      await csiAccountManagementPage.openOrganizationList();
+      await csiAccountManagementPage.startAddOrganization({ waitBeforeAddMs: 5_000 });
+      await csiAccountManagementPage.fillNewOrganizationAm009({
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        ownerEmail: invalidFormatEmail,
+        phoneNumber: profile.phoneNumber,
+        organizationName: profile.organizationName,
+        category: profile.category,
+        size: profile.size,
+        plan: profile.plan,
+      });
+      await csiAccountManagementPage.submitCreateOrganization();
+      await csiAccountManagementPage.expectCreateOrganizationOwnerEmailValidationErrorAm016();
     });
   });
 
