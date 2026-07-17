@@ -875,4 +875,11 @@ export class CsiAccountManagementPage extends BasePage {
       timeout: 30_000,
     });
   }
+
+  /** AM-062: assert the "Invalid password" error after submitting a wrong current password. */
+  async expectInvalidPasswordErrorAm062() {
+    await expect(this.page.getByText('Invalid password', { exact: true })).toBeVisible({
+      timeout: 30_000,
+    });
+  }
 }
