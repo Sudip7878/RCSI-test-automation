@@ -42,6 +42,7 @@ import {
 } from '../../../utils/csi/am016OrganizationTestData';
 import { AM003_INVALID_SIGNUP_EMAILS } from '../../../utils/csi/am003AccountManagementTestData';
 import { buildExternalDomainUserEmailAm026 } from '../../../utils/csi/am026AccountManagementTestData';
+import { buildWrongCurrentPasswordAm062 } from '../../../utils/csi/am062AccountManagementTestData';
 import {
   csiAccountManagementEmailLocalPart,
   csiAccountManagementFirstName,
@@ -1233,6 +1234,59 @@ test.describe('CSI · Account Management', () => {
       await csiLoginPage.gotoLogin();
       await csiLoginPage.signInWithEmailAndPassword(userEmail, newPassword);
       await csiLoginPage.expectOnHome();
+    });
+  });
+
+  /**
+   * AM-062: same flow as AM-061 but submits a wrong current password; expects "Invalid password"
+   * and must not change the account password (recorded-steps/AccountManagement/AM-062.txt).
+   */
+  test.describe('AM-062 wrong current password', () => {
+    test.describe.configure({ timeout: 120_000 });
+
+    test.beforeEach(async () => {
+      if (
+        !process.env.CSI_ORG_PASSWORD_CHANGE_USER_TEST_EMAIL?.trim()?.length ||
+        !process.env.CSI_ORG_PASSWORD_CHANGE_USER_TEST_PASSWORD_1?.length ||
+        !process.env.CSI_ORG_PASSWORD_CHANGE_USER_TEST_PASSWORD_2?.length
+      ) {
+        test.skip();
+        return;
+      }
+    });
+
+    test('AM-062', async ({ csiLoginPage, csiAccountManagementPage }) => {
+      const userEmail = csiOrgPasswordChangeUserTestEmail();
+      const password1 = csiOrgPasswordChangeUserTestPassword1();
+      const password2 = csiOrgPasswordChangeUserTestPassword2();
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(userEmail, password1);
+
+      let currentPassword: string;
+      let newPassword: string;
+
+      if (await csiLoginPage.isInvalidCredentialsVisible()) {
+        currentPassword = password2;
+        newPassword = password1;
+        await csiLoginPage.gotoLogin();
+        await csiLoginPage.signInWithEmailAndPassword(userEmail, password2);
+      } else {
+        currentPassword = password1;
+        newPassword = password2;
+      }
+
+      await csiLoginPage.expectOnHome();
+
+      const wrongCurrentPassword = buildWrongCurrentPasswordAm062(currentPassword);
+
+      await csiAccountManagementPage.openUserProfileSecurityTab();
+      await csiAccountManagementPage.fillChangePasswordFormAm061(
+        wrongCurrentPassword,
+        newPassword,
+      );
+      await csiAccountManagementPage.submitChangePasswordAm061();
+      await csiAccountManagementPage.expectInvalidPasswordErrorAm062();
     });
   });
 
