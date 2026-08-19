@@ -9,6 +9,8 @@ import {
   csiOrgBIncidentReporterTestPassword,
   csiPenetrationTesterTestEmail,
   csiPenetrationTesterTestPassword,
+  csiRicohOrgOwnerTestEmail,
+  csiRicohOrgOwnerTestPassword,
   csiSystemOwnerTestEmail,
   csiSystemOwnerTestPassword,
   csiTestEmail,
@@ -305,6 +307,32 @@ test.describe('CSI · Incident Report', () => {
 
     test('IR-016', async ({ csiIncidentReportPage }) => {
       await csiIncidentReportPage.clickIncidentResponseAndExpectBlackpandaAuthRedirect();
+    });
+  });
+
+  test.describe('IR-017 — Ricoh org owner Incident Response redirects to external domain with no phone field', () => {
+    test.describe.configure({ timeout: 180_000 });
+
+    // Uses CSI_RICOH_ORG_OWNER_TEST_* credentials — different account from the IR-016 beforeEach.
+    test.beforeEach(async ({ csiLoginPage }) => {
+      if (
+        !process.env.CSI_RICOH_ORG_OWNER_TEST_PASSWORD?.length ||
+        !process.env.CSI_RICOH_ORG_OWNER_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiRicohOrgOwnerTestEmail(),
+        csiRicohOrgOwnerTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+    });
+
+    test('IR-017', async ({ csiIncidentReportPage }) => {
+      await csiIncidentReportPage.clickIncidentResponseAndExpectBlackpandaAuthRedirectNoPhoneNumber();
     });
   });
 });

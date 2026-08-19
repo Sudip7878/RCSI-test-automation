@@ -338,3 +338,2161 @@
 2026-05-11T16:45:09.548Z CLI info [main]  [a6rb5sphax4efq6t0da1hwlv7kyjehzswew2ocxh]  [cc59fafd-2566-4ed0-89b0-6833ae390d64]  Received graceful signal termination (none), performing cleanup
 2026-05-11T16:45:09.549Z CLI info  [a6rb5sphax4efq6t0da1hwlv7kyjehzswew2ocxh]  [cc59fafd-2566-4ed0-89b0-6833ae390d64]  [PRODUCTION] Making PUT request to https://collector-observability.browserstack.com
 2026-05-11T16:45:10.897Z CLI info [testhub:module]  [a6rb5sphax4efq6t0da1hwlv7kyjehzswew2ocxh]  [cc59fafd-2566-4ed0-89b0-6833ae390d64]  stopBuild: a6rb5sphax4efq6t0da1hwlv7kyjehzswew2ocxh request={"finished_at":"2026-05-11T16:45:09.548Z","finished_metadata":[],"custom_metadata":null} response={"data":""}
+2026-06-17T13:47:05.457Z CLI info [main]    Server listening on port: 5400
+2026-06-17T13:47:05.524Z CLI info    Config : {"platforms":[{"os":"Windows","osVersion":"11","browserName":"chrome","browserVersion":"latest"}],"browserstackLocal":true,"buildName":"Avotech-Regression-TestSuite","video":true,"interactiveDebugging":true}
+2026-06-17T13:47:05.682Z CLI info    Should start debug utility: undefined
+2026-06-17T13:47:05.686Z CLI info [testhub:module]   [90107517-f640-4aeb-b577-8e53aa9bbe22]  Starting testhub from 8792:0
+2026-06-17T13:47:05.687Z CLI info   [90107517-f640-4aeb-b577-8e53aa9bbe22]  [PRODUCTION] Making POST request to https://sdk.browserstack.com
+2026-06-17T13:47:05.689Z CLI info   [90107517-f640-4aeb-b577-8e53aa9bbe22]  [PRODUCTION] Making GET request to https://hub.browserstack.com
+2026-06-17T13:47:07.834Z CLI info   [90107517-f640-4aeb-b577-8e53aa9bbe22]  [PRODUCTION] Making GET request to https://hub-usw.browserstack.com
+2026-06-17T13:47:07.834Z CLI info   [90107517-f640-4aeb-b577-8e53aa9bbe22]  [PRODUCTION] Making GET request to https://hub-use.browserstack.com
+2026-06-17T13:47:07.835Z CLI info   [90107517-f640-4aeb-b577-8e53aa9bbe22]  [PRODUCTION] Making GET request to https://hub-euw.browserstack.com
+2026-06-17T13:47:08.672Z CLI info [testhub:module]   [90107517-f640-4aeb-b577-8e53aa9bbe22]  startBuild: response=f8zvxxkjjaglaoczehtwbyfwgvoatwipjgaesyla
+2026-06-17T13:47:08.675Z CLI info  [f8zvxxkjjaglaoczehtwbyfwgvoatwipjgaesyla]  [90107517-f640-4aeb-b577-8e53aa9bbe22]  [PRODUCTION] Making POST request to https://api.browserstack.com
+2026-06-17T13:47:12.303Z CLI info [main]  [f8zvxxkjjaglaoczehtwbyfwgvoatwipjgaesyla]  [90107517-f640-4aeb-b577-8e53aa9bbe22]  Uncaught Exception occurred, error: Error: EBUSY: resource busy or locked, open 'C:\Users\giver\.browserstack\BrowserStackLocal.exe', error stack trace: Error: EBUSY: resource busy or locked, open 'C:\Users\giver\.browserstack\BrowserStackLocal.exe'
+2026-06-17T13:47:12.304Z CLI info [main]  [f8zvxxkjjaglaoczehtwbyfwgvoatwipjgaesyla]  [90107517-f640-4aeb-b577-8e53aa9bbe22]  Upgrade available: Please update from beta to the latest stable version.
+2026-06-17T13:47:12.304Z CLI error [main]  [f8zvxxkjjaglaoczehtwbyfwgvoatwipjgaesyla]  [90107517-f640-4aeb-b577-8e53aa9bbe22]  error: Error: EBUSY: resource busy or locked, open 'C:\Users\giver\.browserstack\BrowserStackLocal.exe'
+2026-06-17T13:47:12.309Z CLI info [main]  [f8zvxxkjjaglaoczehtwbyfwgvoatwipjgaesyla]  [90107517-f640-4aeb-b577-8e53aa9bbe22]  Received graceful signal termination (none), performing cleanup
+2026-06-17T13:47:12.311Z CLI info  [f8zvxxkjjaglaoczehtwbyfwgvoatwipjgaesyla]  [90107517-f640-4aeb-b577-8e53aa9bbe22]  [PRODUCTION] Making PUT request to https://collector-observability.browserstack.com
+2026-06-17T13:47:16.125Z CLI error [testhub:module]  [f8zvxxkjjaglaoczehtwbyfwgvoatwipjgaesyla]  [90107517-f640-4aeb-b577-8e53aa9bbe22]  stopBuild: request={"finished_at":"2026-06-17T13:47:12.310Z","finished_metadata":[],"custom_metadata":null} error=RequestError: getaddrinfo ENOTFOUND collector-observability.browserstack.com
+    at ClientRequest.<anonymous> (C:\snapshot\browserstack-binary\cli\dist\index.js)
+    at Object.onceWrapper (node:events:632:26)
+    at ClientRequest.emit (node:events:529:35)
+    at ClientRequest.emit (node:domain:489:12)
+    at ClientRequest.<anonymous> (C:\snapshot\browserstack-binary\cli\dist\index.js)
+    at TLSSocket.socketErrorListener (node:_http_client:501:9)
+    at TLSSocket.emit (node:events:517:28)
+    at TLSSocket.emit (node:domain:489:12)
+    at emitErrorNT (node:internal/streams/destroy:151:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:116:3)
+    at GetAddrInfoReqWrap.onlookup [as oncomplete] (node:dns:107:26)
+2026-06-17T13:54:33.486Z CLI info [main]    Server listening on port: 5400
+2026-06-17T13:54:33.563Z CLI info    Config : {"platforms":[{"os":"Windows","osVersion":"11","browserName":"chrome","browserVersion":"latest"}],"browserstackLocal":true,"buildName":"Avotech-Regression-TestSuite","video":true,"interactiveDebugging":true}
+2026-06-17T13:54:33.619Z CLI info    Should start debug utility: undefined
+2026-06-17T13:54:33.623Z CLI info [testhub:module]   [9e6bca92-5df5-4c54-910b-2253f9d3ba55]  Starting testhub from 2632:0
+2026-06-17T13:54:33.625Z CLI info   [9e6bca92-5df5-4c54-910b-2253f9d3ba55]  [PRODUCTION] Making POST request to https://sdk.browserstack.com
+2026-06-17T13:54:33.628Z CLI info   [9e6bca92-5df5-4c54-910b-2253f9d3ba55]  [PRODUCTION] Making GET request to https://hub.browserstack.com
+2026-06-17T13:54:35.432Z CLI info   [9e6bca92-5df5-4c54-910b-2253f9d3ba55]  [PRODUCTION] Making GET request to https://hub-usw.browserstack.com
+2026-06-17T13:54:35.434Z CLI info   [9e6bca92-5df5-4c54-910b-2253f9d3ba55]  [PRODUCTION] Making GET request to https://hub-use.browserstack.com
+2026-06-17T13:54:35.435Z CLI info   [9e6bca92-5df5-4c54-910b-2253f9d3ba55]  [PRODUCTION] Making GET request to https://hub-euw.browserstack.com
+2026-06-17T13:54:36.557Z CLI info [testhub:module]   [9e6bca92-5df5-4c54-910b-2253f9d3ba55]  startBuild: response=msronumq89nvwv5y9ko49fzs6kvhoge4evolwnw1
+2026-06-17T13:54:36.559Z CLI info  [msronumq89nvwv5y9ko49fzs6kvhoge4evolwnw1]  [9e6bca92-5df5-4c54-910b-2253f9d3ba55]  [PRODUCTION] Making POST request to https://api.browserstack.com
+2026-06-17T13:54:40.328Z CLI info [main]  [msronumq89nvwv5y9ko49fzs6kvhoge4evolwnw1]  [9e6bca92-5df5-4c54-910b-2253f9d3ba55]  Uncaught Exception occurred, error: Error: EBUSY: resource busy or locked, open 'C:\Users\giver\.browserstack\BrowserStackLocal.exe', error stack trace: Error: EBUSY: resource busy or locked, open 'C:\Users\giver\.browserstack\BrowserStackLocal.exe'
+2026-06-17T13:54:40.328Z CLI info [main]  [msronumq89nvwv5y9ko49fzs6kvhoge4evolwnw1]  [9e6bca92-5df5-4c54-910b-2253f9d3ba55]  Upgrade available: Please update from beta to the latest stable version.
+2026-06-17T13:54:40.328Z CLI error [main]  [msronumq89nvwv5y9ko49fzs6kvhoge4evolwnw1]  [9e6bca92-5df5-4c54-910b-2253f9d3ba55]  error: Error: EBUSY: resource busy or locked, open 'C:\Users\giver\.browserstack\BrowserStackLocal.exe'
+2026-06-17T13:54:40.331Z CLI info [main]  [msronumq89nvwv5y9ko49fzs6kvhoge4evolwnw1]  [9e6bca92-5df5-4c54-910b-2253f9d3ba55]  Received graceful signal termination (none), performing cleanup
+2026-06-17T13:54:40.332Z CLI info  [msronumq89nvwv5y9ko49fzs6kvhoge4evolwnw1]  [9e6bca92-5df5-4c54-910b-2253f9d3ba55]  [PRODUCTION] Making PUT request to https://collector-observability.browserstack.com
+2026-06-17T13:54:44.043Z CLI error [testhub:module]  [msronumq89nvwv5y9ko49fzs6kvhoge4evolwnw1]  [9e6bca92-5df5-4c54-910b-2253f9d3ba55]  stopBuild: request={"finished_at":"2026-06-17T13:54:40.331Z","finished_metadata":[],"custom_metadata":null} error=RequestError: getaddrinfo ENOTFOUND collector-observability.browserstack.com
+    at ClientRequest.<anonymous> (C:\snapshot\browserstack-binary\cli\dist\index.js)
+    at Object.onceWrapper (node:events:632:26)
+    at ClientRequest.emit (node:events:529:35)
+    at ClientRequest.emit (node:domain:489:12)
+    at ClientRequest.<anonymous> (C:\snapshot\browserstack-binary\cli\dist\index.js)
+    at TLSSocket.socketErrorListener (node:_http_client:501:9)
+    at TLSSocket.emit (node:events:517:28)
+    at TLSSocket.emit (node:domain:489:12)
+    at emitErrorNT (node:internal/streams/destroy:151:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:116:3)
+    at GetAddrInfoReqWrap.onlookup [as oncomplete] (node:dns:107:26)
+2026-06-17T14:21:04.727Z CLI info [main]    Server listening on port: 5400
+2026-06-17T14:21:04.796Z CLI info    Config : {"platforms":[{"os":"Windows","osVersion":"11","browserName":"chrome","browserVersion":"latest"}],"browserstackLocal":true,"buildName":"Avotech-Regression-TestSuite","video":true,"interactiveDebugging":true}
+2026-06-17T14:21:04.848Z CLI info    Should start debug utility: undefined
+2026-06-17T14:21:04.852Z CLI info [testhub:module]   [2e8bdee6-4afe-4fbf-be7c-2add7200dfd9]  Starting testhub from 18248:0
+2026-06-17T14:21:04.853Z CLI info   [2e8bdee6-4afe-4fbf-be7c-2add7200dfd9]  [PRODUCTION] Making POST request to https://sdk.browserstack.com
+2026-06-17T14:21:04.855Z CLI info   [2e8bdee6-4afe-4fbf-be7c-2add7200dfd9]  [PRODUCTION] Making GET request to https://hub.browserstack.com
+2026-06-17T14:21:06.783Z CLI info   [2e8bdee6-4afe-4fbf-be7c-2add7200dfd9]  [PRODUCTION] Making GET request to https://hub-usw.browserstack.com
+2026-06-17T14:21:06.783Z CLI info   [2e8bdee6-4afe-4fbf-be7c-2add7200dfd9]  [PRODUCTION] Making GET request to https://hub-use.browserstack.com
+2026-06-17T14:21:06.784Z CLI info   [2e8bdee6-4afe-4fbf-be7c-2add7200dfd9]  [PRODUCTION] Making GET request to https://hub-euw.browserstack.com
+2026-06-17T14:21:07.170Z CLI info [testhub:module]   [2e8bdee6-4afe-4fbf-be7c-2add7200dfd9]  startBuild: response=zrezgncmkppzyp8fsepppw1qjylhqvzhr21xjcvg
+2026-06-17T14:21:07.171Z CLI info  [zrezgncmkppzyp8fsepppw1qjylhqvzhr21xjcvg]  [2e8bdee6-4afe-4fbf-be7c-2add7200dfd9]  [PRODUCTION] Making POST request to https://api.browserstack.com
+2026-06-17T14:21:10.544Z CLI info [main]  [zrezgncmkppzyp8fsepppw1qjylhqvzhr21xjcvg]  [2e8bdee6-4afe-4fbf-be7c-2add7200dfd9]  Uncaught Exception occurred, error: Error: EBUSY: resource busy or locked, open 'C:\Users\giver\.browserstack\BrowserStackLocal.exe', error stack trace: Error: EBUSY: resource busy or locked, open 'C:\Users\giver\.browserstack\BrowserStackLocal.exe'
+2026-06-17T14:21:10.544Z CLI info [main]  [zrezgncmkppzyp8fsepppw1qjylhqvzhr21xjcvg]  [2e8bdee6-4afe-4fbf-be7c-2add7200dfd9]  Upgrade available: Please update from beta to the latest stable version.
+2026-06-17T14:21:10.544Z CLI error [main]  [zrezgncmkppzyp8fsepppw1qjylhqvzhr21xjcvg]  [2e8bdee6-4afe-4fbf-be7c-2add7200dfd9]  error: Error: EBUSY: resource busy or locked, open 'C:\Users\giver\.browserstack\BrowserStackLocal.exe'
+2026-06-17T14:21:10.550Z CLI info [main]  [zrezgncmkppzyp8fsepppw1qjylhqvzhr21xjcvg]  [2e8bdee6-4afe-4fbf-be7c-2add7200dfd9]  Received graceful signal termination (none), performing cleanup
+2026-06-17T14:21:10.552Z CLI info  [zrezgncmkppzyp8fsepppw1qjylhqvzhr21xjcvg]  [2e8bdee6-4afe-4fbf-be7c-2add7200dfd9]  [PRODUCTION] Making PUT request to https://collector-observability.browserstack.com
+2026-06-17T14:21:14.312Z CLI error [testhub:module]  [zrezgncmkppzyp8fsepppw1qjylhqvzhr21xjcvg]  [2e8bdee6-4afe-4fbf-be7c-2add7200dfd9]  stopBuild: request={"finished_at":"2026-06-17T14:21:10.551Z","finished_metadata":[],"custom_metadata":null} error=RequestError: getaddrinfo ENOTFOUND collector-observability.browserstack.com
+    at ClientRequest.<anonymous> (C:\snapshot\browserstack-binary\cli\dist\index.js)
+    at Object.onceWrapper (node:events:632:26)
+    at ClientRequest.emit (node:events:529:35)
+    at ClientRequest.emit (node:domain:489:12)
+    at ClientRequest.<anonymous> (C:\snapshot\browserstack-binary\cli\dist\index.js)
+    at TLSSocket.socketErrorListener (node:_http_client:501:9)
+    at TLSSocket.emit (node:events:517:28)
+    at TLSSocket.emit (node:domain:489:12)
+    at emitErrorNT (node:internal/streams/destroy:151:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:116:3)
+    at GetAddrInfoReqWrap.onlookup [as oncomplete] (node:dns:107:26)
+2026-06-17T14:27:47.119Z CLI info [main]    Server listening on port: 5400
+2026-06-17T14:27:47.189Z CLI info    Config : {"platforms":[{"os":"Windows","osVersion":"11","browserName":"chrome","browserVersion":"latest"}],"browserstackLocal":true,"buildName":"Avotech-Regression-TestSuite","video":true,"interactiveDebugging":true}
+2026-06-17T14:27:47.232Z CLI info    Should start debug utility: undefined
+2026-06-17T14:27:47.236Z CLI info [testhub:module]   [af827100-1038-48f2-892c-9467221cc043]  Starting testhub from 19796:0
+2026-06-17T14:27:47.238Z CLI info   [af827100-1038-48f2-892c-9467221cc043]  [PRODUCTION] Making POST request to https://sdk.browserstack.com
+2026-06-17T14:27:47.240Z CLI info   [af827100-1038-48f2-892c-9467221cc043]  [PRODUCTION] Making GET request to https://hub.browserstack.com
+2026-06-17T14:27:48.934Z CLI info   [af827100-1038-48f2-892c-9467221cc043]  [PRODUCTION] Making GET request to https://hub-usw.browserstack.com
+2026-06-17T14:27:48.936Z CLI info   [af827100-1038-48f2-892c-9467221cc043]  [PRODUCTION] Making GET request to https://hub-use.browserstack.com
+2026-06-17T14:27:48.937Z CLI info   [af827100-1038-48f2-892c-9467221cc043]  [PRODUCTION] Making GET request to https://hub-euw.browserstack.com
+2026-06-17T14:27:49.631Z CLI info [testhub:module]   [af827100-1038-48f2-892c-9467221cc043]  startBuild: response=2yhgrxwvshk2k9yh7hiknreffv5qskjwdoei6cai
+2026-06-17T14:27:49.633Z CLI info  [2yhgrxwvshk2k9yh7hiknreffv5qskjwdoei6cai]  [af827100-1038-48f2-892c-9467221cc043]  [PRODUCTION] Making POST request to https://api.browserstack.com
+2026-06-17T14:27:53.203Z CLI info [main]  [2yhgrxwvshk2k9yh7hiknreffv5qskjwdoei6cai]  [af827100-1038-48f2-892c-9467221cc043]  Uncaught Exception occurred, error: Error: EBUSY: resource busy or locked, open 'C:\Users\giver\.browserstack\BrowserStackLocal.exe', error stack trace: Error: EBUSY: resource busy or locked, open 'C:\Users\giver\.browserstack\BrowserStackLocal.exe'
+2026-06-17T14:27:53.203Z CLI info [main]  [2yhgrxwvshk2k9yh7hiknreffv5qskjwdoei6cai]  [af827100-1038-48f2-892c-9467221cc043]  Upgrade available: Please update from beta to the latest stable version.
+2026-06-17T14:27:53.203Z CLI error [main]  [2yhgrxwvshk2k9yh7hiknreffv5qskjwdoei6cai]  [af827100-1038-48f2-892c-9467221cc043]  error: Error: EBUSY: resource busy or locked, open 'C:\Users\giver\.browserstack\BrowserStackLocal.exe'
+2026-06-17T14:27:53.206Z CLI info [main]  [2yhgrxwvshk2k9yh7hiknreffv5qskjwdoei6cai]  [af827100-1038-48f2-892c-9467221cc043]  Received graceful signal termination (none), performing cleanup
+2026-06-17T14:27:53.208Z CLI info  [2yhgrxwvshk2k9yh7hiknreffv5qskjwdoei6cai]  [af827100-1038-48f2-892c-9467221cc043]  [PRODUCTION] Making PUT request to https://collector-observability.browserstack.com
+2026-06-17T14:27:57.018Z CLI error [testhub:module]  [2yhgrxwvshk2k9yh7hiknreffv5qskjwdoei6cai]  [af827100-1038-48f2-892c-9467221cc043]  stopBuild: request={"finished_at":"2026-06-17T14:27:53.207Z","finished_metadata":[],"custom_metadata":null} error=RequestError: getaddrinfo ENOTFOUND collector-observability.browserstack.com
+    at ClientRequest.<anonymous> (C:\snapshot\browserstack-binary\cli\dist\index.js)
+    at Object.onceWrapper (node:events:632:26)
+    at ClientRequest.emit (node:events:529:35)
+    at ClientRequest.emit (node:domain:489:12)
+    at ClientRequest.<anonymous> (C:\snapshot\browserstack-binary\cli\dist\index.js)
+    at TLSSocket.socketErrorListener (node:_http_client:501:9)
+    at TLSSocket.emit (node:events:517:28)
+    at TLSSocket.emit (node:domain:489:12)
+    at emitErrorNT (node:internal/streams/destroy:151:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:116:3)
+    at GetAddrInfoReqWrap.onlookup [as oncomplete] (node:dns:107:26)
+2026-06-17T14:40:11.568Z CLI info [main]    Server listening on port: 5400
+2026-06-17T14:40:11.616Z CLI info    Config : {"platforms":[{"os":"Windows","osVersion":"11","browserName":"chrome","browserVersion":"latest"}],"browserstackLocal":false,"buildName":"Avotech-Regression-TestSuite","video":true,"interactiveDebugging":true}
+2026-06-17T14:40:11.656Z CLI info    Should start debug utility: undefined
+2026-06-17T14:40:11.660Z CLI info [testhub:module]   [cc4b08ef-ad19-4614-8f5f-2bfd2c723145]  Starting testhub from 13388:0
+2026-06-17T14:40:11.661Z CLI info   [cc4b08ef-ad19-4614-8f5f-2bfd2c723145]  [PRODUCTION] Making POST request to https://sdk.browserstack.com
+2026-06-17T14:40:11.663Z CLI info   [cc4b08ef-ad19-4614-8f5f-2bfd2c723145]  [PRODUCTION] Making GET request to https://hub.browserstack.com
+2026-06-17T14:40:13.421Z CLI info   [cc4b08ef-ad19-4614-8f5f-2bfd2c723145]  [PRODUCTION] Making GET request to https://hub-usw.browserstack.com
+2026-06-17T14:40:13.422Z CLI info   [cc4b08ef-ad19-4614-8f5f-2bfd2c723145]  [PRODUCTION] Making GET request to https://hub-use.browserstack.com
+2026-06-17T14:40:13.422Z CLI info   [cc4b08ef-ad19-4614-8f5f-2bfd2c723145]  [PRODUCTION] Making GET request to https://hub-euw.browserstack.com
+2026-06-17T14:40:14.189Z CLI info [testhub:module]   [cc4b08ef-ad19-4614-8f5f-2bfd2c723145]  startBuild: response=xnwehjpasvxrmflowuuvdib2bxdyzeugzs6ska3o
+2026-06-17T14:40:14.191Z CLI info  [xnwehjpasvxrmflowuuvdib2bxdyzeugzs6ska3o]  [cc4b08ef-ad19-4614-8f5f-2bfd2c723145]  [PRODUCTION] Making POST request to https://api.browserstack.com
+2026-06-17T14:40:21.113Z CLI info [testhub:request-queue-handler]  [xnwehjpasvxrmflowuuvdib2bxdyzeugzs6ska3o]  [cc4b08ef-ad19-4614-8f5f-2bfd2c723145]  Added the event {
+  event_type: 'TestRunStarted',
+  logs: [],
+  test_run: {
+    type: 'test',
+    framework: 'Playwright',
+    uuid: '8de3b30d-0181-42a5-8d59-4b8b9e473d80',
+    name: 'redirects to login, then to home after valid credentials',
+    body: {
+      lang: 'javascript',
+      code: 'async ({\n' +
+        '      page,\n' +
+        '      csiLoginPage\n' +
+        '    }) => {\n' +
+        '      var _process$env$CSI_TEST;\n' +
+        '      if (!((_process$env$CSI_TEST = process.env.CSI_TEST_PASSWORD) !== null && _process$env$CSI_TEST !== void 0 && _process$env$CSI_TEST.length)) {\n' +
+        '        _testSetup.test.skip();\n' +
+        '        return;\n' +
+        '      }\n' +
+        '      const password = (0, _credentials.csiTestPassword)();\n' +
+        '      const email = (0, _credentials.csiTestEmail)();\n' +
+        '      await csiLoginPage.gotoLogin();\n' +
+        '      await (0, _testSetup.expect)(page).toHaveURL(url => (0, _csi.isCsiLoginPageUrl)(url));\n' +
+        '      await csiLoginPage.signInWithEmailAndPassword(email, password);\n' +
+        '      await csiLoginPage.expectOnHome();\n' +
+        '    }'
+    },
+    identifier: 'redirects to login, then to home after valid credentials',
+    scope: 'redirects to login, then to home after valid credentials',
+    scopes: [
+      'CSI · Avotech login',
+      'redirects to login, then to home after valid credentials'
+    ],
+    custom_metadata: undefined,
+    meta: {},
+    file_name: 'tests\\csi\\auth\\login.spec.ts',
+    vc_filepath: 'tests\\csi\\auth\\login.spec.ts',
+    location: 'tests\\csi\\auth\\login.spec.ts',
+    result: 'pending',
+    duration_in_ms: null,
+    started_at: '2026-06-17T14:40:21.067Z',
+    failure: undefined,
+    failure_type: undefined,
+    failure_reason: null,
+    retry_of: null,
+    tags: [],
+    customRerunParam: {
+      rerun_name: ' -latest:Windows 11-browserstack csi\\auth\\login.spec.ts CSI · Avotech login redirects to login, then to home after valid credentials redirects to login, then to home after valid credentials'
+    },
+    hooks: [],
+    product_map: {
+      observability: true,
+      accessibility: false,
+      percy: false,
+      automate: true,
+      app_automate: false,
+      lts: false
+    }
+  }
+} to 13388:0
+2026-06-17T14:40:22.191Z CLI info [testhub:request-queue-handler]  [xnwehjpasvxrmflowuuvdib2bxdyzeugzs6ska3o]  [cc4b08ef-ad19-4614-8f5f-2bfd2c723145]  Processing batch event [
+  {
+    event_type: 'TestRunStarted',
+    logs: [],
+    test_run: {
+      type: 'test',
+      framework: 'Playwright',
+      uuid: '8de3b30d-0181-42a5-8d59-4b8b9e473d80',
+      name: 'redirects to login, then to home after valid credentials',
+      body: {
+        lang: 'javascript',
+        code: 'async ({\n' +
+          '      page,\n' +
+          '      csiLoginPage\n' +
+          '    }) => {\n' +
+          '      var _process$env$CSI_TEST;\n' +
+          '      if (!((_process$env$CSI_TEST = process.env.CSI_TEST_PASSWORD) !== null && _process$env$CSI_TEST !== void 0 && _process$env$CSI_TEST.length)) {\n' +
+          '        _testSetup.test.skip();\n' +
+          '        return;\n' +
+          '      }\n' +
+          '      const password = (0, _credentials.csiTestPassword)();\n' +
+          '      const email = (0, _credentials.csiTestEmail)();\n' +
+          '      await csiLoginPage.gotoLogin();\n' +
+          '      await (0, _testSetup.expect)(page).toHaveURL(url => (0, _csi.isCsiLoginPageUrl)(url));\n' +
+          '      await csiLoginPage.signInWithEmailAndPassword(email, password);\n' +
+          '      await csiLoginPage.expectOnHome();\n' +
+          '    }'
+      },
+      identifier: 'redirects to login, then to home after valid credentials',
+      scope: 'redirects to login, then to home after valid credentials',
+      scopes: [
+        'CSI · Avotech login',
+        'redirects to login, then to home after valid credentials'
+      ],
+      custom_metadata: undefined,
+      meta: {},
+      file_name: 'tests\\csi\\auth\\login.spec.ts',
+      vc_filepath: 'tests\\csi\\auth\\login.spec.ts',
+      location: 'tests\\csi\\auth\\login.spec.ts',
+      result: 'pending',
+      duration_in_ms: null,
+      started_at: '2026-06-17T14:40:21.067Z',
+      failure: undefined,
+      failure_type: undefined,
+      failure_reason: null,
+      retry_of: null,
+      tags: [],
+      customRerunParam: {
+        rerun_name: ' -latest:Windows 11-browserstack csi\\auth\\login.spec.ts CSI · Avotech login redirects to login, then to home after valid credentials redirects to login, then to home after valid credentials'
+      },
+      hooks: [],
+      product_map: {
+        observability: true,
+        accessibility: false,
+        percy: false,
+        automate: true,
+        app_automate: false,
+        lts: false
+      }
+    }
+  }
+] to 13388:0
+2026-06-17T14:40:22.192Z CLI info  [xnwehjpasvxrmflowuuvdib2bxdyzeugzs6ska3o]  [cc4b08ef-ad19-4614-8f5f-2bfd2c723145]  [PRODUCTION] Making POST request to https://collector-observability.browserstack.com
+2026-06-17T14:40:23.902Z CLI info [testhub:request-queue-handler]  [xnwehjpasvxrmflowuuvdib2bxdyzeugzs6ska3o]  [cc4b08ef-ad19-4614-8f5f-2bfd2c723145]  Added the event {
+  event_type: 'CBTSessionCreated',
+  test_run: {
+    uuid: '8de3b30d-0181-42a5-8d59-4b8b9e473d80',
+    integrations: { browserstack: [Object] }
+  }
+} to 13388:0
+2026-06-17T14:40:23.939Z CLI info [testhub:request-queue-handler]  [xnwehjpasvxrmflowuuvdib2bxdyzeugzs6ska3o]  [cc4b08ef-ad19-4614-8f5f-2bfd2c723145]  Added the event {
+  event_type: 'LogCreated',
+  logs: [
+    {
+      testFrameworkName: 'Playwright',
+      testFrameworkVersion: '1.59.1',
+      testFrameworkState: 'TEST',
+      timestamp: '2026-06-17T14:40:23.908Z',
+      uuid: '8de3b30d-0181-42a5-8d59-4b8b9e473d80',
+      kind: 'TEST_STEP',
+      message: 'Fixture "browser"',
+      level: 'passed',
+      fileName: '',
+      fileSize: [Long],
+      filePath: '',
+      attachmentType: '',
+      test_run_uuid: '8de3b30d-0181-42a5-8d59-4b8b9e473d80'
+    },
+    {
+      testFrameworkName: 'Playwright',
+      testFrameworkVersion: '1.59.1',
+      testFrameworkState: 'TEST',
+      timestamp: '2026-06-17T14:40:23.909Z',
+      uuid: '8de3b30d-0181-42a5-8d59-4b8b9e473d80',
+      kind: 'TEST_STEP',
+      message: 'Fixture "__browserstack_workerHook"',
+      level: 'passed',
+      fileName: '',
+      fileSize: [Long],
+      filePath: '',
+      attachmentType: '',
+      duration: 2,
+      test_run_uuid: '8de3b30d-0181-42a5-8d59-4b8b9e473d80'
+    }
+  ]
+} to 13388:0
+2026-06-17T14:40:23.949Z CLI info [testhub:request-queue-handler]  [xnwehjpasvxrmflowuuvdib2bxdyzeugzs6ska3o]  [cc4b08ef-ad19-4614-8f5f-2bfd2c723145]  Added the event {
+  event_type: 'TestRunFinished',
+  logs: [],
+  test_run: {
+    type: 'test',
+    framework: 'Playwright',
+    uuid: '8de3b30d-0181-42a5-8d59-4b8b9e473d80',
+    name: 'redirects to login, then to home after valid credentials',
+    body: {
+      lang: 'javascript',
+      code: 'async ({\n' +
+        '      page,\n' +
+        '      csiLoginPage\n' +
+        '    }) => {\n' +
+        '      var _process$env$CSI_TEST;\n' +
+        '      if (!((_process$env$CSI_TEST = process.env.CSI_TEST_PASSWORD) !== null && _process$env$CSI_TEST !== void 0 && _process$env$CSI_TEST.length)) {\n' +
+        '        _testSetup.test.skip();\n' +
+        '        return;\n' +
+        '      }\n' +
+        '      const password = (0, _credentials.csiTestPassword)();\n' +
+        '      const email = (0, _credentials.csiTestEmail)();\n' +
+        '      await csiLoginPage.gotoLogin();\n' +
+        '      await (0, _testSetup.expect)(page).toHaveURL(url => (0, _csi.isCsiLoginPageUrl)(url));\n' +
+        '      await csiLoginPage.signInWithEmailAndPassword(email, password);\n' +
+        '      await csiLoginPage.expectOnHome();\n' +
+        '    }'
+    },
+    identifier: 'redirects to login, then to home after valid credentials',
+    scope: 'redirects to login, then to home after valid credentials',
+    scopes: [
+      'CSI · Avotech login',
+      'redirects to login, then to home after valid credentials'
+    ],
+    custom_metadata: {},
+    meta: {},
+    file_name: 'tests\\csi\\auth\\login.spec.ts',
+    vc_filepath: 'tests\\csi\\auth\\login.spec.ts',
+    location: 'tests\\csi\\auth\\login.spec.ts',
+    result: 'failed',
+    duration_in_ms: 28,
+    started_at: '2026-06-17T14:40:21.067Z',
+    finished_at: '2026-06-17T14:40:21.095Z',
+    failure: [ [Object] ],
+    failure_type: 'UnhandledError',
+    failure_reason: null,
+    retry_of: null,
+    tags: [],
+    customRerunParam: {
+      rerun_name: ' -latest:Windows 11-browserstack csi\\auth\\login.spec.ts CSI · Avotech login redirects to login, then to home after valid credentials redirects to login, then to home after valid credentials'
+    },
+    hooks: [],
+    product_map: {
+      observability: true,
+      accessibility: false,
+      percy: false,
+      automate: true,
+      app_automate: false,
+      lts: false
+    },
+    integrations: { browserstack: [Object] }
+  }
+} to 13388:0
+2026-06-17T14:40:24.191Z CLI info [testhub:request-queue-handler]  [xnwehjpasvxrmflowuuvdib2bxdyzeugzs6ska3o]  [cc4b08ef-ad19-4614-8f5f-2bfd2c723145]  Processing batch event [
+  {
+    event_type: 'CBTSessionCreated',
+    test_run: {
+      uuid: '8de3b30d-0181-42a5-8d59-4b8b9e473d80',
+      integrations: {
+        browserstack: {
+          product: 'automate',
+          session_id: undefined,
+          capabilities: {
+            build: 'Avotech-Regression-TestSuite',
+            'browserstack.video': true,
+            interactiveDebugging: true,
+            'browserstack.user': '[REDACTED]',
+            'browserstack.key': '[REDACTED]',
+            'browserstack.buildIdentifier': '#27',
+            turboScaleOptions: {},
+            os: 'Windows',
+            os_version: '11',
+            'browserstack.hostName': 'DESKTOP-B1PF2KP',
+            'browserstack.browserstackSDK': 'Playwright-nodeagent/1.52.2',
+            'browserstack.buildProductMap': {
+              observability: true,
+              accessibility: false,
+              percy: false,
+              automate: true,
+              app_automate: false,
+              turboscale: false,
+              central_scanner: false,
+              lts: false
+            },
+            'browserstack.use_w3c': false,
+            browser: 'chrome',
+            browser_version: 'latest',
+            'browserstack.testhubBuildUuid': 'xnwehjpasvxrmflowuuvdib2bxdyzeugzs6ska3o',
+            'browserstack.local': false,
+            'browserstack.localIdentifier': null
+          },
+          platform: 'Windows',
+          platform_version: '11',
+          browser: 'chrome',
+          browser_version: 'latest'
+        }
+      }
+    }
+  },
+  {
+    event_type: 'LogCreated',
+    logs: [
+      {
+        testFrameworkName: 'Playwright',
+        testFrameworkVersion: '1.59.1',
+        testFrameworkState: 'TEST',
+        timestamp: '2026-06-17T14:40:23.908Z',
+        uuid: '8de3b30d-0181-42a5-8d59-4b8b9e473d80',
+        kind: 'TEST_STEP',
+        message: 'Fixture "browser"',
+        level: 'passed',
+        fileName: '',
+        fileSize: Long { low: 0, high: 0, unsigned: false },
+        filePath: '',
+        attachmentType: '',
+        test_run_uuid: '8de3b30d-0181-42a5-8d59-4b8b9e473d80'
+      },
+      {
+        testFrameworkName: 'Playwright',
+        testFrameworkVersion: '1.59.1',
+        testFrameworkState: 'TEST',
+        timestamp: '2026-06-17T14:40:23.909Z',
+        uuid: '8de3b30d-0181-42a5-8d59-4b8b9e473d80',
+        kind: 'TEST_STEP',
+        message: 'Fixture "__browserstack_workerHook"',
+        level: 'passed',
+        fileName: '',
+        fileSize: Long { low: 0, high: 0, unsigned: false },
+        filePath: '',
+        attachmentType: '',
+        duration: 2,
+        test_run_uuid: '8de3b30d-0181-42a5-8d59-4b8b9e473d80'
+      }
+    ]
+  },
+  {
+    event_type: 'TestRunFinished',
+    logs: [],
+    test_run: {
+      type: 'test',
+      framework: 'Playwright',
+      uuid: '8de3b30d-0181-42a5-8d59-4b8b9e473d80',
+      name: 'redirects to login, then to home after valid credentials',
+      body: {
+        lang: 'javascript',
+        code: 'async ({\n' +
+          '      page,\n' +
+          '      csiLoginPage\n' +
+          '    }) => {\n' +
+          '      var _process$env$CSI_TEST;\n' +
+          '      if (!((_process$env$CSI_TEST = process.env.CSI_TEST_PASSWORD) !== null && _process$env$CSI_TEST !== void 0 && _process$env$CSI_TEST.length)) {\n' +
+          '        _testSetup.test.skip();\n' +
+          '        return;\n' +
+          '      }\n' +
+          '      const password = (0, _credentials.csiTestPassword)();\n' +
+          '      const email = (0, _credentials.csiTestEmail)();\n' +
+          '      await csiLoginPage.gotoLogin();\n' +
+          '      await (0, _testSetup.expect)(page).toHaveURL(url => (0, _csi.isCsiLoginPageUrl)(url));\n' +
+          '      await csiLoginPage.signInWithEmailAndPassword(email, password);\n' +
+          '      await csiLoginPage.expectOnHome();\n' +
+          '    }'
+      },
+      identifier: 'redirects to login, then to home after valid credentials',
+      scope: 'redirects to login, then to home after valid credentials',
+      scopes: [
+        'CSI · Avotech login',
+        'redirects to login, then to home after valid credentials'
+      ],
+      custom_metadata: {},
+      meta: {},
+      file_name: 'tests\\csi\\auth\\login.spec.ts',
+      vc_filepath: 'tests\\csi\\auth\\login.spec.ts',
+      location: 'tests\\csi\\auth\\login.spec.ts',
+      result: 'failed',
+      duration_in_ms: 28,
+      started_at: '2026-06-17T14:40:21.067Z',
+      finished_at: '2026-06-17T14:40:21.095Z',
+      failure: [
+        {
+          backtrace: [
+            'Error: browserType.connect: Error: Automate testing time expired.',
+            '    at BrowserType._0x1ef10c (D:\\CODES\\CSI-QA-testing\\node_modules\\browserstack-node-sdk\\src\\bin\\playwright\\mock-process.js:1:34696)'
+          ],
+          expanded: [
+            'message: Error: browserType.connect: Error: Automate testing time expired.',
+            'location: undefined'
+          ]
+        }
+      ],
+      failure_type: 'UnhandledError',
+      failure_reason: null,
+      retry_of: null,
+      tags: [],
+      customRerunParam: {
+        rerun_name: ' -latest:Windows 11-browserstack csi\\auth\\login.spec.ts CSI · Avotech login redirects to login, then to home after valid credentials redirects to login, then to home after valid credentials'
+      },
+      hooks: [],
+      product_map: {
+        observability: true,
+        accessibility: false,
+        percy: false,
+        automate: true,
+        app_automate: false,
+        lts: false
+      },
+      integrations: {
+        browserstack: {
+          product: 'automate',
+          capabilities: {
+            build: 'Avotech-Regression-TestSuite',
+            'browserstack.video': true,
+            interactiveDebugging: true,
+            'browserstack.user': '[REDACTED]',
+            'browserstack.key': '[REDACTED]',
+            'browserstack.buildIdentifier': '#27',
+            turboScaleOptions: {},
+            os: 'Windows',
+            os_version: '11',
+            'browserstack.hostName': 'DESKTOP-B1PF2KP',
+            'browserstack.browserstackSDK': 'Playwright-nodeagent/1.52.2',
+            'browserstack.buildProductMap': {
+              observability: true,
+              accessibility: false,
+              percy: false,
+              automate: true,
+              app_automate: false,
+              turboscale: false,
+              central_scanner: false,
+              lts: false
+            },
+            'browserstack.use_w3c': false,
+            browser: 'chrome',
+            browser_version: 'latest',
+            'browserstack.testhubBuildUuid': 'xnwehjpasvxrmflowuuvdib2bxdyzeugzs6ska3o',
+            'browserstack.local': false,
+            'browserstack.localIdentifier': null
+          },
+          platform: 'Windows',
+          platform_version: '11',
+          browser: 'chrome',
+          browser_version: 'latest'
+        }
+      }
+    }
+  }
+] to 13388:0
+2026-06-17T14:40:24.192Z CLI info  [xnwehjpasvxrmflowuuvdib2bxdyzeugzs6ska3o]  [cc4b08ef-ad19-4614-8f5f-2bfd2c723145]  [PRODUCTION] Making POST request to https://collector-observability.browserstack.com
+2026-06-17T14:40:29.435Z CLI info [main]  [xnwehjpasvxrmflowuuvdib2bxdyzeugzs6ska3o]  [cc4b08ef-ad19-4614-8f5f-2bfd2c723145]  Received graceful signal termination (SIGINT), performing cleanup
+2026-06-17T14:58:23.753Z CLI info [main]    Server listening on port: 5400
+2026-06-17T14:58:23.820Z CLI info    Config : {"platforms":[{"os":"Windows","osVersion":"11","browserName":"chrome","browserVersion":"latest"}],"browserstackLocal":false,"buildName":"Avotech-Regression-TestSuite","video":true,"interactiveDebugging":true}
+2026-06-17T14:58:23.861Z CLI info    Should start debug utility: undefined
+2026-06-17T14:58:23.865Z CLI info [testhub:module]   [1318597e-7e2a-437e-b7cb-80a86c81ae2b]  Starting testhub from 4192:0
+2026-06-17T14:58:23.867Z CLI info   [1318597e-7e2a-437e-b7cb-80a86c81ae2b]  [PRODUCTION] Making POST request to https://sdk.browserstack.com
+2026-06-17T14:58:23.869Z CLI info   [1318597e-7e2a-437e-b7cb-80a86c81ae2b]  [PRODUCTION] Making GET request to https://hub.browserstack.com
+2026-06-17T14:58:25.567Z CLI info   [1318597e-7e2a-437e-b7cb-80a86c81ae2b]  [PRODUCTION] Making GET request to https://hub-usw.browserstack.com
+2026-06-17T14:58:25.568Z CLI info   [1318597e-7e2a-437e-b7cb-80a86c81ae2b]  [PRODUCTION] Making GET request to https://hub-use.browserstack.com
+2026-06-17T14:58:25.568Z CLI info   [1318597e-7e2a-437e-b7cb-80a86c81ae2b]  [PRODUCTION] Making GET request to https://hub-euw.browserstack.com
+2026-06-17T14:58:26.413Z CLI info [testhub:module]   [1318597e-7e2a-437e-b7cb-80a86c81ae2b]  startBuild: response=txjwzootgmnszwjhtrjspmo57pnubz762liaorwz
+2026-06-17T14:58:26.414Z CLI info  [txjwzootgmnszwjhtrjspmo57pnubz762liaorwz]  [1318597e-7e2a-437e-b7cb-80a86c81ae2b]  [PRODUCTION] Making POST request to https://api.browserstack.com
+2026-06-17T14:58:33.534Z CLI info [testhub:request-queue-handler]  [txjwzootgmnszwjhtrjspmo57pnubz762liaorwz]  [1318597e-7e2a-437e-b7cb-80a86c81ae2b]  Added the event {
+  event_type: 'TestRunStarted',
+  logs: [],
+  test_run: {
+    type: 'test',
+    framework: 'Playwright',
+    uuid: '3b51bcec-341c-444d-baf4-35972cea437b',
+    name: 'redirects to login, then to home after valid credentials',
+    body: {
+      lang: 'javascript',
+      code: 'async ({\n' +
+        '      page,\n' +
+        '      csiLoginPage\n' +
+        '    }) => {\n' +
+        '      var _process$env$CSI_TEST;\n' +
+        '      if (!((_process$env$CSI_TEST = process.env.CSI_TEST_PASSWORD) !== null && _process$env$CSI_TEST !== void 0 && _process$env$CSI_TEST.length)) {\n' +
+        '        _testSetup.test.skip();\n' +
+        '        return;\n' +
+        '      }\n' +
+        '      const password = (0, _credentials.csiTestPassword)();\n' +
+        '      const email = (0, _credentials.csiTestEmail)();\n' +
+        '      await csiLoginPage.gotoLogin();\n' +
+        '      await (0, _testSetup.expect)(page).toHaveURL(url => (0, _csi.isCsiLoginPageUrl)(url));\n' +
+        '      await csiLoginPage.signInWithEmailAndPassword(email, password);\n' +
+        '      await csiLoginPage.expectOnHome();\n' +
+        '    }'
+    },
+    identifier: 'redirects to login, then to home after valid credentials',
+    scope: 'redirects to login, then to home after valid credentials',
+    scopes: [
+      'CSI · Avotech login',
+      'redirects to login, then to home after valid credentials'
+    ],
+    custom_metadata: undefined,
+    meta: {},
+    file_name: 'tests\\csi\\auth\\login.spec.ts',
+    vc_filepath: 'tests\\csi\\auth\\login.spec.ts',
+    location: 'tests\\csi\\auth\\login.spec.ts',
+    result: 'pending',
+    duration_in_ms: null,
+    started_at: '2026-06-17T14:58:33.498Z',
+    failure: undefined,
+    failure_type: undefined,
+    failure_reason: null,
+    retry_of: null,
+    tags: [],
+    customRerunParam: {
+      rerun_name: ' -latest:Windows 11-browserstack csi\\auth\\login.spec.ts CSI · Avotech login redirects to login, then to home after valid credentials redirects to login, then to home after valid credentials'
+    },
+    hooks: [],
+    product_map: {
+      observability: true,
+      accessibility: false,
+      percy: false,
+      automate: true,
+      app_automate: false,
+      lts: false
+    }
+  }
+} to 4192:0
+2026-06-17T14:58:34.453Z CLI info [testhub:request-queue-handler]  [txjwzootgmnszwjhtrjspmo57pnubz762liaorwz]  [1318597e-7e2a-437e-b7cb-80a86c81ae2b]  Processing batch event [
+  {
+    event_type: 'TestRunStarted',
+    logs: [],
+    test_run: {
+      type: 'test',
+      framework: 'Playwright',
+      uuid: '3b51bcec-341c-444d-baf4-35972cea437b',
+      name: 'redirects to login, then to home after valid credentials',
+      body: {
+        lang: 'javascript',
+        code: 'async ({\n' +
+          '      page,\n' +
+          '      csiLoginPage\n' +
+          '    }) => {\n' +
+          '      var _process$env$CSI_TEST;\n' +
+          '      if (!((_process$env$CSI_TEST = process.env.CSI_TEST_PASSWORD) !== null && _process$env$CSI_TEST !== void 0 && _process$env$CSI_TEST.length)) {\n' +
+          '        _testSetup.test.skip();\n' +
+          '        return;\n' +
+          '      }\n' +
+          '      const password = (0, _credentials.csiTestPassword)();\n' +
+          '      const email = (0, _credentials.csiTestEmail)();\n' +
+          '      await csiLoginPage.gotoLogin();\n' +
+          '      await (0, _testSetup.expect)(page).toHaveURL(url => (0, _csi.isCsiLoginPageUrl)(url));\n' +
+          '      await csiLoginPage.signInWithEmailAndPassword(email, password);\n' +
+          '      await csiLoginPage.expectOnHome();\n' +
+          '    }'
+      },
+      identifier: 'redirects to login, then to home after valid credentials',
+      scope: 'redirects to login, then to home after valid credentials',
+      scopes: [
+        'CSI · Avotech login',
+        'redirects to login, then to home after valid credentials'
+      ],
+      custom_metadata: undefined,
+      meta: {},
+      file_name: 'tests\\csi\\auth\\login.spec.ts',
+      vc_filepath: 'tests\\csi\\auth\\login.spec.ts',
+      location: 'tests\\csi\\auth\\login.spec.ts',
+      result: 'pending',
+      duration_in_ms: null,
+      started_at: '2026-06-17T14:58:33.498Z',
+      failure: undefined,
+      failure_type: undefined,
+      failure_reason: null,
+      retry_of: null,
+      tags: [],
+      customRerunParam: {
+        rerun_name: ' -latest:Windows 11-browserstack csi\\auth\\login.spec.ts CSI · Avotech login redirects to login, then to home after valid credentials redirects to login, then to home after valid credentials'
+      },
+      hooks: [],
+      product_map: {
+        observability: true,
+        accessibility: false,
+        percy: false,
+        automate: true,
+        app_automate: false,
+        lts: false
+      }
+    }
+  }
+] to 4192:0
+2026-06-17T14:58:34.453Z CLI info  [txjwzootgmnszwjhtrjspmo57pnubz762liaorwz]  [1318597e-7e2a-437e-b7cb-80a86c81ae2b]  [PRODUCTION] Making POST request to https://collector-observability.browserstack.com
+2026-06-17T14:58:35.810Z CLI info [testhub:request-queue-handler]  [txjwzootgmnszwjhtrjspmo57pnubz762liaorwz]  [1318597e-7e2a-437e-b7cb-80a86c81ae2b]  Added the event {
+  event_type: 'CBTSessionCreated',
+  test_run: {
+    uuid: '3b51bcec-341c-444d-baf4-35972cea437b',
+    integrations: { browserstack: [Object] }
+  }
+} to 4192:0
+2026-06-17T14:58:35.841Z CLI info [testhub:request-queue-handler]  [txjwzootgmnszwjhtrjspmo57pnubz762liaorwz]  [1318597e-7e2a-437e-b7cb-80a86c81ae2b]  Added the event {
+  event_type: 'LogCreated',
+  logs: [
+    {
+      testFrameworkName: 'Playwright',
+      testFrameworkVersion: '1.59.1',
+      testFrameworkState: 'TEST',
+      timestamp: '2026-06-17T14:58:35.815Z',
+      uuid: '3b51bcec-341c-444d-baf4-35972cea437b',
+      kind: 'TEST_STEP',
+      message: 'Fixture "browser"',
+      level: 'passed',
+      fileName: '',
+      fileSize: [Long],
+      filePath: '',
+      attachmentType: '',
+      test_run_uuid: '3b51bcec-341c-444d-baf4-35972cea437b'
+    },
+    {
+      testFrameworkName: 'Playwright',
+      testFrameworkVersion: '1.59.1',
+      testFrameworkState: 'TEST',
+      timestamp: '2026-06-17T14:58:35.815Z',
+      uuid: '3b51bcec-341c-444d-baf4-35972cea437b',
+      kind: 'TEST_STEP',
+      message: 'Fixture "__browserstack_workerHook"',
+      level: 'passed',
+      fileName: '',
+      fileSize: [Long],
+      filePath: '',
+      attachmentType: '',
+      duration: 2,
+      test_run_uuid: '3b51bcec-341c-444d-baf4-35972cea437b'
+    }
+  ]
+} to 4192:0
+2026-06-17T14:58:35.850Z CLI info [testhub:request-queue-handler]  [txjwzootgmnszwjhtrjspmo57pnubz762liaorwz]  [1318597e-7e2a-437e-b7cb-80a86c81ae2b]  Added the event {
+  event_type: 'TestRunFinished',
+  logs: [],
+  test_run: {
+    type: 'test',
+    framework: 'Playwright',
+    uuid: '3b51bcec-341c-444d-baf4-35972cea437b',
+    name: 'redirects to login, then to home after valid credentials',
+    body: {
+      lang: 'javascript',
+      code: 'async ({\n' +
+        '      page,\n' +
+        '      csiLoginPage\n' +
+        '    }) => {\n' +
+        '      var _process$env$CSI_TEST;\n' +
+        '      if (!((_process$env$CSI_TEST = process.env.CSI_TEST_PASSWORD) !== null && _process$env$CSI_TEST !== void 0 && _process$env$CSI_TEST.length)) {\n' +
+        '        _testSetup.test.skip();\n' +
+        '        return;\n' +
+        '      }\n' +
+        '      const password = (0, _credentials.csiTestPassword)();\n' +
+        '      const email = (0, _credentials.csiTestEmail)();\n' +
+        '      await csiLoginPage.gotoLogin();\n' +
+        '      await (0, _testSetup.expect)(page).toHaveURL(url => (0, _csi.isCsiLoginPageUrl)(url));\n' +
+        '      await csiLoginPage.signInWithEmailAndPassword(email, password);\n' +
+        '      await csiLoginPage.expectOnHome();\n' +
+        '    }'
+    },
+    identifier: 'redirects to login, then to home after valid credentials',
+    scope: 'redirects to login, then to home after valid credentials',
+    scopes: [
+      'CSI · Avotech login',
+      'redirects to login, then to home after valid credentials'
+    ],
+    custom_metadata: {},
+    meta: {},
+    file_name: 'tests\\csi\\auth\\login.spec.ts',
+    vc_filepath: 'tests\\csi\\auth\\login.spec.ts',
+    location: 'tests\\csi\\auth\\login.spec.ts',
+    result: 'failed',
+    duration_in_ms: 21,
+    started_at: '2026-06-17T14:58:33.498Z',
+    finished_at: '2026-06-17T14:58:33.519Z',
+    failure: [ [Object] ],
+    failure_type: 'UnhandledError',
+    failure_reason: null,
+    retry_of: null,
+    tags: [],
+    customRerunParam: {
+      rerun_name: ' -latest:Windows 11-browserstack csi\\auth\\login.spec.ts CSI · Avotech login redirects to login, then to home after valid credentials redirects to login, then to home after valid credentials'
+    },
+    hooks: [],
+    product_map: {
+      observability: true,
+      accessibility: false,
+      percy: false,
+      automate: true,
+      app_automate: false,
+      lts: false
+    },
+    integrations: { browserstack: [Object] }
+  }
+} to 4192:0
+2026-06-17T14:58:36.468Z CLI info [testhub:request-queue-handler]  [txjwzootgmnszwjhtrjspmo57pnubz762liaorwz]  [1318597e-7e2a-437e-b7cb-80a86c81ae2b]  Processing batch event [
+  {
+    event_type: 'CBTSessionCreated',
+    test_run: {
+      uuid: '3b51bcec-341c-444d-baf4-35972cea437b',
+      integrations: {
+        browserstack: {
+          product: 'automate',
+          session_id: undefined,
+          capabilities: {
+            build: 'Avotech-Regression-TestSuite',
+            'browserstack.video': true,
+            interactiveDebugging: true,
+            'browserstack.user': '[REDACTED]',
+            'browserstack.key': '[REDACTED]',
+            'browserstack.buildIdentifier': '#28',
+            turboScaleOptions: {},
+            os: 'Windows',
+            os_version: '11',
+            'browserstack.hostName': 'DESKTOP-B1PF2KP',
+            'browserstack.browserstackSDK': 'Playwright-nodeagent/1.52.2',
+            'browserstack.buildProductMap': {
+              observability: true,
+              accessibility: false,
+              percy: false,
+              automate: true,
+              app_automate: false,
+              turboscale: false,
+              central_scanner: false,
+              lts: false
+            },
+            'browserstack.use_w3c': false,
+            browser: 'chrome',
+            browser_version: 'latest',
+            'browserstack.testhubBuildUuid': 'txjwzootgmnszwjhtrjspmo57pnubz762liaorwz',
+            'browserstack.local': false,
+            'browserstack.localIdentifier': null
+          },
+          platform: 'Windows',
+          platform_version: '11',
+          browser: 'chrome',
+          browser_version: 'latest'
+        }
+      }
+    }
+  },
+  {
+    event_type: 'LogCreated',
+    logs: [
+      {
+        testFrameworkName: 'Playwright',
+        testFrameworkVersion: '1.59.1',
+        testFrameworkState: 'TEST',
+        timestamp: '2026-06-17T14:58:35.815Z',
+        uuid: '3b51bcec-341c-444d-baf4-35972cea437b',
+        kind: 'TEST_STEP',
+        message: 'Fixture "browser"',
+        level: 'passed',
+        fileName: '',
+        fileSize: Long { low: 0, high: 0, unsigned: false },
+        filePath: '',
+        attachmentType: '',
+        test_run_uuid: '3b51bcec-341c-444d-baf4-35972cea437b'
+      },
+      {
+        testFrameworkName: 'Playwright',
+        testFrameworkVersion: '1.59.1',
+        testFrameworkState: 'TEST',
+        timestamp: '2026-06-17T14:58:35.815Z',
+        uuid: '3b51bcec-341c-444d-baf4-35972cea437b',
+        kind: 'TEST_STEP',
+        message: 'Fixture "__browserstack_workerHook"',
+        level: 'passed',
+        fileName: '',
+        fileSize: Long { low: 0, high: 0, unsigned: false },
+        filePath: '',
+        attachmentType: '',
+        duration: 2,
+        test_run_uuid: '3b51bcec-341c-444d-baf4-35972cea437b'
+      }
+    ]
+  },
+  {
+    event_type: 'TestRunFinished',
+    logs: [],
+    test_run: {
+      type: 'test',
+      framework: 'Playwright',
+      uuid: '3b51bcec-341c-444d-baf4-35972cea437b',
+      name: 'redirects to login, then to home after valid credentials',
+      body: {
+        lang: 'javascript',
+        code: 'async ({\n' +
+          '      page,\n' +
+          '      csiLoginPage\n' +
+          '    }) => {\n' +
+          '      var _process$env$CSI_TEST;\n' +
+          '      if (!((_process$env$CSI_TEST = process.env.CSI_TEST_PASSWORD) !== null && _process$env$CSI_TEST !== void 0 && _process$env$CSI_TEST.length)) {\n' +
+          '        _testSetup.test.skip();\n' +
+          '        return;\n' +
+          '      }\n' +
+          '      const password = (0, _credentials.csiTestPassword)();\n' +
+          '      const email = (0, _credentials.csiTestEmail)();\n' +
+          '      await csiLoginPage.gotoLogin();\n' +
+          '      await (0, _testSetup.expect)(page).toHaveURL(url => (0, _csi.isCsiLoginPageUrl)(url));\n' +
+          '      await csiLoginPage.signInWithEmailAndPassword(email, password);\n' +
+          '      await csiLoginPage.expectOnHome();\n' +
+          '    }'
+      },
+      identifier: 'redirects to login, then to home after valid credentials',
+      scope: 'redirects to login, then to home after valid credentials',
+      scopes: [
+        'CSI · Avotech login',
+        'redirects to login, then to home after valid credentials'
+      ],
+      custom_metadata: {},
+      meta: {},
+      file_name: 'tests\\csi\\auth\\login.spec.ts',
+      vc_filepath: 'tests\\csi\\auth\\login.spec.ts',
+      location: 'tests\\csi\\auth\\login.spec.ts',
+      result: 'failed',
+      duration_in_ms: 21,
+      started_at: '2026-06-17T14:58:33.498Z',
+      finished_at: '2026-06-17T14:58:33.519Z',
+      failure: [
+        {
+          backtrace: [
+            'Error: browserType.connect: Error: Automate testing time expired.',
+            '    at BrowserType._0x1ef10c (D:\\CODES\\CSI-QA-testing\\node_modules\\browserstack-node-sdk\\src\\bin\\playwright\\mock-process.js:1:34696)'
+          ],
+          expanded: [
+            'message: Error: browserType.connect: Error: Automate testing time expired.',
+            'location: undefined'
+          ]
+        }
+      ],
+      failure_type: 'UnhandledError',
+      failure_reason: null,
+      retry_of: null,
+      tags: [],
+      customRerunParam: {
+        rerun_name: ' -latest:Windows 11-browserstack csi\\auth\\login.spec.ts CSI · Avotech login redirects to login, then to home after valid credentials redirects to login, then to home after valid credentials'
+      },
+      hooks: [],
+      product_map: {
+        observability: true,
+        accessibility: false,
+        percy: false,
+        automate: true,
+        app_automate: false,
+        lts: false
+      },
+      integrations: {
+        browserstack: {
+          product: 'automate',
+          capabilities: {
+            build: 'Avotech-Regression-TestSuite',
+            'browserstack.video': true,
+            interactiveDebugging: true,
+            'browserstack.user': '[REDACTED]',
+            'browserstack.key': '[REDACTED]',
+            'browserstack.buildIdentifier': '#28',
+            turboScaleOptions: {},
+            os: 'Windows',
+            os_version: '11',
+            'browserstack.hostName': 'DESKTOP-B1PF2KP',
+            'browserstack.browserstackSDK': 'Playwright-nodeagent/1.52.2',
+            'browserstack.buildProductMap': {
+              observability: true,
+              accessibility: false,
+              percy: false,
+              automate: true,
+              app_automate: false,
+              turboscale: false,
+              central_scanner: false,
+              lts: false
+            },
+            'browserstack.use_w3c': false,
+            browser: 'chrome',
+            browser_version: 'latest',
+            'browserstack.testhubBuildUuid': 'txjwzootgmnszwjhtrjspmo57pnubz762liaorwz',
+            'browserstack.local': false,
+            'browserstack.localIdentifier': null
+          },
+          platform: 'Windows',
+          platform_version: '11',
+          browser: 'chrome',
+          browser_version: 'latest'
+        }
+      }
+    }
+  }
+] to 4192:0
+2026-06-17T14:58:36.470Z CLI info  [txjwzootgmnszwjhtrjspmo57pnubz762liaorwz]  [1318597e-7e2a-437e-b7cb-80a86c81ae2b]  [PRODUCTION] Making POST request to https://collector-observability.browserstack.com
+2026-06-17T15:10:07.329Z CLI info [main]  [txjwzootgmnszwjhtrjspmo57pnubz762liaorwz]  [1318597e-7e2a-437e-b7cb-80a86c81ae2b]  Received graceful signal termination (SIGINT), performing cleanup
+2026-06-17T15:21:28.576Z CLI info [main]    Server listening on port: 5400
+2026-06-17T15:21:28.625Z CLI info    Config : {"platforms":[{"os":"Windows","osVersion":"11","browserName":"chrome","browserVersion":"latest"}],"browserstackLocal":false,"buildName":"Avotech-Regression-TestSuite","video":true,"interactiveDebugging":true}
+2026-06-17T15:21:28.656Z CLI info    Should start debug utility: undefined
+2026-06-17T15:21:28.660Z CLI info [testhub:module]   [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  Starting testhub from 16248:0
+2026-06-17T15:21:28.662Z CLI info   [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  [PRODUCTION] Making POST request to https://sdk.browserstack.com
+2026-06-17T15:21:28.664Z CLI info   [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  [PRODUCTION] Making GET request to https://hub.browserstack.com
+2026-06-17T15:21:30.399Z CLI info   [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  [PRODUCTION] Making GET request to https://hub-usw.browserstack.com
+2026-06-17T15:21:30.400Z CLI info   [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  [PRODUCTION] Making GET request to https://hub-use.browserstack.com
+2026-06-17T15:21:30.401Z CLI info   [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  [PRODUCTION] Making GET request to https://hub-euw.browserstack.com
+2026-06-17T15:21:31.204Z CLI info [testhub:module]   [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  startBuild: response=hfiataltcekarbrxhss9gyaqmanvgqqlrncd2e0x
+2026-06-17T15:21:31.206Z CLI info  [hfiataltcekarbrxhss9gyaqmanvgqqlrncd2e0x]  [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  [PRODUCTION] Making POST request to https://api.browserstack.com
+2026-06-17T15:21:38.804Z CLI info [testhub:request-queue-handler]  [hfiataltcekarbrxhss9gyaqmanvgqqlrncd2e0x]  [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  Added the event {
+  event_type: 'TestRunStarted',
+  logs: [],
+  test_run: {
+    type: 'test',
+    framework: 'Playwright',
+    uuid: '2f145c70-80b0-42c5-924e-3c36f775d855',
+    name: 'redirects to login, then to home after valid credentials',
+    body: {
+      lang: 'javascript',
+      code: 'async ({\n' +
+        '      page,\n' +
+        '      csiLoginPage\n' +
+        '    }) => {\n' +
+        '      var _process$env$CSI_TEST;\n' +
+        '      if (!((_process$env$CSI_TEST = process.env.CSI_TEST_PASSWORD) !== null && _process$env$CSI_TEST !== void 0 && _process$env$CSI_TEST.length)) {\n' +
+        '        _testSetup.test.skip();\n' +
+        '        return;\n' +
+        '      }\n' +
+        '      const password = (0, _credentials.csiTestPassword)();\n' +
+        '      const email = (0, _credentials.csiTestEmail)();\n' +
+        '      await csiLoginPage.gotoLogin();\n' +
+        '      await (0, _testSetup.expect)(page).toHaveURL(url => (0, _csi.isCsiLoginPageUrl)(url));\n' +
+        '      await csiLoginPage.signInWithEmailAndPassword(email, password);\n' +
+        '      await csiLoginPage.expectOnHome();\n' +
+        '    }'
+    },
+    identifier: 'redirects to login, then to home after valid credentials',
+    scope: 'redirects to login, then to home after valid credentials',
+    scopes: [
+      'CSI · Avotech login',
+      'redirects to login, then to home after valid credentials'
+    ],
+    custom_metadata: undefined,
+    meta: {},
+    file_name: 'tests\\csi\\auth\\login.spec.ts',
+    vc_filepath: 'tests\\csi\\auth\\login.spec.ts',
+    location: 'tests\\csi\\auth\\login.spec.ts',
+    result: 'pending',
+    duration_in_ms: null,
+    started_at: '2026-06-17T15:21:38.762Z',
+    failure: undefined,
+    failure_type: undefined,
+    failure_reason: null,
+    retry_of: null,
+    tags: [],
+    customRerunParam: {
+      rerun_name: ' -latest:Windows 11-browserstack csi\\auth\\login.spec.ts CSI · Avotech login redirects to login, then to home after valid credentials redirects to login, then to home after valid credentials'
+    },
+    hooks: [],
+    product_map: {
+      observability: true,
+      accessibility: false,
+      percy: false,
+      automate: true,
+      app_automate: false,
+      lts: false
+    }
+  }
+} to 16248:0
+2026-06-17T15:21:39.225Z CLI info [testhub:request-queue-handler]  [hfiataltcekarbrxhss9gyaqmanvgqqlrncd2e0x]  [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  Processing batch event [
+  {
+    event_type: 'TestRunStarted',
+    logs: [],
+    test_run: {
+      type: 'test',
+      framework: 'Playwright',
+      uuid: '2f145c70-80b0-42c5-924e-3c36f775d855',
+      name: 'redirects to login, then to home after valid credentials',
+      body: {
+        lang: 'javascript',
+        code: 'async ({\n' +
+          '      page,\n' +
+          '      csiLoginPage\n' +
+          '    }) => {\n' +
+          '      var _process$env$CSI_TEST;\n' +
+          '      if (!((_process$env$CSI_TEST = process.env.CSI_TEST_PASSWORD) !== null && _process$env$CSI_TEST !== void 0 && _process$env$CSI_TEST.length)) {\n' +
+          '        _testSetup.test.skip();\n' +
+          '        return;\n' +
+          '      }\n' +
+          '      const password = (0, _credentials.csiTestPassword)();\n' +
+          '      const email = (0, _credentials.csiTestEmail)();\n' +
+          '      await csiLoginPage.gotoLogin();\n' +
+          '      await (0, _testSetup.expect)(page).toHaveURL(url => (0, _csi.isCsiLoginPageUrl)(url));\n' +
+          '      await csiLoginPage.signInWithEmailAndPassword(email, password);\n' +
+          '      await csiLoginPage.expectOnHome();\n' +
+          '    }'
+      },
+      identifier: 'redirects to login, then to home after valid credentials',
+      scope: 'redirects to login, then to home after valid credentials',
+      scopes: [
+        'CSI · Avotech login',
+        'redirects to login, then to home after valid credentials'
+      ],
+      custom_metadata: undefined,
+      meta: {},
+      file_name: 'tests\\csi\\auth\\login.spec.ts',
+      vc_filepath: 'tests\\csi\\auth\\login.spec.ts',
+      location: 'tests\\csi\\auth\\login.spec.ts',
+      result: 'pending',
+      duration_in_ms: null,
+      started_at: '2026-06-17T15:21:38.762Z',
+      failure: undefined,
+      failure_type: undefined,
+      failure_reason: null,
+      retry_of: null,
+      tags: [],
+      customRerunParam: {
+        rerun_name: ' -latest:Windows 11-browserstack csi\\auth\\login.spec.ts CSI · Avotech login redirects to login, then to home after valid credentials redirects to login, then to home after valid credentials'
+      },
+      hooks: [],
+      product_map: {
+        observability: true,
+        accessibility: false,
+        percy: false,
+        automate: true,
+        app_automate: false,
+        lts: false
+      }
+    }
+  }
+] to 16248:0
+2026-06-17T15:21:39.229Z CLI info  [hfiataltcekarbrxhss9gyaqmanvgqqlrncd2e0x]  [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  [PRODUCTION] Making POST request to https://collector-observability.browserstack.com
+2026-06-17T15:21:50.062Z CLI info [sdk:service]  [hfiataltcekarbrxhss9gyaqmanvgqqlrncd2e0x]  [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  Driver initialized as primary driver: platformIndex=0
+2026-06-17T15:21:51.536Z CLI info [testhub:request-queue-handler]  [hfiataltcekarbrxhss9gyaqmanvgqqlrncd2e0x]  [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  Added the event {
+  event_type: 'CBTSessionCreated',
+  test_run: {
+    uuid: '2f145c70-80b0-42c5-924e-3c36f775d855',
+    integrations: { browserstack: [Object] }
+  }
+} to 16248:0
+2026-06-17T15:21:53.271Z CLI info [testhub:request-queue-handler]  [hfiataltcekarbrxhss9gyaqmanvgqqlrncd2e0x]  [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  Processing batch event [
+  {
+    event_type: 'CBTSessionCreated',
+    test_run: {
+      uuid: '2f145c70-80b0-42c5-924e-3c36f775d855',
+      integrations: {
+        browserstack: {
+          product: 'automate',
+          session_id: '50120b911b97a1561c2f6d6508c8229e6499ffc3',
+          capabilities: {
+            build: 'Avotech-Regression-TestSuite',
+            'browserstack.video': true,
+            interactiveDebugging: true,
+            'browserstack.user': '[REDACTED]',
+            'browserstack.key': '[REDACTED]',
+            'browserstack.buildIdentifier': '#29',
+            turboScaleOptions: {},
+            os: 'Windows',
+            os_version: '11',
+            'browserstack.hostName': 'DESKTOP-B1PF2KP',
+            'browserstack.browserstackSDK': 'Playwright-nodeagent/1.52.2',
+            'browserstack.buildProductMap': {
+              observability: true,
+              accessibility: false,
+              percy: false,
+              automate: true,
+              app_automate: false,
+              turboscale: false,
+              central_scanner: false,
+              lts: false
+            },
+            'browserstack.use_w3c': false,
+            browser: 'chrome',
+            browser_version: 'latest',
+            'browserstack.testhubBuildUuid': 'hfiataltcekarbrxhss9gyaqmanvgqqlrncd2e0x',
+            'browserstack.local': false,
+            'browserstack.localIdentifier': null
+          },
+          platform: 'Windows',
+          platform_version: '11',
+          browser: 'chrome',
+          browser_version: 'latest'
+        }
+      }
+    }
+  }
+] to 16248:0
+2026-06-17T15:21:53.271Z CLI info  [hfiataltcekarbrxhss9gyaqmanvgqqlrncd2e0x]  [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  [PRODUCTION] Making POST request to https://collector-observability.browserstack.com
+2026-06-17T15:22:05.010Z CLI info [testhub:request-queue-handler]  [hfiataltcekarbrxhss9gyaqmanvgqqlrncd2e0x]  [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  Added the event {
+  event_type: 'CBTSessionCreated',
+  test_run: {
+    uuid: '2f145c70-80b0-42c5-924e-3c36f775d855',
+    integrations: { browserstack: [Object] }
+  }
+} to 16248:0
+2026-06-17T15:22:05.336Z CLI info [testhub:request-queue-handler]  [hfiataltcekarbrxhss9gyaqmanvgqqlrncd2e0x]  [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  Processing batch event [
+  {
+    event_type: 'CBTSessionCreated',
+    test_run: {
+      uuid: '2f145c70-80b0-42c5-924e-3c36f775d855',
+      integrations: {
+        browserstack: {
+          product: 'automate',
+          session_id: '50120b911b97a1561c2f6d6508c8229e6499ffc3',
+          capabilities: {
+            build: 'Avotech-Regression-TestSuite',
+            'browserstack.video': true,
+            interactiveDebugging: true,
+            'browserstack.user': '[REDACTED]',
+            'browserstack.key': '[REDACTED]',
+            'browserstack.buildIdentifier': '#29',
+            turboScaleOptions: {},
+            os: 'Windows',
+            os_version: '11',
+            'browserstack.hostName': 'DESKTOP-B1PF2KP',
+            'browserstack.browserstackSDK': 'Playwright-nodeagent/1.52.2',
+            'browserstack.buildProductMap': {
+              observability: true,
+              accessibility: false,
+              percy: false,
+              automate: true,
+              app_automate: false,
+              turboscale: false,
+              central_scanner: false,
+              lts: false
+            },
+            'browserstack.use_w3c': false,
+            browser: 'chrome',
+            browser_version: 'latest',
+            'browserstack.testhubBuildUuid': 'hfiataltcekarbrxhss9gyaqmanvgqqlrncd2e0x',
+            'browserstack.local': false,
+            'browserstack.localIdentifier': null
+          },
+          platform: 'Windows',
+          platform_version: '11',
+          browser: 'chrome',
+          browser_version: 'latest'
+        }
+      }
+    }
+  }
+] to 16248:0
+2026-06-17T15:22:05.338Z CLI info  [hfiataltcekarbrxhss9gyaqmanvgqqlrncd2e0x]  [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  [PRODUCTION] Making POST request to https://collector-observability.browserstack.com
+2026-06-17T15:22:05.958Z CLI info [testhub:request-queue-handler]  [hfiataltcekarbrxhss9gyaqmanvgqqlrncd2e0x]  [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  Added the event {
+  event_type: 'CBTSessionCreated',
+  test_run: {
+    uuid: '2f145c70-80b0-42c5-924e-3c36f775d855',
+    integrations: { browserstack: [Object] }
+  }
+} to 16248:0
+2026-06-17T15:22:07.344Z CLI info [testhub:request-queue-handler]  [hfiataltcekarbrxhss9gyaqmanvgqqlrncd2e0x]  [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  Processing batch event [
+  {
+    event_type: 'CBTSessionCreated',
+    test_run: {
+      uuid: '2f145c70-80b0-42c5-924e-3c36f775d855',
+      integrations: {
+        browserstack: {
+          product: 'automate',
+          session_id: '50120b911b97a1561c2f6d6508c8229e6499ffc3',
+          capabilities: {
+            build: 'Avotech-Regression-TestSuite',
+            'browserstack.video': true,
+            interactiveDebugging: true,
+            'browserstack.user': '[REDACTED]',
+            'browserstack.key': '[REDACTED]',
+            'browserstack.buildIdentifier': '#29',
+            turboScaleOptions: {},
+            os: 'Windows',
+            os_version: '11',
+            'browserstack.hostName': 'DESKTOP-B1PF2KP',
+            'browserstack.browserstackSDK': 'Playwright-nodeagent/1.52.2',
+            'browserstack.buildProductMap': {
+              observability: true,
+              accessibility: false,
+              percy: false,
+              automate: true,
+              app_automate: false,
+              turboscale: false,
+              central_scanner: false,
+              lts: false
+            },
+            'browserstack.use_w3c': false,
+            browser: 'chrome',
+            browser_version: 'latest',
+            'browserstack.testhubBuildUuid': 'hfiataltcekarbrxhss9gyaqmanvgqqlrncd2e0x',
+            'browserstack.local': false,
+            'browserstack.localIdentifier': null
+          },
+          platform: 'Windows',
+          platform_version: '11',
+          browser: 'chrome',
+          browser_version: 'latest'
+        }
+      }
+    }
+  }
+] to 16248:0
+2026-06-17T15:22:07.345Z CLI info  [hfiataltcekarbrxhss9gyaqmanvgqqlrncd2e0x]  [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  [PRODUCTION] Making POST request to https://collector-observability.browserstack.com
+2026-06-17T15:22:07.766Z CLI info [testhub:request-queue-handler]  [hfiataltcekarbrxhss9gyaqmanvgqqlrncd2e0x]  [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  Added the event {
+  event_type: 'LogCreated',
+  logs: [
+    {
+      testFrameworkName: 'Playwright',
+      testFrameworkVersion: '1.59.1',
+      testFrameworkState: 'TEST',
+      timestamp: '2026-06-17T15:21:52.575Z',
+      uuid: '2f145c70-80b0-42c5-924e-3c36f775d855',
+      kind: 'TEST_STEP',
+      message: 'Navigate to "/Login"',
+      level: 'passed',
+      fileName: '',
+      fileSize: [Long],
+      filePath: '',
+      attachmentType: '',
+      duration: 1816,
+      test_run_uuid: '2f145c70-80b0-42c5-924e-3c36f775d855'
+    },
+    {
+      testFrameworkName: 'Playwright',
+      testFrameworkVersion: '1.59.1',
+      testFrameworkState: 'TEST',
+      timestamp: '2026-06-17T15:21:54.393Z',
+      uuid: '2f145c70-80b0-42c5-924e-3c36f775d855',
+      kind: 'TEST_STEP',
+      message: 'Wait for load state "domcontentloaded"',
+      level: 'passed',
+      fileName: '',
+      fileSize: [Long],
+      filePath: '',
+      attachmentType: '',
+      duration: 4,
+      test_run_uuid: '2f145c70-80b0-42c5-924e-3c36f775d855'
+    },
+    {
+      testFrameworkName: 'Playwright',
+      testFrameworkVersion: '1.59.1',
+      testFrameworkState: 'TEST',
+      timestamp: '2026-06-17T15:21:55.210Z',
+      uuid: '2f145c70-80b0-42c5-924e-3c36f775d855',
+      kind: 'TEST_STEP',
+      message: "Wait for selector getByRole('textbox', { name: 'Enter your email' })",
+      level: 'passed',
+      fileName: '',
+      fileSize: [Long],
+      filePath: '',
+      attachmentType: '',
+      duration: 2184,
+      test_run_uuid: '2f145c70-80b0-42c5-924e-3c36f775d855'
+    },
+    {
+      testFrameworkName: 'Playwright',
+      testFrameworkVersion: '1.59.1',
+      testFrameworkState: 'TEST',
+      timestamp: '2026-06-17T15:21:57.400Z',
+      uuid: '2f145c70-80b0-42c5-924e-3c36f775d855',
+      kind: 'TEST_STEP',
+      message: 'Wait for load state "load"',
+      level: 'passed',
+      fileName: '',
+      fileSize: [Long],
+      filePath: '',
+      attachmentType: '',
+      duration: 3,
+      test_run_uuid: '2f145c70-80b0-42c5-924e-3c36f775d855'
+    },
+    {
+      testFrameworkName: 'Playwright',
+      testFrameworkVersion: '1.59.1',
+      testFrameworkState: 'TEST',
+      timestamp: '2026-06-17T15:21:57.770Z',
+      uuid: '2f145c70-80b0-42c5-924e-3c36f775d855',
+      kind: 'TEST_STEP',
+      message: `Fill "dax.manning@appnovation.com" getByRole('textbox', { name: 'Enter your email' })`,
+      level: 'passed',
+      fileName: '',
+      fileSize: [Long],
+      filePath: '',
+      attachmentType: '',
+      duration: 403,
+      test_run_uuid: '2f145c70-80b0-42c5-924e-3c36f775d855'
+    },
+    {
+      testFrameworkName: 'Playwright',
+      testFrameworkVersion: '1.59.1',
+      testFrameworkState: 'TEST',
+      timestamp: '2026-06-17T15:21:58.535Z',
+      uuid: '2f145c70-80b0-42c5-924e-3c36f775d855',
+      kind: 'TEST_STEP',
+      message: `Expect "toBeVisible" getByRole('button', { name: 'Next' })`,
+      level: 'passed',
+      fileName: '',
+      fileSize: [Long],
+      filePath: '',
+      attachmentType: '',
+      duration: 363,
+      test_run_uuid: '2f145c70-80b0-42c5-924e-3c36f775d855'
+    },
+    {
+      testFrameworkName: 'Playwright',
+      testFrameworkVersion: '1.59.1',
+      testFrameworkState: 'TEST',
+      timestamp: '2026-06-17T15:21:58.899Z',
+      uuid: '2f145c70-80b0-42c5-924e-3c36f775d855',
+      kind: 'TEST_STEP',
+      message: "Click getByRole('button', { name: 'Next' })",
+      level: 'passed',
+      fileName: '',
+      fileSize: [Long],
+      filePath: '',
+      attachmentType: '',
+      duration: 483,
+      test_run_uuid: '2f145c70-80b0-42c5-924e-3c36f775d855'
+    },
+    {
+      testFrameworkName: 'Playwright',
+      testFrameworkVersion: '1.59.1',
+      testFrameworkState: 'TEST',
+      timestamp: '2026-06-17T15:21:59.384Z',
+      uuid: '2f145c70-80b0-42c5-924e-3c36f775d855',
+      kind: 'TEST_STEP',
+      message: `Expect "toBeVisible" getByRole('textbox', { name: 'Enter your password' })`,
+      level: 'passed',
+      fileName: '',
+      fileSize: [Long],
+      filePath: '',
+      attachmentType: '',
+      duration: 473,
+      test_run_uuid: '2f145c70-80b0-42c5-924e-3c36f775d855'
+    },
+    {
+      testFrameworkName: 'Playwright',
+      testFrameworkVersion: '1.59.1',
+      testFrameworkState: 'TEST',
+      timestamp: '2026-06-17T15:21:59.858Z',
+      uuid: '2f145c70-80b0-42c5-924e-3c36f775d855',
+      kind: 'TEST_STEP',
+      message: `Fill "123qweQWE!@#" getByRole('textbox', { name: 'Enter your password' })`,
+      level: 'passed',
+      fileName: '',
+      fileSize: [Long],
+      filePath: '',
+      attachmentType: '',
+      duration: 406,
+      test_run_uuid: '2f145c70-80b0-42c5-924e-3c36f775d855'
+    },
+    {
+      testFrameworkName: 'Playwright',
+      testFrameworkVersion: '1.59.1',
+      testFrameworkState: 'TEST',
+      timestamp: '2026-06-17T15:22:00.265Z',
+      uuid: '2f145c70-80b0-42c5-924e-3c36f775d855',
+      kind: 'TEST_STEP',
+      message: `Expect "toBeVisible" getByRole('button', { name: 'Log in' })`,
+      level: 'passed',
+      fileName: '',
+      fileSize: [Long],
+      filePath: '',
+      attachmentType: '',
+      duration: 386,
+      test_run_uuid: '2f145c70-80b0-42c5-924e-3c36f775d855'
+    },
+    {
+      testFrameworkName: 'Playwright',
+      testFrameworkVersion: '1.59.1',
+      testFrameworkState: 'TEST',
+      timestamp: '2026-06-17T15:22:00.652Z',
+      uuid: '2f145c70-80b0-42c5-924e-3c36f775d855',
+      kind: 'TEST_STEP',
+      message: "Check getByRole('checkbox', { name: 'Stay signed in for a week' })",
+      level: 'passed',
+      fileName: '',
+      fileSize: [Long],
+      filePath: '',
+      attachmentType: '',
+      duration: 432,
+      test_run_uuid: '2f145c70-80b0-42c5-924e-3c36f775d855'
+    },
+    {
+      testFrameworkName: 'Playwright',
+      testFrameworkVersion: '1.59.1',
+      testFrameworkState: 'TEST',
+      timestamp: '2026-06-17T15:22:01.085Z',
+      uuid: '2f145c70-80b0-42c5-924e-3c36f775d855',
+      kind: 'TEST_STEP',
+      message: "Click getByRole('button', { name: 'Log in' })",
+      level: 'passed',
+      fileName: '',
+      fileSize: [Long],
+      filePath: '',
+      attachmentType: '',
+      duration: 417,
+      test_run_uuid: '2f145c70-80b0-42c5-924e-3c36f775d855'
+    },
+    {
+      testFrameworkName: 'Playwright',
+      testFrameworkVersion: '1.59.1',
+      testFrameworkState: 'TEST',
+      timestamp: '2026-06-17T15:22:01.503Z',
+      uuid: '2f145c70-80b0-42c5-924e-3c36f775d855',
+      kind: 'TEST_STEP',
+      message: 'Wait for navigation',
+      level: 'passed',
+      fileName: '',
+      fileSize: [Long],
+      filePath: '',
+      attachmentType: '',
+      duration: 2442,
+      test_run_uuid: '2f145c70-80b0-42c5-924e-3c36f775d855'
+    }
+  ]
+} to 16248:0
+2026-06-17T15:22:07.773Z CLI info [testhub:request-queue-handler]  [hfiataltcekarbrxhss9gyaqmanvgqqlrncd2e0x]  [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  Added the event {
+  event_type: 'TestRunFinished',
+  logs: [],
+  test_run: {
+    type: 'test',
+    framework: 'Playwright',
+    uuid: '2f145c70-80b0-42c5-924e-3c36f775d855',
+    name: 'redirects to login, then to home after valid credentials',
+    body: {
+      lang: 'javascript',
+      code: 'async ({\n' +
+        '      page,\n' +
+        '      csiLoginPage\n' +
+        '    }) => {\n' +
+        '      var _process$env$CSI_TEST;\n' +
+        '      if (!((_process$env$CSI_TEST = process.env.CSI_TEST_PASSWORD) !== null && _process$env$CSI_TEST !== void 0 && _process$env$CSI_TEST.length)) {\n' +
+        '        _testSetup.test.skip();\n' +
+        '        return;\n' +
+        '      }\n' +
+        '      const password = (0, _credentials.csiTestPassword)();\n' +
+        '      const email = (0, _credentials.csiTestEmail)();\n' +
+        '      await csiLoginPage.gotoLogin();\n' +
+        '      await (0, _testSetup.expect)(page).toHaveURL(url => (0, _csi.isCsiLoginPageUrl)(url));\n' +
+        '      await csiLoginPage.signInWithEmailAndPassword(email, password);\n' +
+        '      await csiLoginPage.expectOnHome();\n' +
+        '    }'
+    },
+    identifier: 'redirects to login, then to home after valid credentials',
+    scope: 'redirects to login, then to home after valid credentials',
+    scopes: [
+      'CSI · Avotech login',
+      'redirects to login, then to home after valid credentials'
+    ],
+    custom_metadata: {},
+    meta: {},
+    file_name: 'tests\\csi\\auth\\login.spec.ts',
+    vc_filepath: 'tests\\csi\\auth\\login.spec.ts',
+    location: 'tests\\csi\\auth\\login.spec.ts',
+    result: 'passed',
+    duration_in_ms: 17652,
+    started_at: '2026-06-17T15:21:38.762Z',
+    finished_at: '2026-06-17T15:21:56.414Z',
+    failure: null,
+    failure_type: undefined,
+    failure_reason: null,
+    retry_of: null,
+    tags: [],
+    customRerunParam: {
+      rerun_name: ' -latest:Windows 11-browserstack csi\\auth\\login.spec.ts CSI · Avotech login redirects to login, then to home after valid credentials redirects to login, then to home after valid credentials'
+    },
+    hooks: [],
+    product_map: {
+      observability: true,
+      accessibility: false,
+      percy: false,
+      automate: true,
+      app_automate: false,
+      lts: false
+    },
+    integrations: { browserstack: [Object] }
+  }
+} to 16248:0
+2026-06-17T15:22:07.938Z CLI info  [hfiataltcekarbrxhss9gyaqmanvgqqlrncd2e0x]  [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  [PRODUCTION] Making GET request to https://api.browserstack.com
+2026-06-17T15:22:07.942Z CLI info  [hfiataltcekarbrxhss9gyaqmanvgqqlrncd2e0x]  [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  [PRODUCTION] Making POST request to https://collector-observability.browserstack.com
+2026-06-17T15:22:09.342Z CLI info  [hfiataltcekarbrxhss9gyaqmanvgqqlrncd2e0x]  [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  [PRODUCTION] Making PUT request to https://collector-observability.browserstack.com
+2026-06-17T15:22:11.070Z CLI info [testhub:module]  [hfiataltcekarbrxhss9gyaqmanvgqqlrncd2e0x]  [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  stopBuild: hfiataltcekarbrxhss9gyaqmanvgqqlrncd2e0x request={"finished_at":"2026-06-17T15:22:07.937Z","finished_metadata":[],"custom_metadata":{}} response={"data":""}
+2026-06-17T15:22:11.074Z CLI info  [hfiataltcekarbrxhss9gyaqmanvgqqlrncd2e0x]  [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  [PRODUCTION] Making POST request to https://api.browserstack.com
+2026-06-17T15:22:12.473Z CLI info [TEST REPORTING AND ANALYTICS:module]  [hfiataltcekarbrxhss9gyaqmanvgqqlrncd2e0x]  [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  Visit https://automation.browserstack.com/builds/hfiataltcekarbrxhss9gyaqmanvgqqlrncd2e0x to view build report, insights, and many more debugging information all at one place!
+2026-06-17T15:22:12.473Z CLI warn [sdk:service]  [hfiataltcekarbrxhss9gyaqmanvgqqlrncd2e0x]  [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  
+─────── Network Restrictions Detected ───────
+The following BrowserStack URLs were blocked during this build:
+
+  ✗ hub-use.browserstack.com
+       ENOTFOUND (1 failure during this build)
+       The specified domain or host could not be found.
+
+  ✗ hub-euw.browserstack.com
+       ENOTFOUND (1 failure during this build)
+       The specified domain or host could not be found.
+
+Likely cause: corporate firewall blocking BrowserStack endpoints.
+Action: ask your network team to allow these URLs.
+Whitelist guide: https://www.browserstack.com/docs/test-reporting-and-analytics/sdk-troubleshooting/debug-common-errors?ref=sdk#connection-restricted-to-browserstack
+─────────────────────────────────────────────
+
+2026-06-17T15:22:12.533Z CLI info  [hfiataltcekarbrxhss9gyaqmanvgqqlrncd2e0x]  [6bb035be-8a73-4bf9-96dc-1ceda40269cc]  [PRODUCTION] Making POST request to https://eds.browserstack.com
+2026-06-17T15:22:46.851Z CLI info [main]    Server listening on port: 5400
+2026-06-17T15:22:46.901Z CLI info    Config : {"platforms":[{"os":"Windows","osVersion":"11","browserName":"chrome","browserVersion":"latest"}],"browserstackLocal":false,"buildName":"Avotech-Regression-TestSuite","video":true,"interactiveDebugging":true}
+2026-06-17T15:22:46.937Z CLI info    Should start debug utility: undefined
+2026-06-17T15:22:46.941Z CLI info [testhub:module]   [286b7968-6a20-40b3-82f5-e0dfb0ded057]  Starting testhub from 19328:0
+2026-06-17T15:22:46.943Z CLI info   [286b7968-6a20-40b3-82f5-e0dfb0ded057]  [PRODUCTION] Making POST request to https://sdk.browserstack.com
+2026-06-17T15:22:46.945Z CLI info   [286b7968-6a20-40b3-82f5-e0dfb0ded057]  [PRODUCTION] Making GET request to https://hub.browserstack.com
+2026-06-17T15:22:48.664Z CLI info   [286b7968-6a20-40b3-82f5-e0dfb0ded057]  [PRODUCTION] Making GET request to https://hub-usw.browserstack.com
+2026-06-17T15:22:48.665Z CLI info   [286b7968-6a20-40b3-82f5-e0dfb0ded057]  [PRODUCTION] Making GET request to https://hub-use.browserstack.com
+2026-06-17T15:22:48.665Z CLI info   [286b7968-6a20-40b3-82f5-e0dfb0ded057]  [PRODUCTION] Making GET request to https://hub-euw.browserstack.com
+2026-06-17T15:22:49.409Z CLI info [testhub:module]   [286b7968-6a20-40b3-82f5-e0dfb0ded057]  startBuild: response=n4xnicct6xvj1p7pyzo9ss9aamkcllcbinqsc3uk
+2026-06-17T15:22:49.412Z CLI info  [n4xnicct6xvj1p7pyzo9ss9aamkcllcbinqsc3uk]  [286b7968-6a20-40b3-82f5-e0dfb0ded057]  [PRODUCTION] Making POST request to https://api.browserstack.com
+2026-06-17T15:22:56.237Z CLI info [testhub:request-queue-handler]  [n4xnicct6xvj1p7pyzo9ss9aamkcllcbinqsc3uk]  [286b7968-6a20-40b3-82f5-e0dfb0ded057]  Added the event {
+  event_type: 'TestRunStarted',
+  logs: [],
+  test_run: {
+    type: 'test',
+    framework: 'Playwright',
+    uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1',
+    name: 'redirects to login, then to home after valid credentials',
+    body: {
+      lang: 'javascript',
+      code: 'async ({\n' +
+        '      page,\n' +
+        '      csiLoginPage\n' +
+        '    }) => {\n' +
+        '      var _process$env$CSI_TEST;\n' +
+        '      if (!((_process$env$CSI_TEST = process.env.CSI_TEST_PASSWORD) !== null && _process$env$CSI_TEST !== void 0 && _process$env$CSI_TEST.length)) {\n' +
+        '        _testSetup.test.skip();\n' +
+        '        return;\n' +
+        '      }\n' +
+        '      const password = (0, _credentials.csiTestPassword)();\n' +
+        '      const email = (0, _credentials.csiTestEmail)();\n' +
+        '      await csiLoginPage.gotoLogin();\n' +
+        '      await (0, _testSetup.expect)(page).toHaveURL(url => (0, _csi.isCsiLoginPageUrl)(url));\n' +
+        '      await csiLoginPage.signInWithEmailAndPassword(email, password);\n' +
+        '      await csiLoginPage.expectOnHome();\n' +
+        '    }'
+    },
+    identifier: 'redirects to login, then to home after valid credentials',
+    scope: 'redirects to login, then to home after valid credentials',
+    scopes: [
+      'CSI · Avotech login',
+      'redirects to login, then to home after valid credentials'
+    ],
+    custom_metadata: undefined,
+    meta: {},
+    file_name: 'tests\\csi\\auth\\login.spec.ts',
+    vc_filepath: 'tests\\csi\\auth\\login.spec.ts',
+    location: 'tests\\csi\\auth\\login.spec.ts',
+    result: 'pending',
+    duration_in_ms: null,
+    started_at: '2026-06-17T15:22:56.203Z',
+    failure: undefined,
+    failure_type: undefined,
+    failure_reason: null,
+    retry_of: null,
+    tags: [],
+    customRerunParam: {
+      rerun_name: ' -latest:Windows 11-browserstack csi\\auth\\login.spec.ts CSI · Avotech login redirects to login, then to home after valid credentials redirects to login, then to home after valid credentials'
+    },
+    hooks: [],
+    product_map: {
+      observability: true,
+      accessibility: false,
+      percy: false,
+      automate: true,
+      app_automate: false,
+      lts: false
+    }
+  }
+} to 19328:0
+2026-06-17T15:22:57.438Z CLI info [testhub:request-queue-handler]  [n4xnicct6xvj1p7pyzo9ss9aamkcllcbinqsc3uk]  [286b7968-6a20-40b3-82f5-e0dfb0ded057]  Processing batch event [
+  {
+    event_type: 'TestRunStarted',
+    logs: [],
+    test_run: {
+      type: 'test',
+      framework: 'Playwright',
+      uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1',
+      name: 'redirects to login, then to home after valid credentials',
+      body: {
+        lang: 'javascript',
+        code: 'async ({\n' +
+          '      page,\n' +
+          '      csiLoginPage\n' +
+          '    }) => {\n' +
+          '      var _process$env$CSI_TEST;\n' +
+          '      if (!((_process$env$CSI_TEST = process.env.CSI_TEST_PASSWORD) !== null && _process$env$CSI_TEST !== void 0 && _process$env$CSI_TEST.length)) {\n' +
+          '        _testSetup.test.skip();\n' +
+          '        return;\n' +
+          '      }\n' +
+          '      const password = (0, _credentials.csiTestPassword)();\n' +
+          '      const email = (0, _credentials.csiTestEmail)();\n' +
+          '      await csiLoginPage.gotoLogin();\n' +
+          '      await (0, _testSetup.expect)(page).toHaveURL(url => (0, _csi.isCsiLoginPageUrl)(url));\n' +
+          '      await csiLoginPage.signInWithEmailAndPassword(email, password);\n' +
+          '      await csiLoginPage.expectOnHome();\n' +
+          '    }'
+      },
+      identifier: 'redirects to login, then to home after valid credentials',
+      scope: 'redirects to login, then to home after valid credentials',
+      scopes: [
+        'CSI · Avotech login',
+        'redirects to login, then to home after valid credentials'
+      ],
+      custom_metadata: undefined,
+      meta: {},
+      file_name: 'tests\\csi\\auth\\login.spec.ts',
+      vc_filepath: 'tests\\csi\\auth\\login.spec.ts',
+      location: 'tests\\csi\\auth\\login.spec.ts',
+      result: 'pending',
+      duration_in_ms: null,
+      started_at: '2026-06-17T15:22:56.203Z',
+      failure: undefined,
+      failure_type: undefined,
+      failure_reason: null,
+      retry_of: null,
+      tags: [],
+      customRerunParam: {
+        rerun_name: ' -latest:Windows 11-browserstack csi\\auth\\login.spec.ts CSI · Avotech login redirects to login, then to home after valid credentials redirects to login, then to home after valid credentials'
+      },
+      hooks: [],
+      product_map: {
+        observability: true,
+        accessibility: false,
+        percy: false,
+        automate: true,
+        app_automate: false,
+        lts: false
+      }
+    }
+  }
+] to 19328:0
+2026-06-17T15:22:57.439Z CLI info  [n4xnicct6xvj1p7pyzo9ss9aamkcllcbinqsc3uk]  [286b7968-6a20-40b3-82f5-e0dfb0ded057]  [PRODUCTION] Making POST request to https://collector-observability.browserstack.com
+2026-06-17T15:23:07.145Z CLI info [sdk:service]  [n4xnicct6xvj1p7pyzo9ss9aamkcllcbinqsc3uk]  [286b7968-6a20-40b3-82f5-e0dfb0ded057]  Driver initialized as primary driver: platformIndex=0
+2026-06-17T15:23:08.497Z CLI info [testhub:request-queue-handler]  [n4xnicct6xvj1p7pyzo9ss9aamkcllcbinqsc3uk]  [286b7968-6a20-40b3-82f5-e0dfb0ded057]  Added the event {
+  event_type: 'CBTSessionCreated',
+  test_run: {
+    uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1',
+    integrations: { browserstack: [Object] }
+  }
+} to 19328:0
+2026-06-17T15:23:09.472Z CLI info [testhub:request-queue-handler]  [n4xnicct6xvj1p7pyzo9ss9aamkcllcbinqsc3uk]  [286b7968-6a20-40b3-82f5-e0dfb0ded057]  Processing batch event [
+  {
+    event_type: 'CBTSessionCreated',
+    test_run: {
+      uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1',
+      integrations: {
+        browserstack: {
+          product: 'automate',
+          session_id: 'e3b80cbd30135cc3bd25f294111abbb852d6fd57',
+          capabilities: {
+            build: 'Avotech-Regression-TestSuite',
+            'browserstack.video': true,
+            interactiveDebugging: true,
+            'browserstack.user': '[REDACTED]',
+            'browserstack.key': '[REDACTED]',
+            'browserstack.buildIdentifier': '#30',
+            turboScaleOptions: {},
+            os: 'Windows',
+            os_version: '11',
+            'browserstack.hostName': 'DESKTOP-B1PF2KP',
+            'browserstack.browserstackSDK': 'Playwright-nodeagent/1.52.2',
+            'browserstack.buildProductMap': {
+              observability: true,
+              accessibility: false,
+              percy: false,
+              automate: true,
+              app_automate: false,
+              turboscale: false,
+              central_scanner: false,
+              lts: false
+            },
+            'browserstack.use_w3c': false,
+            browser: 'chrome',
+            browser_version: 'latest',
+            'browserstack.testhubBuildUuid': 'n4xnicct6xvj1p7pyzo9ss9aamkcllcbinqsc3uk',
+            'browserstack.local': false,
+            'browserstack.localIdentifier': null
+          },
+          platform: 'Windows',
+          platform_version: '11',
+          browser: 'chrome',
+          browser_version: 'latest'
+        }
+      }
+    }
+  }
+] to 19328:0
+2026-06-17T15:23:09.473Z CLI info  [n4xnicct6xvj1p7pyzo9ss9aamkcllcbinqsc3uk]  [286b7968-6a20-40b3-82f5-e0dfb0ded057]  [PRODUCTION] Making POST request to https://collector-observability.browserstack.com
+2026-06-17T15:23:21.827Z CLI info [testhub:request-queue-handler]  [n4xnicct6xvj1p7pyzo9ss9aamkcllcbinqsc3uk]  [286b7968-6a20-40b3-82f5-e0dfb0ded057]  Added the event {
+  event_type: 'CBTSessionCreated',
+  test_run: {
+    uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1',
+    integrations: { browserstack: [Object] }
+  }
+} to 19328:0
+2026-06-17T15:23:22.981Z CLI info [testhub:request-queue-handler]  [n4xnicct6xvj1p7pyzo9ss9aamkcllcbinqsc3uk]  [286b7968-6a20-40b3-82f5-e0dfb0ded057]  Added the event {
+  event_type: 'CBTSessionCreated',
+  test_run: {
+    uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1',
+    integrations: { browserstack: [Object] }
+  }
+} to 19328:0
+2026-06-17T15:23:23.533Z CLI info [testhub:request-queue-handler]  [n4xnicct6xvj1p7pyzo9ss9aamkcllcbinqsc3uk]  [286b7968-6a20-40b3-82f5-e0dfb0ded057]  Processing batch event [
+  {
+    event_type: 'CBTSessionCreated',
+    test_run: {
+      uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1',
+      integrations: {
+        browserstack: {
+          product: 'automate',
+          session_id: 'e3b80cbd30135cc3bd25f294111abbb852d6fd57',
+          capabilities: {
+            build: 'Avotech-Regression-TestSuite',
+            'browserstack.video': true,
+            interactiveDebugging: true,
+            'browserstack.user': '[REDACTED]',
+            'browserstack.key': '[REDACTED]',
+            'browserstack.buildIdentifier': '#30',
+            turboScaleOptions: {},
+            os: 'Windows',
+            os_version: '11',
+            'browserstack.hostName': 'DESKTOP-B1PF2KP',
+            'browserstack.browserstackSDK': 'Playwright-nodeagent/1.52.2',
+            'browserstack.buildProductMap': {
+              observability: true,
+              accessibility: false,
+              percy: false,
+              automate: true,
+              app_automate: false,
+              turboscale: false,
+              central_scanner: false,
+              lts: false
+            },
+            'browserstack.use_w3c': false,
+            browser: 'chrome',
+            browser_version: 'latest',
+            'browserstack.testhubBuildUuid': 'n4xnicct6xvj1p7pyzo9ss9aamkcllcbinqsc3uk',
+            'browserstack.local': false,
+            'browserstack.localIdentifier': null
+          },
+          platform: 'Windows',
+          platform_version: '11',
+          browser: 'chrome',
+          browser_version: 'latest'
+        }
+      }
+    }
+  },
+  {
+    event_type: 'CBTSessionCreated',
+    test_run: {
+      uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1',
+      integrations: {
+        browserstack: {
+          product: 'automate',
+          session_id: 'e3b80cbd30135cc3bd25f294111abbb852d6fd57',
+          capabilities: {
+            build: 'Avotech-Regression-TestSuite',
+            'browserstack.video': true,
+            interactiveDebugging: true,
+            'browserstack.user': '[REDACTED]',
+            'browserstack.key': '[REDACTED]',
+            'browserstack.buildIdentifier': '#30',
+            turboScaleOptions: {},
+            os: 'Windows',
+            os_version: '11',
+            'browserstack.hostName': 'DESKTOP-B1PF2KP',
+            'browserstack.browserstackSDK': 'Playwright-nodeagent/1.52.2',
+            'browserstack.buildProductMap': {
+              observability: true,
+              accessibility: false,
+              percy: false,
+              automate: true,
+              app_automate: false,
+              turboscale: false,
+              central_scanner: false,
+              lts: false
+            },
+            'browserstack.use_w3c': false,
+            browser: 'chrome',
+            browser_version: 'latest',
+            'browserstack.testhubBuildUuid': 'n4xnicct6xvj1p7pyzo9ss9aamkcllcbinqsc3uk',
+            'browserstack.local': false,
+            'browserstack.localIdentifier': null
+          },
+          platform: 'Windows',
+          platform_version: '11',
+          browser: 'chrome',
+          browser_version: 'latest'
+        }
+      }
+    }
+  }
+] to 19328:0
+2026-06-17T15:23:23.534Z CLI info  [n4xnicct6xvj1p7pyzo9ss9aamkcllcbinqsc3uk]  [286b7968-6a20-40b3-82f5-e0dfb0ded057]  [PRODUCTION] Making POST request to https://collector-observability.browserstack.com
+2026-06-17T15:23:24.681Z CLI info [testhub:request-queue-handler]  [n4xnicct6xvj1p7pyzo9ss9aamkcllcbinqsc3uk]  [286b7968-6a20-40b3-82f5-e0dfb0ded057]  Added the event {
+  event_type: 'LogCreated',
+  logs: [
+    {
+      testFrameworkName: 'Playwright',
+      testFrameworkVersion: '1.59.1',
+      testFrameworkState: 'TEST',
+      timestamp: '2026-06-17T15:23:09.448Z',
+      uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1',
+      kind: 'TEST_STEP',
+      message: 'Navigate to "/Login"',
+      level: 'passed',
+      fileName: '',
+      fileSize: [Long],
+      filePath: '',
+      attachmentType: '',
+      duration: 1844,
+      test_run_uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1'
+    },
+    {
+      testFrameworkName: 'Playwright',
+      testFrameworkVersion: '1.59.1',
+      testFrameworkState: 'TEST',
+      timestamp: '2026-06-17T15:23:11.298Z',
+      uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1',
+      kind: 'TEST_STEP',
+      message: 'Wait for load state "domcontentloaded"',
+      level: 'passed',
+      fileName: '',
+      fileSize: [Long],
+      filePath: '',
+      attachmentType: '',
+      duration: 8,
+      test_run_uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1'
+    },
+    {
+      testFrameworkName: 'Playwright',
+      testFrameworkVersion: '1.59.1',
+      testFrameworkState: 'TEST',
+      timestamp: '2026-06-17T15:23:12.764Z',
+      uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1',
+      kind: 'TEST_STEP',
+      message: "Wait for selector getByRole('textbox', { name: 'Enter your email' })",
+      level: 'passed',
+      fileName: '',
+      fileSize: [Long],
+      filePath: '',
+      attachmentType: '',
+      duration: 1890,
+      test_run_uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1'
+    },
+    {
+      testFrameworkName: 'Playwright',
+      testFrameworkVersion: '1.59.1',
+      testFrameworkState: 'TEST',
+      timestamp: '2026-06-17T15:23:14.659Z',
+      uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1',
+      kind: 'TEST_STEP',
+      message: 'Wait for load state "load"',
+      level: 'passed',
+      fileName: '',
+      fileSize: [Long],
+      filePath: '',
+      attachmentType: '',
+      duration: 2,
+      test_run_uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1'
+    },
+    {
+      testFrameworkName: 'Playwright',
+      testFrameworkVersion: '1.59.1',
+      testFrameworkState: 'TEST',
+      timestamp: '2026-06-17T15:23:15.005Z',
+      uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1',
+      kind: 'TEST_STEP',
+      message: `Fill "dax.manning@appnovation.com" getByRole('textbox', { name: 'Enter your email' })`,
+      level: 'passed',
+      fileName: '',
+      fileSize: [Long],
+      filePath: '',
+      attachmentType: '',
+      duration: 378,
+      test_run_uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1'
+    },
+    {
+      testFrameworkName: 'Playwright',
+      testFrameworkVersion: '1.59.1',
+      testFrameworkState: 'TEST',
+      timestamp: '2026-06-17T15:23:15.739Z',
+      uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1',
+      kind: 'TEST_STEP',
+      message: `Expect "toBeVisible" getByRole('button', { name: 'Next' })`,
+      level: 'passed',
+      fileName: '',
+      fileSize: [Long],
+      filePath: '',
+      attachmentType: '',
+      duration: 351,
+      test_run_uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1'
+    },
+    {
+      testFrameworkName: 'Playwright',
+      testFrameworkVersion: '1.59.1',
+      testFrameworkState: 'TEST',
+      timestamp: '2026-06-17T15:23:16.091Z',
+      uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1',
+      kind: 'TEST_STEP',
+      message: "Click getByRole('button', { name: 'Next' })",
+      level: 'passed',
+      fileName: '',
+      fileSize: [Long],
+      filePath: '',
+      attachmentType: '',
+      duration: 455,
+      test_run_uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1'
+    },
+    {
+      testFrameworkName: 'Playwright',
+      testFrameworkVersion: '1.59.1',
+      testFrameworkState: 'TEST',
+      timestamp: '2026-06-17T15:23:16.547Z',
+      uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1',
+      kind: 'TEST_STEP',
+      message: `Expect "toBeVisible" getByRole('textbox', { name: 'Enter your password' })`,
+      level: 'passed',
+      fileName: '',
+      fileSize: [Long],
+      filePath: '',
+      attachmentType: '',
+      duration: 474,
+      test_run_uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1'
+    },
+    {
+      testFrameworkName: 'Playwright',
+      testFrameworkVersion: '1.59.1',
+      testFrameworkState: 'TEST',
+      timestamp: '2026-06-17T15:23:17.023Z',
+      uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1',
+      kind: 'TEST_STEP',
+      message: `Fill "123qweQWE!@#" getByRole('textbox', { name: 'Enter your password' })`,
+      level: 'passed',
+      fileName: '',
+      fileSize: [Long],
+      filePath: '',
+      attachmentType: '',
+      duration: 363,
+      test_run_uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1'
+    },
+    {
+      testFrameworkName: 'Playwright',
+      testFrameworkVersion: '1.59.1',
+      testFrameworkState: 'TEST',
+      timestamp: '2026-06-17T15:23:17.388Z',
+      uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1',
+      kind: 'TEST_STEP',
+      message: `Expect "toBeVisible" getByRole('button', { name: 'Log in' })`,
+      level: 'passed',
+      fileName: '',
+      fileSize: [Long],
+      filePath: '',
+      attachmentType: '',
+      duration: 350,
+      test_run_uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1'
+    },
+    {
+      testFrameworkName: 'Playwright',
+      testFrameworkVersion: '1.59.1',
+      testFrameworkState: 'TEST',
+      timestamp: '2026-06-17T15:23:17.739Z',
+      uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1',
+      kind: 'TEST_STEP',
+      message: "Check getByRole('checkbox', { name: 'Stay signed in for a week' })",
+      level: 'passed',
+      fileName: '',
+      fileSize: [Long],
+      filePath: '',
+      attachmentType: '',
+      duration: 408,
+      test_run_uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1'
+    },
+    {
+      testFrameworkName: 'Playwright',
+      testFrameworkVersion: '1.59.1',
+      testFrameworkState: 'TEST',
+      timestamp: '2026-06-17T15:23:18.150Z',
+      uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1',
+      kind: 'TEST_STEP',
+      message: "Click getByRole('button', { name: 'Log in' })",
+      level: 'passed',
+      fileName: '',
+      fileSize: [Long],
+      filePath: '',
+      attachmentType: '',
+      duration: 409,
+      test_run_uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1'
+    },
+    {
+      testFrameworkName: 'Playwright',
+      testFrameworkVersion: '1.59.1',
+      testFrameworkState: 'TEST',
+      timestamp: '2026-06-17T15:23:18.563Z',
+      uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1',
+      kind: 'TEST_STEP',
+      message: 'Wait for navigation',
+      level: 'passed',
+      fileName: '',
+      fileSize: [Long],
+      filePath: '',
+      attachmentType: '',
+      duration: 2404,
+      test_run_uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1'
+    }
+  ]
+} to 19328:0
+2026-06-17T15:23:24.691Z CLI info [testhub:request-queue-handler]  [n4xnicct6xvj1p7pyzo9ss9aamkcllcbinqsc3uk]  [286b7968-6a20-40b3-82f5-e0dfb0ded057]  Added the event {
+  event_type: 'TestRunFinished',
+  logs: [],
+  test_run: {
+    type: 'test',
+    framework: 'Playwright',
+    uuid: 'efbdb220-a6d5-413f-a7e0-8a78c247f3d1',
+    name: 'redirects to login, then to home after valid credentials',
+    body: {
+      lang: 'javascript',
+      code: 'async ({\n' +
+        '      page,\n' +
+        '      csiLoginPage\n' +
+        '    }) => {\n' +
+        '      var _process$env$CSI_TEST;\n' +
+        '      if (!((_process$env$CSI_TEST = process.env.CSI_TEST_PASSWORD) !== null && _process$env$CSI_TEST !== void 0 && _process$env$CSI_TEST.length)) {\n' +
+        '        _testSetup.test.skip();\n' +
+        '        return;\n' +
+        '      }\n' +
+        '      const password = (0, _credentials.csiTestPassword)();\n' +
+        '      const email = (0, _credentials.csiTestEmail)();\n' +
+        '      await csiLoginPage.gotoLogin();\n' +
+        '      await (0, _testSetup.expect)(page).toHaveURL(url => (0, _csi.isCsiLoginPageUrl)(url));\n' +
+        '      await csiLoginPage.signInWithEmailAndPassword(email, password);\n' +
+        '      await csiLoginPage.expectOnHome();\n' +
+        '    }'
+    },
+    identifier: 'redirects to login, then to home after valid credentials',
+    scope: 'redirects to login, then to home after valid credentials',
+    scopes: [
+      'CSI · Avotech login',
+      'redirects to login, then to home after valid credentials'
+    ],
+    custom_metadata: {},
+    meta: {},
+    file_name: 'tests\\csi\\auth\\login.spec.ts',
+    vc_filepath: 'tests\\csi\\auth\\login.spec.ts',
+    location: 'tests\\csi\\auth\\login.spec.ts',
+    result: 'passed',
+    duration_in_ms: 17498,
+    started_at: '2026-06-17T15:22:56.203Z',
+    finished_at: '2026-06-17T15:23:13.701Z',
+    failure: null,
+    failure_type: undefined,
+    failure_reason: null,
+    retry_of: null,
+    tags: [],
+    customRerunParam: {
+      rerun_name: ' -latest:Windows 11-browserstack csi\\auth\\login.spec.ts CSI · Avotech login redirects to login, then to home after valid credentials redirects to login, then to home after valid credentials'
+    },
+    hooks: [],
+    product_map: {
+      observability: true,
+      accessibility: false,
+      percy: false,
+      automate: true,
+      app_automate: false,
+      lts: false
+    },
+    integrations: { browserstack: [Object] }
+  }
+} to 19328:0
+2026-06-17T15:23:24.838Z CLI info  [n4xnicct6xvj1p7pyzo9ss9aamkcllcbinqsc3uk]  [286b7968-6a20-40b3-82f5-e0dfb0ded057]  [PRODUCTION] Making GET request to https://api.browserstack.com
+2026-06-17T15:23:24.842Z CLI info  [n4xnicct6xvj1p7pyzo9ss9aamkcllcbinqsc3uk]  [286b7968-6a20-40b3-82f5-e0dfb0ded057]  [PRODUCTION] Making POST request to https://collector-observability.browserstack.com
+2026-06-17T15:23:26.582Z CLI info  [n4xnicct6xvj1p7pyzo9ss9aamkcllcbinqsc3uk]  [286b7968-6a20-40b3-82f5-e0dfb0ded057]  [PRODUCTION] Making PUT request to https://collector-observability.browserstack.com
+2026-06-17T15:23:28.207Z CLI info [testhub:module]  [n4xnicct6xvj1p7pyzo9ss9aamkcllcbinqsc3uk]  [286b7968-6a20-40b3-82f5-e0dfb0ded057]  stopBuild: n4xnicct6xvj1p7pyzo9ss9aamkcllcbinqsc3uk request={"finished_at":"2026-06-17T15:23:24.837Z","finished_metadata":[],"custom_metadata":{}} response={"data":""}
+2026-06-17T15:23:28.209Z CLI info  [n4xnicct6xvj1p7pyzo9ss9aamkcllcbinqsc3uk]  [286b7968-6a20-40b3-82f5-e0dfb0ded057]  [PRODUCTION] Making POST request to https://api.browserstack.com
+2026-06-17T15:23:29.591Z CLI info [TEST REPORTING AND ANALYTICS:module]  [n4xnicct6xvj1p7pyzo9ss9aamkcllcbinqsc3uk]  [286b7968-6a20-40b3-82f5-e0dfb0ded057]  Visit https://automation.browserstack.com/builds/n4xnicct6xvj1p7pyzo9ss9aamkcllcbinqsc3uk to view build report, insights, and many more debugging information all at one place!
+2026-06-17T15:23:29.653Z CLI info  [n4xnicct6xvj1p7pyzo9ss9aamkcllcbinqsc3uk]  [286b7968-6a20-40b3-82f5-e0dfb0ded057]  [PRODUCTION] Making POST request to https://eds.browserstack.com

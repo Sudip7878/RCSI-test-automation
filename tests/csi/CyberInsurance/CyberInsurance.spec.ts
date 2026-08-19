@@ -2,6 +2,8 @@ import { test } from '../../../fixtures/csi/testSetup';
 import {
   csiPenetrationTesterTestEmail,
   csiPenetrationTesterTestPassword,
+  csiTrainingPhisingSysOwnerTestEmail,
+  csiTrainingPhisingSysOwnerTestPassword,
 } from '../../../utils/csi/credentials';
 import {
   csiCyberInsuranceAddress,
@@ -31,6 +33,35 @@ test.describe('CSI · Cyber Insurance', () => {
     });
 
     test('CI-001', async ({ csiCyberInsurancePage }) => {
+      const uniqueNumeric = utcDateBasedNumber();
+
+      await csiCyberInsurancePage.openCyberInsurance();
+      await csiCyberInsurancePage.submitInsuranceApplication({
+        businessDescription: csiCyberInsuranceBusinessDescription(uniqueNumeric),
+        address: csiCyberInsuranceAddress(uniqueNumeric),
+      });
+    });
+  });
+
+  test.describe('CI-002 — System Owner submits insurance application', () => {
+    test.beforeEach(async ({ csiLoginPage }) => {
+      if (
+        !process.env.CSI_TRAINING_PHISING_SYS_OWNER_TEST_PASSWORD?.length ||
+        !process.env.CSI_TRAINING_PHISING_SYS_OWNER_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiTrainingPhisingSysOwnerTestEmail(),
+        csiTrainingPhisingSysOwnerTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+    });
+
+    test('CI-002', async ({ csiCyberInsurancePage }) => {
       const uniqueNumeric = utcDateBasedNumber();
 
       await csiCyberInsurancePage.openCyberInsurance();

@@ -1,5 +1,31 @@
 import { expect, type Locator } from '@playwright/test';
-import { CSI_BASE_URL, CSI_GROUP_LIST_PATH, CSI_ORGANIZATION_DETAIL_PATH, CSI_ORGANIZATION_LIST_PATH } from '../../config/csi';
+import {
+  CSI_BASE_URL,
+  CSI_GROUP_LIST_PATH,
+  CSI_ORGANIZATION_DETAIL_PATH,
+  CSI_ORGANIZATION_LIST_PATH,
+  CSI_SIGNUP_PATH,
+} from '../../config/csi';
+import { AM002_SIGNUP_REGISTERED_EMAIL_MESSAGE } from '../../utils/csi/am002AccountManagementTestData';
+import {
+  AM003_INVALID_EMAIL_MESSAGE,
+  AM003_REQUIRED_EMAIL_MESSAGE,
+} from '../../utils/csi/am003AccountManagementTestData';
+import {
+  AM015_ORGANIZATION_CREATED_SUCCESS,
+  AM015_ORG_NAME_DROPDOWN_SETTLE_MS,
+  type Am015OrganizationFormStep,
+} from '../../utils/csi/am015OrganizationTestData';
+import { AM016_OWNER_EMAIL_VALIDATION_MESSAGE } from '../../utils/csi/am016OrganizationTestData';
+import { AM026_INVALID_EMAIL_MESSAGE } from '../../utils/csi/am026AccountManagementTestData';
+import { AM029_MISSING_FIELDS_MESSAGE } from '../../utils/csi/am029AccountManagementTestData';
+import {
+  AM030_BULK_NO_USER_IMPORTED_MESSAGE,
+  AM030_BULK_ROW_DUPLICATE_TAG,
+  AM030_BULK_USERS_ALREADY_EXIST_MESSAGE,
+  AM030_MANUAL_DUPLICATE_EMAIL_MESSAGE,
+  loginEmailLocalPartAm030,
+} from '../../utils/csi/am030AccountManagementTestData';
 import {
   AM033_ASSIGNABLE_ROLE_NAMES,
   AM033_MODULE_ACCESS_TIMEOUT_MS,
@@ -20,6 +46,7 @@ export class CsiAccountManagementPage extends BasePage {
   readonly userSearchButton = this.page.getByRole('button', { name: 'Search' });
   readonly excelUploadButton = this.page.getByRole('button', { name: /Excel Upload/i });
   readonly downloadTemplateButton = this.page.getByRole('button', { name: 'Download Template' });
+  readonly bulkUploadBackButton = this.page.getByRole('button', { name: /Back/i });
   readonly editOrganizationDetailsButton = this.page.getByRole('button', { name: 'Edit Details' });
   readonly changeMfaRuleButton = this.page.getByRole('button', { name: 'Change MFA Rule' });
   readonly saveOrganizationChangesButton = this.page.getByRole('button', { name: 'Save Changes' });
@@ -73,6 +100,19 @@ export class CsiAccountManagementPage extends BasePage {
     await this.emailInput.fill(params.emailLocalPart);
   }
 
+  /** AM-026: same identity fields as AM-019 but fills the full email including external domain. */
+  async fillNewUserIdentityAm026(params: { firstName: string; lastName: string; email: string }) {
+    await expect(this.firstNameInput).toBeVisible();
+    await this.firstNameInput.click();
+    await this.firstNameInput.fill(params.firstName);
+
+    await this.lastNameInput.click();
+    await this.lastNameInput.fill(params.lastName);
+
+    await this.emailInput.click();
+    await this.emailInput.fill(params.email);
+  }
+
   private async setRoleAssignmentByName(roleGrid: Locator, roleName: string, shouldCheck: boolean) {
     const roleCell = roleGrid.getByRole('gridcell', { name: new RegExp(`^${roleName}\\b`, 'i') });
     await expect(roleCell).toBeVisible({ timeout: 30_000 });
@@ -119,6 +159,55 @@ export class CsiAccountManagementPage extends BasePage {
 
   async expectUserCreatedSuccess() {
     await expect(this.page.getByText('You have successfully added')).toBeVisible({ timeout: 60_000 });
+  }
+
+  /** AM-026: manual add user rejects email outside the organization domain. */
+  async expectInvalidEmailOnCreateUserAm026() {
+    await expect(this.page.getByText(AM026_INVALID_EMAIL_MESSAGE, { exact: true })).toBeVisible({
+      timeout: 60_000,
+    });
+  }
+
+  /** AM-030: manual add user with the login email local part (domain auto-filled by the app). */
+  async fillNewUserIdentityWithLoginEmailAm030(params: {
+    firstName: string;
+    lastName: string;
+    loginEmail: string;
+  }) {
+    await this.fillNewUserIdentity({
+      firstName: params.firstName,
+      lastName: params.lastName,
+      emailLocalPart: loginEmailLocalPartAm030(params.loginEmail),
+    });
+  }
+
+  /** AM-030: manual add user rejects an email that already exists in the org. */
+  async expectDuplicateEmailOnManualAddUserAm030() {
+    await expect(this.page.getByText(AM030_MANUAL_DUPLICATE_EMAIL_MESSAGE, { exact: true })).toBeVisible({
+      timeout: 60_000,
+    });
+  }
+
+  /** AM-030: hard-reload user list before the bulk-upload duplicate phase. */
+  async reloadUserListAndWaitForAddNewUserAm030() {
+    await this.page.reload({ waitUntil: 'domcontentloaded' });
+    await expect(this.addNewUserButton).toBeVisible({ timeout: 30_000 });
+  }
+
+  /**
+   * AM-030: after Continue on a template where every row reuses the login email, the review
+   * step shows duplicate errors and Import Users is not offered.
+   */
+  async expectBulkUploadDuplicateUsersRejectedAm030() {
+    await expect(this.page.getByText(AM030_BULK_NO_USER_IMPORTED_MESSAGE, { exact: true })).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(
+      this.page.getByText(AM030_BULK_USERS_ALREADY_EXIST_MESSAGE, { exact: true }),
+    ).toBeVisible({ timeout: 30_000 });
+    await expect(this.page.getByText(AM030_BULK_ROW_DUPLICATE_TAG, { exact: true }).first()).toBeVisible({
+      timeout: 30_000,
+    });
   }
 
   /** IR-001: `/userList` with search box ready (recorded flow). */
@@ -408,6 +497,26 @@ export class CsiAccountManagementPage extends BasePage {
     await this.page.waitForTimeout(3_000);
   }
 
+  /** AM-029: after Continue on a malformed template, the "missing fields" banner is shown instead of the row-review step. */
+  async expectBulkUploadMissingFieldsMessageAm029() {
+    await expect(this.page.getByText(AM029_MISSING_FIELDS_MESSAGE, { exact: true })).toBeVisible({
+      timeout: 30_000,
+    });
+  }
+
+  /**
+   * AM-029: click Back to leave the missing-fields banner, wait for the page to finish loading,
+   * then hard-reload so the Download Template / Upload UI are re-verified visible before the
+   * next upload attempt.
+   */
+  async goBackAndReloadBulkUploadFormAm029() {
+    await this.bulkUploadBackButton.click();
+    await this.page.waitForLoadState('domcontentloaded');
+    await this.page.reload({ waitUntil: 'domcontentloaded' });
+    await expect(this.downloadTemplateButton).toBeVisible({ timeout: 30_000 });
+    await expect(this.page.getByText('Upload completed template')).toBeVisible({ timeout: 30_000 });
+  }
+
   async expectUserGridShowsEmails(emails: ReadonlyArray<string>) {
     expect(emails.length).toBeGreaterThan(0);
 
@@ -582,7 +691,10 @@ export class CsiAccountManagementPage extends BasePage {
     await expect(this.page.getByRole('button', { name: 'Add' })).toBeVisible({ timeout: 60_000 });
   }
 
-  async startAddOrganization() {
+  async startAddOrganization(options?: { waitBeforeAddMs?: number }) {
+    if (options?.waitBeforeAddMs) {
+      await this.page.waitForTimeout(options.waitBeforeAddMs);
+    }
     await this.page.getByRole('button', { name: 'Add' }).click();
     const dialog = this.addOrganizationDialog();
     await expect(dialog).toBeVisible({ timeout: 30_000 });
@@ -632,8 +744,37 @@ export class CsiAccountManagementPage extends BasePage {
     await this.page.getByRole('option', { name: params.plan }).click();
   }
 
+  /** AM-015: fill Create organization fields from ordered steps (no hardcoded field sequence). */
+  async fillNewOrganizationFromSteps(steps: Am015OrganizationFormStep[]) {
+    const dialog = this.addOrganizationDialog();
+
+    for (const step of steps) {
+      if (step.type === 'textbox') {
+        const input = dialog.getByRole('textbox', { name: step.name });
+        await expect(input).toBeVisible({ timeout: 30_000 });
+        await input.click();
+        await input.fill(step.value);
+        if (step.name === 'Organization name') {
+          await this.page.waitForTimeout(AM015_ORG_NAME_DROPDOWN_SETTLE_MS);
+        }
+        continue;
+      }
+
+      await dialog.getByText(step.triggerText, { exact: true }).click();
+      await this.page.getByRole('option', { name: step.optionName }).click();
+    }
+  }
+
   async submitCreateOrganization() {
     await this.addOrganizationDialog().getByRole('button', { name: 'Create organization' }).click();
+  }
+
+  /** AM-016: Create organization stays on the form with owner email validation error. */
+  async expectCreateOrganizationOwnerEmailValidationErrorAm016() {
+    const dialog = this.addOrganizationDialog();
+    await expect(dialog.getByText(AM016_OWNER_EMAIL_VALIDATION_MESSAGE, { exact: true })).toBeVisible({
+      timeout: 30_000,
+    });
   }
 
   async expectOrganizationRecordCreated() {
@@ -645,6 +786,13 @@ export class CsiAccountManagementPage extends BasePage {
     if (await closeIcon.isVisible({ timeout: 5_000 }).catch(() => false)) {
       await closeIcon.click();
     }
+  }
+
+  /** AM-015: Create organization succeeds even when the organization name already exists. */
+  async expectOrganizationCreatedAm015() {
+    await expect(
+      this.page.getByText(AM015_ORGANIZATION_CREATED_SUCCESS, { exact: true }),
+    ).toBeVisible({ timeout: 60_000 });
   }
 
   /** AM-063: confirm Email column exists without clicking (sort must not change). */
@@ -721,6 +869,84 @@ export class CsiAccountManagementPage extends BasePage {
     return [...allEmails].sort();
   }
 
+  // ─── AM-002: signup ──────────────────────────────────────────────────────
+
+  /** AM-002: navigate to /signup (no login) and wait for the Email field. */
+  async openSignupAm002() {
+    await this.page.goto(`${CSI_BASE_URL}${CSI_SIGNUP_PATH}`);
+    await this.page.waitForLoadState('domcontentloaded');
+    await expect(this.signupEmailFieldAm002()).toBeVisible({ timeout: 30_000 });
+  }
+
+  private signupEmailFieldAm002() {
+    return this.page.getByRole('textbox', { name: 'Enter your work email' });
+  }
+
+  /** AM-002: enter an already registered email in the signup form. */
+  async fillSignupEmailAm002(email: string) {
+    const emailField = this.signupEmailFieldAm002();
+    await emailField.click();
+    await emailField.fill(email);
+  }
+
+  /** AM-002: click "Next Step" to submit the email and trigger duplicate-email validation. */
+  async submitSignupEmailStepAm002() {
+    await this.page.getByRole('button', { name: 'Next Step' }).click();
+  }
+
+  /** AM-002: signup must show "Email already exist" for a registered address. */
+  async expectSignupRegisteredEmailErrorAm002() {
+    await expect(
+      this.page.getByText(AM002_SIGNUP_REGISTERED_EMAIL_MESSAGE, { exact: true }),
+    ).toBeVisible({ timeout: 60_000 });
+  }
+
+  // ─── AM-003: signup invalid email format ─────────────────────────────────
+
+  /** AM-003: navigate to /signup (no login) and wait for the Email field. */
+  async openSignupAm003() {
+    await this.page.goto(`${CSI_BASE_URL}${CSI_SIGNUP_PATH}`);
+    await this.page.waitForLoadState('domcontentloaded');
+    await expect(this.signupEmailFieldAm003()).toBeVisible({ timeout: 30_000 });
+  }
+
+  private signupEmailFieldAm003() {
+    return this.page.getByRole('textbox', { name: 'Enter your work email' });
+  }
+
+  /** AM-003: enter a value in the signup email field. */
+  async fillSignupEmailAm003(email: string) {
+    const emailField = this.signupEmailFieldAm003();
+    await emailField.click();
+    await emailField.fill(email);
+  }
+
+  /** AM-003: clear the signup email field before submitting an empty value. */
+  async clearSignupEmailAm003() {
+    const emailField = this.signupEmailFieldAm003();
+    await emailField.click();
+    await emailField.clear();
+  }
+
+  /** AM-003: click "Next Step" to trigger signup email validation. */
+  async submitSignupEmailStepAm003() {
+    await this.page.getByRole('button', { name: 'Next Step' }).click();
+  }
+
+  /** AM-003: malformed addresses must show "Enter a valid email." */
+  async expectSignupInvalidEmailErrorAm003() {
+    await expect(
+      this.page.getByText(AM003_INVALID_EMAIL_MESSAGE, { exact: true }),
+    ).toBeVisible({ timeout: 60_000 });
+  }
+
+  /** AM-003: an empty email field must show "This field is required." */
+  async expectSignupRequiredEmailErrorAm003() {
+    await expect(
+      this.page.getByText(AM003_REQUIRED_EMAIL_MESSAGE, { exact: true }),
+    ).toBeVisible({ timeout: 60_000 });
+  }
+
   // ─── AM-041: group creation ────────────────────────────────────────────────
 
   /** AM-041: navigate to /groupList and wait for the Create New Group button. */
@@ -729,6 +955,31 @@ export class CsiAccountManagementPage extends BasePage {
     await expect(this.page.getByRole('button', { name: /Create New Group/i })).toBeVisible({
       timeout: 30_000,
     });
+  }
+
+  /**
+   * AM-043: return the name from the first group-grid row, or undefined when no name appears
+   * within the required 15-second window.
+   */
+  async firstGroupNameOrUndefinedAm043(): Promise<string | undefined> {
+    const firstGroupNameCell = this.page
+      .getByRole('grid')
+      .filter({ has: this.page.getByRole('columnheader', { name: 'Name' }) })
+      .locator('tbody tr.table-row')
+      .first()
+      .locator('td[data-header="Name"]');
+
+    const nameIsVisible = await expect(firstGroupNameCell)
+      .toBeVisible({ timeout: 15_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (!nameIsVisible) {
+      return undefined;
+    }
+
+    const groupName = (await firstGroupNameCell.textContent())?.replace(/\s+/g, ' ').trim();
+    expect(groupName, 'The first group-grid row must contain a group name').toBeTruthy();
+    return groupName;
   }
 
   /**
