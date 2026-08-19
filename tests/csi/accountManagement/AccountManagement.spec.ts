@@ -52,6 +52,7 @@ import {
 } from '../../../utils/csi/am016OrganizationTestData';
 import { AM003_INVALID_SIGNUP_EMAILS } from '../../../utils/csi/am003AccountManagementTestData';
 import { buildExternalDomainUserEmailAm026 } from '../../../utils/csi/am026AccountManagementTestData';
+import { buildWrongCurrentPasswordAm062 } from '../../../utils/csi/am062AccountManagementTestData';
 import {
   csiAccountManagementEmailLocalPart,
   csiAccountManagementFirstName,
