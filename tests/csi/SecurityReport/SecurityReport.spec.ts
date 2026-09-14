@@ -3,14 +3,24 @@ import { test } from '../../../fixtures/csi/testSetup';
 import {
   csiSecurityReportAdminTestEmail,
   csiSecurityReportAdminTestPassword,
+  csiSystemOwnerTestEmail,
+  csiSystemOwnerTestPassword,
   csiTestEmail,
   csiTestPassword,
+} from '../../../utils/csi/credentials';
+import {
+  csiOrgASystemOwnerTestEmail,
+  csiOrgASystemOwnerTestPassword,
+  csiOrgBSystemOwnerTestEmail,
+  csiOrgBSystemOwnerTestPassword,
 } from '../../../utils/csi/credentials';
 import {
   CSI_ATTACK_SURFACE_REPORT_FILENAME,
   csiAttackSurfaceReportPdfPath,
   csiDarkwebReportTest1PdfPath,
   csiDarkwebReportTest2PdfPath,
+  csiOrgADarkWebRequestId,
+  csiOrgBDarkWebRequestId,
 } from '../../../utils/csi/securityReportTestData';
 
 test.describe('CSI · Security Report', () => {
@@ -103,6 +113,45 @@ test.describe('CSI · Security Report', () => {
     await csiSecurityReportPage.approveRequestedDataWithUploadedPdf(pdfPath, CSI_ATTACK_SURFACE_REPORT_FILENAME);
   });
 
+  /** SR-006: System Owner submits an attack surface scan request; CSI_TEST approves it with a fixture PDF. */
+  test.describe('SR-006 — System Owner requests scan', () => {
+    test.beforeEach(async ({ csiLoginPage }) => {
+      if (
+        !process.env.CSI_SYSTEM_OWNER_TEST_PASSWORD?.length ||
+        !process.env.CSI_SYSTEM_OWNER_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiSystemOwnerTestEmail(),
+        csiSystemOwnerTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+    });
+
+    test('SR-006', async ({ csiSecurityReportPage, csiLoginPage }) => {
+      const pdfPath = csiAttackSurfaceReportPdfPath();
+      test.skip(!fs.existsSync(pdfPath), `Missing fixture PDF: ${pdfPath}`);
+
+      await csiSecurityReportPage.openAttackSurface();
+      await csiSecurityReportPage.submitNewAttackSurfaceRequestFlow();
+      await csiLoginPage.logoutViaHeaderMenu();
+      await csiLoginPage.expectEmailStepVisible();
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(csiTestEmail(), csiTestPassword());
+      await csiLoginPage.expectOnHome();
+
+      await csiSecurityReportPage.openAttackSurface();
+      await csiSecurityReportPage.tryClickClearAfterGridSettled();
+      await csiSecurityReportPage.openFirstPendingAttackSurfaceRequestDetails();
+      await csiSecurityReportPage.approveRequestedDataWithUploadedPdf(pdfPath, CSI_ATTACK_SURFACE_REPORT_FILENAME);
+    });
+  });
+
   test.describe('SR-010 — dark web scan request', () => {
     test('SR-010 and SR-011', async ({ csiSecurityReportPage, csiLoginPage }) => {
       if (
@@ -154,6 +203,52 @@ test.describe('CSI · Security Report', () => {
 
       await csiSecurityReportPage.openRequestHistory();
       await csiSecurityReportPage.expectFirstRequestHistoryRowStatus('Completed');
+    });
+  });
+});
+
+test.describe('CSI · Security Report — org dark web report isolation', () => {
+  test.describe.configure({ timeout: 120_000 });
+
+  /**
+   * SR-009: Org A owner cannot open Org B dark web report and vice versa.
+   * Request ids in `data/csi/securityReport.json` (recorded-steps/SecurityReport/SR-009.txt).
+   */
+  test.describe('SR-009 cross-org DarkwebReport access denied', () => {
+    test('SR-009', async ({ csiLoginPage, csiSecurityReportPage }) => {
+      if (
+        !process.env.CSI_ORG_A_SYSTEM_OWNER_TEST_PASSWORD?.length ||
+        !process.env.CSI_ORG_A_SYSTEM_OWNER_TEST_EMAIL?.trim()?.length ||
+        !process.env.CSI_ORG_B_SYSTEM_OWNER_TEST_PASSWORD?.length ||
+        !process.env.CSI_ORG_B_SYSTEM_OWNER_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiOrgASystemOwnerTestEmail(),
+        csiOrgASystemOwnerTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+
+      await csiSecurityReportPage.openDarkwebReport(csiOrgBDarkWebRequestId());
+      await csiSecurityReportPage.expectDarkwebReportNoPermissionMessage();
+
+      await csiLoginPage.gotoHome();
+      await csiLoginPage.logoutViaHeaderMenu();
+      await csiLoginPage.expectEmailStepVisible();
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiOrgBSystemOwnerTestEmail(),
+        csiOrgBSystemOwnerTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+
+      await csiSecurityReportPage.openDarkwebReport(csiOrgADarkWebRequestId());
+      await csiSecurityReportPage.expectDarkwebReportNoPermissionMessage();
     });
   });
 });

@@ -3,6 +3,8 @@ import path from 'node:path';
 
 import * as XLSX from 'xlsx';
 
+import { AM029_INVALID_HEADER_VALUE } from './am029AccountManagementTestData';
+
 export type BulkUserRow = Readonly<{
   firstName: string;
   lastName: string;
@@ -99,6 +101,99 @@ export function buildBulkUsersFromSystemOwnerEmail(
 }
 
 /**
+ * AM-028: same naming logic as `buildBulkUsersFromSystemOwnerEmail` but writes `invalid.com`
+ * as the email domain so every row triggers an "Invalid domain" validation error on upload.
+ * Returns both `uploadRows` (for the Excel file) and `fixedRows` (real domain, for post-fix
+ * grid verification after the UI fix-and-save loop).
+ */
+export function buildBulkUsersWithInvalidDomainAm028(
+  systemOwnerEmail: string,
+  count = 5,
+  position = 'QA',
+): { uploadRows: BulkUserRow[]; fixedRows: BulkUserRow[]; startingNumber: number; endingNumber: number } {
+  const { lastUserNumber } = readUserCounter();
+  const { firstName, firstNameToken, lastNameBase, domain } =
+    parseSystemOwnerEmailForBulkPattern(systemOwnerEmail);
+
+  const uploadRows: BulkUserRow[] = [];
+  const fixedRows: BulkUserRow[] = [];
+
+  for (let i = 1; i <= count; i += 1) {
+    const n = lastUserNumber + i;
+    const lastName = `${titleCase(lastNameBase)}${n}`;
+    uploadRows.push({
+      firstName,
+      lastName,
+      email: `${firstNameToken}.${lastNameBase}+${n}@invalid.com`,
+      position,
+    });
+    fixedRows.push({
+      firstName,
+      lastName,
+      email: `${firstNameToken}.${lastNameBase}+${n}@${domain}`,
+      position,
+    });
+  }
+
+  writeUserCounter({ lastUserNumber: lastUserNumber + count });
+  return {
+    uploadRows,
+    fixedRows,
+    startingNumber: lastUserNumber + 1,
+    endingNumber: lastUserNumber + count,
+  };
+}
+
+/**
+ * AM-029: same naming logic as `buildBulkUsersFromSystemOwnerEmail` but read-only — the rows
+ * are used to fill a template that is expected to keep failing validation (invalid header), so
+ * no users are ever created and `storage/userCounter.json` must not advance.
+ */
+/**
+ * AM-030: five rows that all reuse the logged-in user's email (duplicate bulk upload).
+ * Read-only — no users are imported and `storage/userCounter.json` must not advance.
+ */
+export function buildBulkUsersWithDuplicateLoginEmailAm030(
+  loginEmail: string,
+  count = 5,
+  position = 'QA',
+): BulkUserRow[] {
+  const { firstName, lastNameBase } = parseSystemOwnerEmailForBulkPattern(loginEmail);
+  const normalizedEmail = loginEmail.trim().toLowerCase();
+  const lastName = titleCase(lastNameBase);
+
+  return Array.from({ length: count }, () => ({
+    firstName,
+    lastName,
+    email: normalizedEmail,
+    position,
+  }));
+}
+
+export function buildBulkUsersForInvalidHeaderAm029(
+  loginEmail: string,
+  count = 5,
+  position = 'QA',
+): BulkUserRow[] {
+  const { lastUserNumber } = readUserCounter();
+  const { firstName, firstNameToken, lastNameBase, domain } =
+    parseSystemOwnerEmailForBulkPattern(loginEmail);
+
+  const rows: BulkUserRow[] = [];
+  for (let i = 1; i <= count; i += 1) {
+    const n = lastUserNumber + i;
+    rows.push({
+      firstName,
+      lastName: `${titleCase(lastNameBase)}${n}`,
+      email: `${firstNameToken}.${lastNameBase}+${n}@${domain}`,
+      position,
+    });
+  }
+
+  return rows;
+}
+
+/**
  * Rewrites the downloaded bulk-import template with header + provided rows.
  * Row data starts from the first data row (dummy template rows are replaced).
  */
@@ -122,6 +217,41 @@ export function writeBulkUsersToTemplateXlsx(
     firstRow.some((v) => /email/i.test(String(v)));
 
   const header = hasHeader ? firstRow : ['First Name', 'Last Name', 'Email', 'Position'];
+  const nextData = [header, ...rows.map((row) => [row.firstName, row.lastName, row.email, row.position])];
+
+  workbook.Sheets[firstSheet] = XLSX.utils.aoa_to_sheet(nextData);
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  XLSX.writeFile(workbook, outputPath);
+  return outputPath;
+}
+
+/**
+ * AM-029: same template rewrite as `writeBulkUsersToTemplateXlsx`, but the header's first
+ * column (normally "First Name") is overwritten with `AM029_INVALID_HEADER_VALUE` so the
+ * upload fails header validation even though every row is otherwise fully populated.
+ */
+export function writeInvalidHeaderBulkUsersToTemplateXlsx(
+  downloadedTemplatePath: string,
+  rows: ReadonlyArray<BulkUserRow>,
+  outputPath: string,
+): string {
+  const workbook = XLSX.readFile(downloadedTemplatePath);
+  const firstSheet = workbook.SheetNames[0];
+  if (!firstSheet) {
+    throw new Error('Downloaded template has no worksheet.');
+  }
+
+  const sheet = workbook.Sheets[firstSheet];
+  const existing = XLSX.utils.sheet_to_json<string[]>(sheet, { header: 1, blankrows: false });
+  const firstRow = existing[0] ?? [];
+  const hasHeader =
+    firstRow.some((v) => /first\s*name/i.test(String(v))) &&
+    firstRow.some((v) => /last\s*name/i.test(String(v))) &&
+    firstRow.some((v) => /email/i.test(String(v)));
+
+  const header = hasHeader ? [...firstRow] : ['First Name', 'Last Name', 'Email', 'Position'];
+  header[0] = AM029_INVALID_HEADER_VALUE;
+
   const nextData = [header, ...rows.map((row) => [row.firstName, row.lastName, row.email, row.position])];
 
   workbook.Sheets[firstSheet] = XLSX.utils.aoa_to_sheet(nextData);

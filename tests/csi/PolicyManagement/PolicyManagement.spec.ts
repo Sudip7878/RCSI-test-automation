@@ -5,10 +5,18 @@ import {
   csiTestPassword,
 } from '../../../utils/csi/credentials';
 import {
+  csiOrgAPolicyId,
+  csiOrgBPolicyId,
   csiPolicyDistributionDueInDays,
   csiPolicyUniqueSuffix,
   replacePolicyTitleLastToken,
 } from '../../../utils/csi/policyManagementTestData';
+import {
+  csiOrgASystemOwnerTestEmail,
+  csiOrgASystemOwnerTestPassword,
+  csiOrgBSystemOwnerTestEmail,
+  csiOrgBSystemOwnerTestPassword,
+} from '../../../utils/csi/credentials';
 import { prependLineToDocx } from '../../../utils/csi/policyDocxPrepend';
 import { csiDistributionUserSearchToken } from '../../../utils/csi/trainingTestData';
 
@@ -127,6 +135,22 @@ test.describe('CSI · Policy Management', () => {
   });
 
   /**
+   * PM-019: Employee who has missed the acknowledgement deadline can still open the overdue
+   * policy from MyPolicies → To be Acknowledged and reach the Acknowledge confirmation step.
+   * Uses the default `CSI_TEST_EMAIL` login (root beforeEach).
+   */
+  test.describe('PM-019 employee with overdue policy can initiate acknowledgement', () => {
+    test('PM-019', async ({ csiPolicyManagementPage }) => {
+      await csiPolicyManagementPage.gotoMyPolicies();
+      await csiPolicyManagementPage.openToBeAcknowledgedTab();
+      await csiPolicyManagementPage.waitForAcknowledgementPolicyCardsAfterTab();
+      await csiPolicyManagementPage.clickViewOnFirstOverdueAcknowledgementCard();
+      await csiPolicyManagementPage.clickAcknowledgePolicyButton();
+      await csiPolicyManagementPage.expectAcknowledgeConfirmButtonVisible();
+    });
+  });
+
+  /**
    * PM-024: same published-policy major-update wizard as PM-026 through `Policy Updated` (no review / approve / version-2).
    * Needs `Update Version 1` on Published Policies (see {@link CsiPolicyManagementPage.clickFirstPublishedRowUpdateVersionOne}).
    */
@@ -192,6 +216,52 @@ test.describe('CSI · Policy Management', () => {
       await csiPolicyManagementPage.expectPolicyTitleVisibleInPublishedGrid(newFullTitle);
       await csiPolicyManagementPage.sortViewPoliciesByVersionColumn();
       await csiPolicyManagementPage.expectPublishedRowVersionColumnIsExact(newFullTitle, '2');
+    });
+  });
+});
+
+test.describe('CSI · Policy Management — org policy isolation', () => {
+  test.describe.configure({ timeout: 120_000 });
+
+  /**
+   * PM-031: Org A owner cannot open Org B policy detail and vice versa.
+   * Policy ids in `data/csi/policyManagement.json` (recorded-steps/PolicyManagement/PM-031.txt).
+   */
+  test.describe('PM-031 cross-org PolicyDetail access denied', () => {
+    test('PM-031', async ({ csiLoginPage, csiPolicyManagementPage }) => {
+      if (
+        !process.env.CSI_ORG_A_SYSTEM_OWNER_TEST_PASSWORD?.length ||
+        !process.env.CSI_ORG_A_SYSTEM_OWNER_TEST_EMAIL?.trim()?.length ||
+        !process.env.CSI_ORG_B_SYSTEM_OWNER_TEST_PASSWORD?.length ||
+        !process.env.CSI_ORG_B_SYSTEM_OWNER_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiOrgASystemOwnerTestEmail(),
+        csiOrgASystemOwnerTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+
+      await csiPolicyManagementPage.openPolicyDetail(csiOrgBPolicyId());
+      await csiPolicyManagementPage.expectPolicyDetailNoPermissionMessage();
+
+      await csiLoginPage.gotoHome();
+      await csiLoginPage.logoutViaHeaderMenu();
+      await csiLoginPage.expectEmailStepVisible();
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiOrgBSystemOwnerTestEmail(),
+        csiOrgBSystemOwnerTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+
+      await csiPolicyManagementPage.openPolicyDetail(csiOrgAPolicyId());
+      await csiPolicyManagementPage.expectPolicyDetailNoPermissionMessage();
     });
   });
 });

@@ -1,6 +1,6 @@
 import { expect, type Locator } from '@playwright/test';
 import * as path from 'path';
-import { CSI_BASE_URL } from '../../config/csi';
+import { CSI_BASE_URL, CSI_POLICY_DETAIL_PATH } from '../../config/csi';
 import { BasePage } from '../BasePage';
 
 export class CsiPolicyManagementPage extends BasePage {
@@ -186,6 +186,18 @@ export class CsiPolicyManagementPage extends BasePage {
     }
   }
 
+  /** PM-031: direct navigation to policy detail (cross-org access check). */
+  async openPolicyDetail(policyId: number) {
+    await this.page.goto(`${CSI_BASE_URL}${CSI_POLICY_DETAIL_PATH}?PolicyId=${policyId}`);
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  async expectPolicyDetailNoPermissionMessage() {
+    await expect(
+      this.page.getByText("You don't have permissions to view this screen.", { exact: true }),
+    ).toBeVisible({ timeout: 60_000 });
+  }
+
   async openPolicyTemplateLibrary() {
     await this.page.goto(`${CSI_BASE_URL}/PolicyTemplateLibrary`);
     await this.page.waitForLoadState('domcontentloaded');
@@ -345,6 +357,44 @@ export class CsiPolicyManagementPage extends BasePage {
     const viewButtons = await this.page.getByRole('button', { name: 'View' }).all();
     expect(viewButtons.length).toBeGreaterThan(0);
     await viewButtons[0].click();
+  }
+
+  /**
+   * PM-019: find the first policy card that contains the 'overdue' indicator text and click its
+   * View button. The overdue text lives inside the card container, so we traverse up to it via
+   * XPath and scope the button lookup to that card only.
+   */
+  async clickViewOnFirstOverdueAcknowledgementCard() {
+    const overdueText = this.page.getByText('overdue').first();
+    await expect(overdueText).toBeVisible({ timeout: 60_000 });
+    const viewBtn = overdueText
+      .locator('xpath=ancestor::div[contains(@class,"card")]')
+      .getByRole('button', { name: 'View' });
+    await expect(viewBtn).toBeVisible({ timeout: 15_000 });
+    await viewBtn.click();
+  }
+
+  /**
+   * PM-019: click the 'Acknowledge Policy' button on the policy detail page.
+   * Kept separate from {@link completePolicyAcknowledgementExpectSuccess} so PM-019 can stop
+   * before the final confirmation click.
+   */
+  async clickAcknowledgePolicyButton() {
+    const btn = this.page.getByRole('button', { name: 'Acknowledge Policy' });
+    await expect(btn).toBeVisible({ timeout: 60_000 });
+    await btn.click();
+  }
+
+  /**
+   * PM-019: assert the 'Acknowledge' confirmation button is presented after clicking
+   * 'Acknowledge Policy'. Does not click the button — the test verifies visibility only
+   * (the employee missed the deadline but the action is still reachable).
+   */
+  async expectAcknowledgeConfirmButtonVisible() {
+    await this.safeSleep(3000);
+    await expect(
+      this.page.getByRole('button', { name: 'Acknowledge' }),
+    ).toBeVisible({ timeout: 30_000 });
   }
 
   async completePolicyAcknowledgementExpectSuccess() {

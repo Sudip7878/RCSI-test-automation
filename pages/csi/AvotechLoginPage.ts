@@ -1,5 +1,11 @@
 import { expect, type Page } from '@playwright/test';
-import { CSI_ACCOUNT_MANAGEMENT_PATH, CSI_LEGACY_LOGIN_PATH, CSI_LOGIN_PATH } from '../../config/csi';
+import {
+  CSI_ACCOUNT_MANAGEMENT_PATH,
+  CSI_BASE_URL,
+  CSI_HOME_PATH,
+  CSI_LEGACY_LOGIN_PATH,
+  CSI_LOGIN_PATH,
+} from '../../config/csi';
 import { BasePage } from '../BasePage';
 
 /**
@@ -53,10 +59,22 @@ export class CsiAvotechLoginPage extends BasePage {
     }
   }
 
+  private async hasAuthenticatedHeader(): Promise<boolean> {
+    return this.page.getByText(/^Hi,\s/i).isVisible({ timeout: 2_000 }).catch(() => false);
+  }
+
   async gotoLogin() {
     await this.page.goto(CSI_LOGIN_PATH);
     await this.page.waitForLoadState('domcontentloaded');
     if (this.isAtHomePath()) {
+      return;
+    }
+
+    if (await this.emailField.isVisible({ timeout: 5_000 }).catch(() => false)) {
+      return;
+    }
+
+    if (await this.hasAuthenticatedHeader()) {
       return;
     }
 
@@ -69,6 +87,12 @@ export class CsiAvotechLoginPage extends BasePage {
       await this.page.goto(CSI_LEGACY_LOGIN_PATH);
       await this.page.waitForLoadState('domcontentloaded');
       if (this.isAtHomePath()) {
+        return;
+      }
+      if (await this.emailField.isVisible({ timeout: 5_000 }).catch(() => false)) {
+        return;
+      }
+      if (await this.hasAuthenticatedHeader()) {
         return;
       }
       await this.emailField.waitFor({ state: 'visible', timeout: 10_000 });
@@ -114,6 +138,12 @@ export class CsiAvotechLoginPage extends BasePage {
     await this.submitLogin();
   }
 
+  async gotoHome() {
+    await this.page.goto(`${CSI_BASE_URL}${CSI_HOME_PATH}`);
+    await this.page.waitForLoadState('domcontentloaded');
+    await this.expectOnHome();
+  }
+
   async expectOnHome() {
     await this.page.waitForURL(
       (url) => {
@@ -140,8 +170,14 @@ export class CsiAvotechLoginPage extends BasePage {
     );
   }
 
+  /** Post-login hub: role-specific landing URLs are valid (AM-033 subject re-login). */
+  async expectAuthenticatedAppSession() {
+    await expect(this.page.getByText(/^Hi,\s/i)).toBeVisible({ timeout: 60_000 });
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
   async openHeaderAccountMenu() {
-    const userMenuTrigger = this.page.getByText(/^Hi,\s/i);
+    const userMenuTrigger = this.page.getByText(/^Hi,\s/i).first();
     await expect(userMenuTrigger).toBeVisible({ timeout: 15_000 });
     await userMenuTrigger.click();
   }
@@ -153,8 +189,131 @@ export class CsiAvotechLoginPage extends BasePage {
     await logoutLink.click();
   }
 
+  /**
+   * AM-033: allow header chrome to finish loading, then retry menu logout until session ends.
+   *
+   * The header can glitch into a half-loaded state where the account menu never opens (e.g. after
+   * a failed/deep-linked module navigation). On every retry the page is reloaded so the header is
+   * re-rendered cleanly before logout is attempted again, and the menu interaction is wrapped so a
+   * glitch triggers a reload-and-retry instead of throwing out of the loop.
+   */
+  async logoutViaHeaderMenuForAm033(headerSettleMs = 3_000) {
+    await this.page.waitForTimeout(headerSettleMs);
+
+    for (let attempt = 0; attempt < 3; attempt++) {
+      // Reload before retrying so a glitched header is freshly loaded (attempt 0 relies on the
+      // caller's preceding navigation to home).
+      if (attempt > 0) {
+        await this.page.reload().catch(() => {});
+        await this.page.waitForLoadState('domcontentloaded').catch(() => {});
+        await this.page.waitForTimeout(1_000);
+      }
+
+      if (!(await this.hasAuthenticatedHeader())) {
+        return;
+      }
+
+      try {
+        await this.openHeaderAccountMenu();
+        const logoutLink = this.page.getByRole('link', { name: /Logout/i });
+        await expect(logoutLink).toBeVisible({ timeout: 15_000 });
+        await logoutLink.click();
+        await this.page.waitForLoadState('domcontentloaded').catch(() => {});
+      } catch {
+        // Header menu/logout link did not render — next iteration reloads and retries.
+        continue;
+      }
+
+      if (await this.emailField.isVisible({ timeout: 10_000 }).catch(() => false)) {
+        return;
+      }
+      if (!(await this.hasAuthenticatedHeader())) {
+        return;
+      }
+    }
+  }
+
+  /** AM-033 last resort when header logout does not clear the OutSystems session cookie. */
+  private async forceAm033LoginScreen() {
+    await this.page.context().clearCookies();
+    await this.page.goto(`${CSI_BASE_URL}${CSI_LOGIN_PATH}`);
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  /** Ends any CSI session; lands on the email login step (header logout or direct /Login). */
+  async ensureLoggedOut() {
+    const headerMenu = this.page.getByText(/^Hi,\s/i);
+    if (await headerMenu.isVisible({ timeout: 3_000 }).catch(() => false)) {
+      await this.logoutViaHeaderMenu();
+      try {
+        await this.expectEmailStepVisible();
+        return;
+      } catch {
+        // permission / error pages may block logout navigation
+      }
+    }
+
+    await this.gotoLogin();
+    await this.expectEmailStepVisible();
+  }
+
+  /** AM-033: return to hub home so header logout is reliable after deep-linked module URLs. */
+  async gotoHomeForAm033() {
+    await this.page.goto(`${CSI_BASE_URL}${CSI_HOME_PATH}`);
+    await this.page.waitForLoadState('domcontentloaded');
+    if (await this.hasAuthenticatedHeader()) {
+      await this.expectOnHome();
+    }
+  }
+
+  /** AM-033 recorded flow: home → header logout → login step ready for next account. */
+  async gotoHomeAndLogoutForAm033() {
+    await this.gotoHomeForAm033();
+    await this.ensureLoggedOutForAm033();
+  }
+
+  /**
+   * AM-033 only — dismiss toast first (caller), 3s header settle, retry logout until login step shows.
+   * Does not call {@link gotoLogin} while a session is still active (that route never shows the email field).
+   */
+  async ensureLoggedOutForAm033() {
+    if (!(await this.hasAuthenticatedHeader())) {
+      if (await this.emailField.isVisible({ timeout: 5_000 }).catch(() => false)) {
+        return;
+      }
+      await this.forceAm033LoginScreen();
+      await this.expectEmailStepVisible();
+      return;
+    }
+
+    await this.logoutViaHeaderMenuForAm033(0);
+
+    if (
+      (await this.hasAuthenticatedHeader()) &&
+      !(await this.emailField.isVisible({ timeout: 5_000 }).catch(() => false))
+    ) {
+      await this.forceAm033LoginScreen();
+    }
+
+    await this.expectEmailStepVisible();
+  }
+
   async expectEmailStepVisible() {
     await expect(this.emailField).toBeVisible({ timeout: 60_000 });
     await this.page.waitForLoadState('domcontentloaded').catch(() => {});
+  }
+
+  /**
+   * AM-061: waits up to 8 s for the "Invalid username or password." error text to appear after
+   * a login attempt. Returns true if the error surfaces (login failed), false if it never
+   * appears within the timeout (login succeeded and the page navigated away).
+   * Uses waitFor so the check actively watches for the element rather than sampling once.
+   */
+  async isInvalidCredentialsVisible(): Promise<boolean> {
+    return this.page
+      .getByText('Invalid username or password.', { exact: true })
+      .waitFor({ state: 'visible', timeout: 8_000 })
+      .then(() => true)
+      .catch(() => false);
   }
 }

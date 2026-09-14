@@ -1,3 +1,5 @@
+import path from 'path';
+
 import training from '../../data/csi/training.json';
 
 /** Local part of the address, truncated at the first `.` (matches user-search field behavior). */
@@ -20,4 +22,75 @@ export function csiTrainingFirstCourseName(): string {
 
 export function csiTrainingSecondCourseName(): string {
   return training.courseDistribution.secondCourse;
+}
+
+/** TR-011: fixed retake course title (`CSI_TRAINING_FAIL_RETAKE_COURSE_NAME`; default Introduction to Cybersecurity). */
+const TR011_DEFAULT_FAIL_RETAKE_COURSE_NAME = 'Introduction to Cybersecurity';
+
+export function csiTrainingFailRetakeCourseName(): string {
+  const name = process.env.CSI_TRAINING_FAIL_RETAKE_COURSE_NAME?.trim();
+  return name && name.length > 0 ? name : TR011_DEFAULT_FAIL_RETAKE_COURSE_NAME;
+}
+
+export const TR011_COURSE_REGISTERED_MESSAGE = /Course registered\. Please/i;
+
+export const TR011_QUIZ_FAILURE_MESSAGE = 'You have failed the course!' as const;
+
+export const TR011_QUIZ_QUESTION_COUNT = 5;
+
+export const TR011_VIDEO_PLAY_SETTLE_MS = 5_000;
+
+export const TR011_VIDEO_AFTER_SEEK_SETTLE_MS = 5_000;
+
+export const TR022_COURSE_CARD_INITIAL_WAIT_MS = 5_000;
+
+export const TR022_MY_COURSE_TAB_SETTLE_MS = 5_000;
+
+export function csiUniqueCourseTitle(prefix = 'TestCourse_'): string {
+  const worker = process.env.TEST_WORKER_INDEX ?? '0';
+  return `${prefix}${Date.now()}_${worker}`;
+}
+
+/** Course code max length is 45 chars; uses last 6 digits of timestamp to stay well within limit. */
+export function csiUniqueCourseCode(): string {
+  const worker = process.env.TEST_WORKER_INDEX ?? '0';
+  return `TC-${Date.now().toString().slice(-6)}_${worker}`;
+}
+
+/** Absolute path to the cover image used in TR-029 course creation. */
+export const csiTr029CourseBgImagePath = path.resolve(
+  __dirname,
+  '../../data/csi/training/course-bg.png',
+);
+
+/** TR-029 — publicly accessible video URL for the course video lesson. Falls back to the Google sample MP4. */
+export function csiTr029VideoUrl(): string {
+  const url = process.env.CSI_TR029_VIDEO_URL?.trim();
+  return url && url.length > 0
+    ? url
+    : 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4';
+}
+
+/**
+ * TR-017 — existing distribution (with missed users) whose schedule is extended.
+ * Environment-specific; must match a distribution already present on the test env.
+ */
+export function csiTr017MissedDistributionName(): string {
+  const name = process.env.CSI_TR017_MISSED_DISTRIBUTION_NAME?.trim();
+  if (!name) {
+    throw new Error('Set CSI_TR017_MISSED_DISTRIBUTION_NAME in the environment (see .env.example).');
+  }
+  return name;
+}
+
+/** TR-017 — first missed course title in the distribution (default Advanced Phishing). */
+export function csiTr017MissedCourseOne(): string {
+  const name = process.env.CSI_TR017_MISSED_COURSE_1?.trim();
+  return name && name.length > 0 ? name : 'Advanced Phishing';
+}
+
+/** TR-017 — second missed course title in the distribution (default AI Vishing). */
+export function csiTr017MissedCourseTwo(): string {
+  const name = process.env.CSI_TR017_MISSED_COURSE_2?.trim();
+  return name && name.length > 0 ? name : 'AI Vishing';
 }

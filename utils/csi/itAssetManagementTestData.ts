@@ -1,4 +1,15 @@
+import itAssetManagement from '../../data/csi/itAssetManagement.json';
 import { utcDateBasedNumber } from '../dateUtils';
+
+/** IA-048: Org A asset form id (`data/csi/itAssetManagement.json`). */
+export function csiOrgAAssetFormId(): number {
+  return itAssetManagement.orgAssetFormIds.orgA;
+}
+
+/** IA-048: Org B asset form id (`data/csi/itAssetManagement.json`). */
+export function csiOrgBAssetFormId(): number {
+  return itAssetManagement.orgAssetFormIds.orgB;
+}
 
 export const csiItAssetManufacturer = 'Acer' as const;
 export const csiItAssetOperatingSystem = 'Windows' as const;
@@ -57,6 +68,31 @@ export function csiItAssetIa016EditedDisplayName(original: string, uniqueNumeric
     return uniqueNumeric;
   }
   return `${t} ${uniqueNumeric}`;
+}
+
+/** IA-037: new Manufacturer custom dropdown value added via Settings. */
+export function csiItAssetIa037ManufacturerName(uniqueNumeric: string): string {
+  return `Lenovo ${uniqueNumeric}`;
+}
+
+/** IA-039: custom field label created in Settings — `Test <uniqueNumeric>`. */
+export function csiItAssetIa039CustomFieldLabel(uniqueNumeric: string): string {
+  return `Test ${uniqueNumeric}`;
+}
+
+/** IA-044: initial custom field label created in Settings — `Test <uniqueNumeric>`. */
+export function csiItAssetIa044CustomFieldLabel(uniqueNumeric: string): string {
+  return `Test ${uniqueNumeric}`;
+}
+
+/** IA-044: edited custom field label after the rename step — `Test <uniqueNumeric reversed>`. */
+export function csiItAssetIa044EditedCustomFieldLabel(uniqueNumeric: string): string {
+  return `Test ${uniqueNumeric.split('').reverse().join('')}`;
+}
+
+/** IA-044: numeric value entered into the Number-type custom field — reversed uniqueNumeric. */
+export function csiItAssetIa044ReversedNumericValue(uniqueNumeric: string): string {
+  return uniqueNumeric.split('').reverse().join('');
 }
 
 /** IA-016: increment integer OS version; empty or non-numeric → `"1"`. */

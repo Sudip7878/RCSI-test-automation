@@ -4,6 +4,8 @@ import {
   csiPenetrationTesterTestPassword,
   csiUserTestEmail,
   csiUserTestPassword,
+  csiTrainingPhisingSysOwnerTestEmail,
+  csiTrainingPhisingSysOwnerTestPassword,
 } from '../../../utils/csi/credentials';
 import {
   csiCyberInsuranceAddress,
@@ -43,11 +45,11 @@ test.describe('CSI · Cyber Insurance', () => {
     });
   });
 
-  test.describe('CI-009 — no permission to view cyber insurance', () => {
+  test.describe('CI-002 — System Owner submits insurance application', () => {
     test.beforeEach(async ({ csiLoginPage }) => {
       if (
-        !process.env.CSI_USER_TEST_PASSWORD?.length ||
-        !process.env.CSI_USER_TEST_EMAIL?.trim()?.length
+        !process.env.CSI_TRAINING_PHISING_SYS_OWNER_TEST_PASSWORD?.length ||
+        !process.env.CSI_TRAINING_PHISING_SYS_OWNER_TEST_EMAIL?.trim()?.length
       ) {
         test.skip();
         return;

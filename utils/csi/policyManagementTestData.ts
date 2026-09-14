@@ -1,3 +1,15 @@
+import policyManagement from '../../data/csi/policyManagement.json';
+
+/** PM-031: Org A policy id (`data/csi/policyManagement.json`). */
+export function csiOrgAPolicyId(): number {
+  return policyManagement.orgPolicyIds.orgA;
+}
+
+/** PM-031: Org B policy id (`data/csi/policyManagement.json`). */
+export function csiOrgBPolicyId(): number {
+  return policyManagement.orgPolicyIds.orgB;
+}
+
 /** Acknowledgement / review “due in” days (policy distribution step). */
 export function csiPolicyDistributionDueInDays(): number {
   return 7;

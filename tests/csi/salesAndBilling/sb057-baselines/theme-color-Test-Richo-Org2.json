@@ -1,0 +1,16 @@
+{
+  "color-primary": "#cf142b",
+  "color-secondary": "#cf142b",
+  "color-background-body": "#ffffff",
+  "color-primary-hover": "#9b0f20",
+  "color-light-primary": "#fef5f5",
+  "color-neutral-0": "#ffffff",
+  "color-neutral-9": "#272b30",
+  "color-neutral-10": "#101213",
+  "mod-color-1": "#cf142b",
+  "mod-color-2": "#18a7d3",
+  "mod-color-3": "#fbaa28",
+  "mod-color-4": "#26bab8",
+  "mod-color-5": "#bc4c9b",
+  "primary-gradient": "linear-gradient(45deg, #cf142b 0%, #BC4C9B 100%)"
+}

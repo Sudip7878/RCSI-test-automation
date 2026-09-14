@@ -1,8 +1,50 @@
 import { readFileSync } from 'node:fs';
 
 import { expect, type Locator } from '@playwright/test';
-import { CSI_BASE_URL, CSI_INVOICE_LIST_PATH } from '../../config/csi';
+import {
+  CSI_BASE_URL,
+  CSI_BILLING_PARTNER_LIST_PATH,
+  CSI_CLIENT_LIST_PATH,
+  CSI_INVOICE_LIST_PATH,
+  CSI_SALES_ORDER_LIST_PATH,
+  CSI_VIEW_SALES_ORDER_PATH,
+} from '../../config/csi';
+import {
+  assertSb052SalesOrderReviewPricing,
+  parseHongKongCurrencyAmount,
+  type SalesOrderReviewPricing,
+} from '../../utils/csi/sb052SalesOrderPricing';
+import {
+  SB030_CLIENT_LIST_SETTLE_MS,
+  SB030_CLIENT_NAME_DROPDOWN_SETTLE_MS,
+  SB030_DUPLICATE_CLIENT_NAME_ERROR,
+} from '../../utils/csi/sb030ClientTestData';
+import type { Sb030AddClientFormStep } from '../../utils/csi/sb030ClientTestData';
+import { SB031_DUPLICATE_CLIENT_EMAIL_ERROR } from '../../utils/csi/sb031ClientTestData';
+import {
+  SB004_DUPLICATE_PACKAGE_NAME_ERROR,
+  SB027_BILLING_PARTNER_EMAIL,
+  SB027_BILLING_PARTNER_PAYMENT_METHOD_OPTION,
+  SB027_DUPLICATE_BILLING_PARTNER_NAME_ERROR,
+  SB067_NO_PERMISSION_MESSAGE_TIMEOUT_MS,
+} from '../../utils/csi/salesAndBillingTestData';
+import {
+  sb057HeaderOrgLogoLocator,
+  sb057WelcomeCardOrgLogoLocator,
+} from '../../utils/csi/sb057OrgLogoLocators';
+import { SB057_ORG_LOGO_SRC_FRAGMENT, SB057_POST_LOGIN_WAIT_MS } from '../../utils/csi/sb057WhiteLabelTestData';
+import {
+  CC022_POLICY_HUB_VISIBILITY_TIMEOUT_MS,
+  CC022_POLICY_MANAGEMENT_MODULE_NAME,
+  CC022_POLICY_MANAGEMENT_UNITS,
+  CC022_SALES_ORDER_UPDATED_MESSAGE,
+  CC023_HUB_MODULE_VISIBILITY_TIMEOUT_MS,
+  CC023_REVOKED_HUB_MODULE_LABELS,
+} from '../../utils/csi/crossCuttingTestData';
 import { BasePage } from '../BasePage';
+
+/** Pause before each sales-order VirtualSelect open (AM-009, SB-046, SB-052). */
+export const CSI_SALES_ORDER_DROPDOWN_SETTLE_MS = 5_000;
 
 export class CsiSalesAndBillingPage extends BasePage {
   readonly salesOrderLink = this.page.getByRole('link', { name: 'Sales Order' });
@@ -10,6 +52,7 @@ export class CsiSalesAndBillingPage extends BasePage {
   readonly salesAndBillingNav = this.page.getByText('Sales & Billing', { exact: true });
   readonly packageManagementLink = this.page.getByRole('link', { name: 'Package Management' });
   readonly addPackageButton = this.page.getByRole('button', { name: 'Add Package' });
+  readonly addClientButton = this.page.getByRole('button', { name: 'Add Client' });
   readonly downloadInvoiceButton = this.page.getByRole('button', { name: 'Download' });
 
   readonly packageNameInput = this.page.getByRole('textbox', { name: 'Package Name*' });
@@ -20,6 +63,11 @@ export class CsiSalesAndBillingPage extends BasePage {
 
   readonly submitButton = this.page.getByRole('button', { name: 'Submit' });
   readonly continueToReviewButton = this.page.getByRole('button', { name: 'Continue to Review' });
+  readonly updateSalesOrderButton = this.page.getByRole('button', { name: 'Update' });
+  readonly salesOrderListSearchBox = this.page.getByRole('searchbox', {
+    name: /Enter Client\/Billing Partner/i,
+  });
+  readonly salesOrderListSearchButton = this.page.getByRole('button', { name: 'Search' });
   readonly addSalesOrderFormReady = this.page.getByText('Select Client', { exact: true });
 
   private async safeSleep(ms: number) {
@@ -28,6 +76,10 @@ export class CsiSalesAndBillingPage extends BasePage {
     }
     await this.page.waitForTimeout(ms).catch(() => {});
   }
+
+  readonly addBillingPartnerButton = this.page.getByRole('button', { name: 'Add Billing Partner' });
+  readonly billingPartnerNameInput = this.page.getByRole('textbox', { name: 'Billing Partner Name*' });
+  readonly salesPartnerListSearchBox = this.page.getByRole('searchbox', { name: 'Enter Sales Partner' });
 
   readonly addSalesPartnerButton = this.page.getByRole('button', { name: 'Add Sales Partner' });
   readonly salesPartnerPartnerNameInput = this.page.getByRole('textbox', { name: 'Partner Name*' });
@@ -51,23 +103,13 @@ export class CsiSalesAndBillingPage extends BasePage {
   }
 
   private async clickFirstVisibleListboxOption() {
-    const clicked = await this.page.getByRole('option').evaluateAll((options) => {
-      for (const node of options) {
-        const el = node as HTMLElement;
-        const style = window.getComputedStyle(el);
-        if (style.display === 'none' || style.visibility === 'hidden') {
-          continue;
-        }
-        const rect = el.getBoundingClientRect();
-        if (rect.width === 0 && rect.height === 0) {
-          continue;
-        }
-        el.click();
-        return true;
-      }
-      return false;
-    });
-    expect(clicked).toBe(true);
+    const expanded = this.page.getByRole('combobox', { expanded: true });
+    await expect(expanded).toBeVisible({ timeout: 12_000 });
+
+    const listbox = this.page.getByRole('listbox');
+    const option = listbox.getByRole('option').first();
+    await expect(option).toBeVisible({ timeout: 30_000 });
+    await option.click();
   }
 
   private async clickLastVisibleListboxOption() {
@@ -162,11 +204,11 @@ export class CsiSalesAndBillingPage extends BasePage {
     await this.waitForElement(this.addSalesOrderButton);
     await this.addSalesOrderButton.click();
     await this.page.waitForLoadState('domcontentloaded');
-    await this.safeSleep(2_000);
+    await this.waitForSalesOrderDropdownToSettle();
     await this.waitForElement(this.addSalesOrderFormReady, 30_000);
   }
 
-  async waitForSalesOrderDropdownToSettle(ms = 5000) {
+  async waitForSalesOrderDropdownToSettle(ms = CSI_SALES_ORDER_DROPDOWN_SETTLE_MS) {
     await this.safeSleep(ms);
   }
 
@@ -200,10 +242,46 @@ export class CsiSalesAndBillingPage extends BasePage {
     let lastError: unknown;
 
     for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      await this.waitForSalesOrderDropdownToSettle();
       await trigger.click();
 
       try {
         await this.clickFirstDropdownOption();
+        return;
+      } catch (error) {
+        lastError = error;
+        if (attempt === maxAttempts - 1) {
+          throw lastError;
+        }
+        await this.page.keyboard.press('Escape').catch(() => {});
+        await this.safeSleep(500);
+      }
+    }
+  }
+
+  /**
+   * AM-009: search Client Name for the organization created in the same flow.
+   * Separate from {@link selectLastOptionByTriggerText}; uses the same dropdown settle as SB-046.
+   */
+  async selectSalesOrderClientByOrganizationNameForAm009(clientName: string, maxAttempts = 4) {
+    const trigger = this.salesOrderFieldTrigger('Select Client');
+    await this.waitForElement(trigger);
+
+    let lastError: unknown;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      await this.waitForSalesOrderDropdownToSettle();
+      await trigger.click();
+
+      try {
+        const search = this.page.getByPlaceholder('Search Client');
+        await expect(search).toBeVisible({ timeout: 12_000 });
+        await search.fill(clientName);
+
+        const clientListbox = this.page.getByRole('listbox');
+        const option = clientListbox.getByRole('option', { name: clientName }).first();
+        await expect(option).toBeVisible({ timeout: 30_000 });
+        await option.click();
         return;
       } catch (error) {
         lastError = error;
@@ -223,6 +301,7 @@ export class CsiSalesAndBillingPage extends BasePage {
     let lastError: unknown;
 
     for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      await this.waitForSalesOrderDropdownToSettle();
       await trigger.click();
 
       try {
@@ -241,6 +320,35 @@ export class CsiSalesAndBillingPage extends BasePage {
 
   async selectFirstBillingPartnerOption(maxAttempts = 1) {
     await this.selectFirstOptionByTriggerText('Select Billing Partner', maxAttempts);
+  }
+
+  /** AM-009: Billing Partner listbox is portaled; pick the first option from the open listbox. */
+  async selectFirstBillingPartnerOptionForAm009(maxAttempts = 4) {
+    await this.page.waitForTimeout(3_000);
+    const trigger = this.salesOrderFieldTrigger('Select Billing Partner');
+    await this.waitForElement(trigger);
+
+    let lastError: unknown;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      await this.waitForSalesOrderDropdownToSettle();
+      await trigger.click();
+
+      try {
+        const listbox = this.page.getByRole('listbox');
+        const option = listbox.getByRole('option').first();
+        await expect(option).toBeVisible({ timeout: 30_000 });
+        await option.click();
+        return;
+      } catch (error) {
+        lastError = error;
+        if (attempt === maxAttempts - 1) {
+          throw lastError;
+        }
+        await this.page.keyboard.press('Escape').catch(() => {});
+        await this.safeSleep(500);
+      }
+    }
   }
 
   async selectAllModulesAndSetUnitPrice(unitPrice: number) {
@@ -344,6 +452,82 @@ export class CsiSalesAndBillingPage extends BasePage {
     await this.continueToReviewButton.click();
   }
 
+  private salesOrderReviewModuleDetailsGrid(): Locator {
+    return this.page
+      .locator('div.container')
+      .filter({ has: this.page.getByText('Module Details', { exact: true }) })
+      .getByRole('grid');
+  }
+
+  private salesOrderReviewSummaryRow(label: string | RegExp): Locator {
+    if (typeof label === 'string') {
+      return this.page.locator('.columns.columns2').filter({
+        has: this.page.getByText(label, { exact: true }),
+      });
+    }
+    return this.page.locator('.columns.columns2').filter({
+      has: this.page.locator('.columns-item').first().filter({ hasText: label }),
+    });
+  }
+
+  private salesOrderReviewSummaryAmount(label: string | RegExp): Locator {
+    return this.salesOrderReviewSummaryRow(label)
+      .locator('.columns-item')
+      .last()
+      .locator('.text-align-right .bold');
+  }
+
+  /** SB-052: review step ready (Submit visible); does not submit. */
+  async expectSalesOrderReviewStepReady() {
+    await expect(this.page.getByText('Module Details', { exact: true })).toBeVisible({
+      timeout: 60_000,
+    });
+    await this.waitForElement(this.submitButton);
+    await expect(this.submitButton).toBeVisible();
+  }
+
+  async readSalesOrderReviewLineItemTotals(): Promise<number[]> {
+    const grid = this.salesOrderReviewModuleDetailsGrid();
+    await expect(grid).toBeVisible({ timeout: 60_000 });
+
+    const rows = grid.locator('tbody tr');
+    const rowCount = await rows.count();
+    expect(rowCount).toBeGreaterThan(0);
+
+    const totals: number[] = [];
+    for (let i = 0; i < rowCount; i += 1) {
+      const totalCell = rows.nth(i).locator('[data-header="Total"]');
+      const text = (await totalCell.innerText()).trim();
+      totals.push(parseHongKongCurrencyAmount(text));
+    }
+    return totals;
+  }
+
+  async readSalesOrderReviewPricing(): Promise<SalesOrderReviewPricing> {
+    const lineItemTotals = await this.readSalesOrderReviewLineItemTotals();
+    const subtotal = parseHongKongCurrencyAmount(
+      await this.readSalesOrderReviewSummaryAmountText('Subtotal'),
+    );
+    const tax = parseHongKongCurrencyAmount(
+      await this.readSalesOrderReviewSummaryAmountText(/^Tax\s*\(/),
+    );
+    const grandTotal = parseHongKongCurrencyAmount(
+      await this.readSalesOrderReviewSummaryAmountText('Grand Total'),
+    );
+    return { lineItemTotals, subtotal, tax, grandTotal };
+  }
+
+  private async readSalesOrderReviewSummaryAmountText(label: string | RegExp): Promise<string> {
+    const amount = this.salesOrderReviewSummaryAmount(label);
+    await expect(amount).toBeVisible({ timeout: 30_000 });
+    return (await amount.innerText()).trim();
+  }
+
+  async expectSb052SalesOrderReviewPricingConsistent() {
+    const pricing = await this.readSalesOrderReviewPricing();
+    assertSb052SalesOrderReviewPricing(pricing);
+  }
+
   async submitPackage() {
     await this.waitForElement(this.submitButton);
     await this.submitButton.click();
@@ -353,6 +537,309 @@ export class CsiSalesAndBillingPage extends BasePage {
     await this.page.waitForURL(/\/PackageList/, { timeout: 60000 });
     const packageCell = this.page.getByRole('gridcell', { name: packageName });
     await this.waitForElement(packageCell, 60_000);
+  }
+
+  /** SB-004: Submit with an existing package name must not create a new package. */
+  async expectPackageDuplicateNameRejected() {
+    await expect(
+      this.page.getByText(SB004_DUPLICATE_PACKAGE_NAME_ERROR, { exact: true }),
+    ).toBeVisible({ timeout: 60_000 });
+    await expect(this.page).not.toHaveURL(/\/PackageList/);
+  }
+
+  async openClientList() {
+    await this.page.goto(`${CSI_BASE_URL}${CSI_CLIENT_LIST_PATH}`);
+    await expect(this.addClientButton).toBeVisible({ timeout: 60_000 });
+    await this.safeSleep(SB030_CLIENT_LIST_SETTLE_MS);
+  }
+
+  async clickAddClient() {
+    await this.waitForElement(this.addClientButton);
+    await this.addClientButton.click();
+    await expect(this.page.getByRole('textbox', { name: 'Client Name*' })).toBeVisible({
+      timeout: 30_000,
+    });
+  }
+
+  private async selectVirtualSelectOption(triggerText: string, optionName: string, maxAttempts = 4) {
+    const trigger = this.page.getByText(triggerText, { exact: true });
+    const option = this.page.getByRole('option', { name: optionName });
+    let lastError: unknown;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      if (attempt > 0) {
+        await this.page.keyboard.press('Escape').catch(() => {});
+        await this.safeSleep(500);
+      }
+
+      await trigger.click();
+
+      try {
+        await expect(option).toBeVisible({ timeout: 15_000 });
+        await option.click();
+        return;
+      } catch (error) {
+        lastError = error;
+        if (attempt === maxAttempts - 1) {
+          throw lastError;
+        }
+      }
+    }
+  }
+
+  private organizationSizeCombobox(): Locator {
+    return this.page.getByRole('combobox').filter({
+      has: this.page.getByRole('option', { name: 'Select Size', exact: true }),
+    });
+  }
+
+  private async selectFirstOrganizationSizeOption() {
+    const select = this.organizationSizeCombobox();
+    await this.waitForElement(select);
+    const firstValue = await select.evaluate((el) => {
+      const selectEl = el as HTMLSelectElement;
+      const option = Array.from(selectEl.options).find(
+        (entry) => entry.value !== '-1' && entry.value !== '',
+      );
+      return option?.value ?? '';
+    });
+    expect(firstValue.length).toBeGreaterThan(0);
+    await select.selectOption(firstValue);
+  }
+
+  async fillAddClientFormSb030(steps: Sb030AddClientFormStep[]) {
+    for (const step of steps) {
+      if (step.type === 'textbox') {
+        const input = this.page.getByRole('textbox', { name: step.name });
+        await this.waitForElement(input);
+        await input.fill(step.value);
+        if (step.name === 'Client Name*') {
+          await this.safeSleep(SB030_CLIENT_NAME_DROPDOWN_SETTLE_MS);
+        }
+        continue;
+      }
+
+      if (step.type === 'virtualSelect') {
+        await this.selectVirtualSelectOption(step.triggerText, step.optionName);
+        continue;
+      }
+
+      await this.selectFirstOrganizationSizeOption();
+    }
+  }
+
+  /** SB-029: successful client creation must redirect back to ClientList with a success message. */
+  async expectClientCreated() {
+    await expect(
+      this.page.getByText('You have successfully added', { exact: false }),
+    ).toBeVisible({ timeout: 60_000 });
+    await this.page.waitForURL(/\/ClientList/, { timeout: 60_000 });
+  }
+
+  /** SB-030: Submit with an existing client name must not create a new client. */
+  async expectClientDuplicateNameRejected() {
+    await expect(
+      this.page.getByText(SB030_DUPLICATE_CLIENT_NAME_ERROR, { exact: true }),
+    ).toBeVisible({ timeout: 60_000 });
+    await expect(this.page.getByRole('textbox', { name: 'Client Name*' })).toBeVisible();
+  }
+
+  /** SB-031: Submit with an existing owner email must not create a new client. */
+  async expectClientDuplicateEmailRejected() {
+    await expect(
+      this.page.getByText(SB031_DUPLICATE_CLIENT_EMAIL_ERROR, { exact: true }),
+    ).toBeVisible({ timeout: 60_000 });
+    await expect(this.page.getByRole('textbox', { name: 'Owner Email*' })).toBeVisible();
+  }
+
+  async openBillingPartnerList() {
+    await this.page.goto(`${CSI_BASE_URL}${CSI_BILLING_PARTNER_LIST_PATH}`);
+    await expect(this.addBillingPartnerButton).toBeVisible({ timeout: 30_000 });
+  }
+
+  async clickAddBillingPartner() {
+    await this.waitForElement(this.addBillingPartnerButton);
+    await this.addBillingPartnerButton.click();
+    await expect(this.billingPartnerNameInput).toBeVisible({ timeout: 30_000 });
+  }
+
+  /**
+   * SB-022: fill the Add Billing Partner form for a successful creation.
+   * Payment method uses the same HSBC option as SB-027 (test-env specific).
+   */
+  async fillAddBillingPartnerForm(billingPartnerName: string, email: string) {
+    await this.billingPartnerNameInput.click();
+    await this.billingPartnerNameInput.fill(billingPartnerName);
+
+    const emailInput = this.page.getByRole('textbox', { name: 'Email*' });
+    await emailInput.click();
+    await emailInput.fill(email);
+
+    await this.selectVirtualSelectOption('Select Sales Partner', 'Avotech');
+    await this.selectVirtualSelectOption(
+      'Select Payment Method',
+      SB027_BILLING_PARTNER_PAYMENT_METHOD_OPTION,
+    );
+
+    const addressInput = this.page.getByRole('textbox', { name: 'Address*' });
+    await addressInput.click();
+    await addressInput.fill('Test Address');
+  }
+
+  /** SB-022: successful creation must redirect back to BillingPartnerList with a success message. */
+  async expectBillingPartnerCreated() {
+    await expect(
+      this.page.getByText('You have successfully added Billing Partner'),
+    ).toBeVisible({ timeout: 60_000 });
+    await this.page.waitForURL(/\/BillingPartnerList/, { timeout: 60_000 });
+  }
+
+  /**
+   * SB-024: open dropdown and select multiple Sales Partner options in sequence.
+   * VirtualSelect multi-select keeps the dropdown open after each selection; if it
+   * closes between selections the combobox is re-clicked to reopen it.
+   */
+  private async selectMultipleSalesPartnersInForm(partnerNames: readonly string[]) {
+    if (partnerNames.length === 0) return;
+
+    await this.page.getByText('Select Sales Partner', { exact: true }).click();
+
+    for (const name of partnerNames) {
+      // If the dropdown closed after the previous selection, reopen it via the first
+      // collapsed combobox (Sales Partner multi-select precedes Payment Method in DOM order)
+      const listbox = this.page.getByRole('listbox');
+      if (!(await listbox.isVisible().catch(() => false))) {
+        await this.page.getByRole('combobox', { expanded: false }).first().click();
+        await expect(listbox).toBeVisible({ timeout: 10_000 });
+      }
+
+      // Use the dropdown's built-in search to filter options; avoids stale-element
+      // issues from VirtualSelect's JS translate3d scroll during scroll
+      const searchInput = this.page.getByPlaceholder('Search sales Partner');
+      await expect(searchInput).toBeVisible({ timeout: 10_000 });
+      await searchInput.fill(name);
+
+      const option = listbox.getByRole('option', { name, exact: true });
+      await expect(option).toBeVisible({ timeout: 15_000 });
+      await option.click();
+
+      // Clear the search so the next iteration starts with the full option list
+      await searchInput.clear().catch(() => {});
+      await this.safeSleep(300);
+    }
+
+    await this.page.keyboard.press('Escape').catch(() => {});
+  }
+
+  /**
+   * SB-024: fill the Add Billing Partner form assigning to multiple Sales Partners.
+   * Differs from fillAddBillingPartnerForm only in the Sales Partner selection step.
+   */
+  async fillAddBillingPartnerFormSb024(
+    billingPartnerName: string,
+    email: string,
+    salesPartners: readonly string[],
+  ) {
+    await this.billingPartnerNameInput.click();
+    await this.billingPartnerNameInput.fill(billingPartnerName);
+
+    const emailInput = this.page.getByRole('textbox', { name: 'Email*' });
+    await emailInput.click();
+    await emailInput.fill(email);
+
+    await this.selectMultipleSalesPartnersInForm(salesPartners);
+    await this.selectVirtualSelectOption(
+      'Select Payment Method',
+      SB027_BILLING_PARTNER_PAYMENT_METHOD_OPTION,
+    );
+
+    const addressInput = this.page.getByRole('textbox', { name: 'Address*' });
+    await addressInput.click();
+    await addressInput.fill('Test Address');
+  }
+
+  private salesPartnerListGrid() {
+    return this.page.getByRole('grid').filter({
+      has: this.page.getByRole('columnheader', { name: 'Partner Name' }),
+    });
+  }
+
+  /** SB-024: search for a Sales Partner by name using the list searchbox. */
+  async searchSalesPartnerByName(partnerName: string) {
+    await expect(this.salesPartnerListSearchBox).toBeVisible({ timeout: 30_000 });
+    await this.salesPartnerListSearchBox.click();
+    await this.salesPartnerListSearchBox.fill(partnerName);
+    await this.salesOrderListSearchButton.click();
+    await expect(
+      this.salesPartnerListGrid().getByRole('gridcell', { name: partnerName }).first(),
+    ).toBeVisible({ timeout: 30_000 });
+  }
+
+  /**
+   * SB-024: click the Action cell of the matching Sales Partner row then follow
+   * the View Details link.
+   */
+  async openSalesPartnerViewDetailsForName(partnerName: string) {
+    const row = this.salesPartnerListGrid()
+      .getByRole('row')
+      .filter({ has: this.page.getByRole('gridcell', { name: partnerName }) })
+      .first();
+    await expect(row).toBeVisible({ timeout: 30_000 });
+
+    const cells = await row.getByRole('gridcell').all();
+    expect(cells.length).toBeGreaterThan(0);
+    await cells[cells.length - 1].click();
+
+    const viewDetailsLink = this.page.getByRole('link', { name: 'View Details' });
+    await expect(viewDetailsLink).toBeVisible({ timeout: 10_000 });
+    await viewDetailsLink.click();
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  /** SB-024: click the 'Invoice & Billing Partners' tab on the Sales Partner detail page. */
+  async clickInvoiceAndBillingPartnersTab() {
+    const tab = this.page.getByRole('tab', { name: 'Invoice & Billing Partners' });
+    await expect(tab).toBeVisible({ timeout: 30_000 });
+    await tab.click();
+  }
+
+  /** SB-024: billing partner name must appear in the Billing Partners grid of the detail page. */
+  async expectBillingPartnerVisibleInSalesPartnerDetail(billingPartnerName: string) {
+    await expect(
+      this.page.getByRole('gridcell', { name: billingPartnerName }).first(),
+    ).toBeVisible({ timeout: 30_000 });
+  }
+
+  /**
+   * SB-027: fill the Add Billing Partner form with a duplicate name.
+   * Only the billing partner name is env-configurable; email, sales partner, payment method,
+   * and address are fixed test-env values sufficient to reach the duplicate-name rejection.
+   */
+  async fillBillingPartnerFormSb027(billingPartnerName: string) {
+    await this.billingPartnerNameInput.click();
+    await this.billingPartnerNameInput.fill(billingPartnerName);
+
+    const emailInput = this.page.getByRole('textbox', { name: 'Email*' });
+    await emailInput.click();
+    await emailInput.fill(SB027_BILLING_PARTNER_EMAIL);
+
+    await this.selectVirtualSelectOption('Select Sales Partner', 'Avotech');
+    await this.selectVirtualSelectOption(
+      'Select Payment Method',
+      SB027_BILLING_PARTNER_PAYMENT_METHOD_OPTION,
+    );
+
+    const addressInput = this.page.getByRole('textbox', { name: 'Address*' });
+    await addressInput.click();
+    await addressInput.fill('Test');
+  }
+
+  /** SB-027: Submit with an existing billing partner name must not create a new entry. */
+  async expectBillingPartnerDuplicateNameRejected() {
+    await expect(
+      this.page.getByText(SB027_DUPLICATE_BILLING_PARTNER_NAME_ERROR, { exact: true }),
+    ).toBeVisible({ timeout: 60_000 });
+    await expect(this.billingPartnerNameInput).toBeVisible();
   }
 
   async expectSalesOrderCreated() {
@@ -654,19 +1141,254 @@ export class CsiSalesAndBillingPage extends BasePage {
     await this.safeSleep(800);
   }
 
+  private async countVisibleHubMenuLabels(label: string): Promise<number> {
+    return this.page.getByText(label, { exact: true }).evaluateAll((nodes) => {
+      return nodes.filter((node) => {
+        const el = node as HTMLElement;
+        if (el.closest('a')) {
+          return false;
+        }
+        const style = window.getComputedStyle(el);
+        if (style.display === 'none' || style.visibility === 'hidden') {
+          return false;
+        }
+        return el.getClientRects().length > 0;
+      }).length;
+    });
+  }
+
   async expectSb056RestrictedHubModulesNotVisible() {
     for (const label of this.sb056RestrictedHubLabels) {
-      const visibleCount = await this.page.getByText(label, { exact: true }).evaluateAll((nodes) => {
-        return nodes.filter((node) => {
-          const el = node as HTMLElement;
-          const style = window.getComputedStyle(el);
-          if (style.display === 'none' || style.visibility === 'hidden') {
-            return false;
-          }
-          return el.getClientRects().length > 0;
-        }).length;
-      });
-      expect(visibleCount).toBe(0);
+      expect(await this.countVisibleHubMenuLabels(label)).toBe(0);
+    }
+  }
+
+  /**
+   * CC-023: after login, revoked hub modules must stay hidden for the full window (default 10s).
+   */
+  async expectCc023RevokedHubModulesNotVisible(
+    timeoutMs = CC023_HUB_MODULE_VISIBILITY_TIMEOUT_MS,
+  ) {
+    const pollIntervalMs = 250;
+    const deadline = Date.now() + timeoutMs;
+
+    while (Date.now() < deadline) {
+      for (const label of CC023_REVOKED_HUB_MODULE_LABELS) {
+        expect(await this.countVisibleHubMenuLabels(label)).toBe(0);
+      }
+      await this.page.waitForTimeout(pollIntervalMs);
+    }
+  }
+
+  private salesOrderListGrid() {
+    return this.page.getByRole('grid').filter({
+      has: this.page.getByRole('columnheader', { name: 'Client Name' }),
+    });
+  }
+
+  private salesOrderModulePackageGrid() {
+    return this.page.getByRole('grid').filter({
+      has: this.page.getByRole('columnheader', { name: 'Module Name' }),
+    });
+  }
+
+  private salesOrderModulePackageRow(moduleName: string) {
+    return this.salesOrderModulePackageGrid().getByRole('row', {
+      name: new RegExp(moduleName, 'i'),
+    });
+  }
+
+  async openSalesOrderList() {
+    await this.page.goto(`${CSI_BASE_URL}${CSI_SALES_ORDER_LIST_PATH}`);
+    await this.page.waitForLoadState('domcontentloaded');
+    await expect(this.salesOrderListSearchBox).toBeVisible({ timeout: 30_000 });
+  }
+
+  async searchSalesOrderListByOrganization(organizationName: string) {
+    await this.salesOrderListSearchBox.click();
+    await this.salesOrderListSearchBox.fill(organizationName.trim());
+    await this.salesOrderListSearchButton.click();
+    await expect(this.salesOrderListSearchButton).toBeEnabled({ timeout: 30_000 });
+    await expect(
+      this.salesOrderListGrid().getByRole('gridcell', { name: organizationName }).first(),
+    ).toBeVisible({ timeout: 90_000 });
+  }
+
+  /** CC-022: open Edit on the Active sales order row matching `clientName`. */
+  async openEditOnActiveSalesOrderForClient(clientName: string) {
+    const row = this.salesOrderListGrid()
+      .getByRole('row')
+      .filter({
+        has: this.page.getByRole('gridcell', { name: clientName }),
+      })
+      .filter({
+        has: this.page.getByRole('gridcell', { name: 'Active', exact: true }),
+      })
+      .first();
+    await expect(row).toBeVisible({ timeout: 60_000 });
+
+    const actionCells = await row.getByRole('gridcell').all();
+    expect(actionCells.length).toBeGreaterThan(0);
+    await actionCells[actionCells.length - 1].click();
+
+    const editLink = this.page.getByRole('link', { name: 'Edit' });
+    await expect(editLink).toBeVisible({ timeout: 15_000 });
+    await editLink.click();
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  async expectPolicyManagementModuleOnEditScreen() {
+    await expect(this.salesOrderModulePackageRow(CC022_POLICY_MANAGEMENT_MODULE_NAME)).toBeVisible({
+      timeout: 60_000,
+    });
+  }
+
+  async setPolicyManagementModuleIncluded(
+    included: boolean,
+    units = CC022_POLICY_MANAGEMENT_UNITS,
+    options?: { allowAlreadyRevoked?: boolean },
+  ) {
+    await this.expectPolicyManagementModuleOnEditScreen();
+    const row = this.salesOrderModulePackageRow(CC022_POLICY_MANAGEMENT_MODULE_NAME);
+    const checkbox = row.getByRole('checkbox');
+
+    if (included) {
+      if (!(await checkbox.isChecked())) {
+        await checkbox.check();
+      }
+      const unitsInput = row.getByPlaceholder('Enter Number of Units');
+      await expect(unitsInput).toBeEnabled({ timeout: 15_000 });
+      await unitsInput.fill(String(units));
+    } else {
+      if (!options?.allowAlreadyRevoked) {
+        await expect(checkbox).toBeChecked({ timeout: 15_000 });
+      }
+      if (await checkbox.isChecked()) {
+        await checkbox.uncheck();
+      }
+    }
+  }
+
+  async submitSalesOrderEditUpdate() {
+    await this.continueSalesOrderToReview();
+    await expect(this.updateSalesOrderButton).toBeVisible({ timeout: 60_000 });
+    await this.updateSalesOrderButton.click();
+
+    const successToast = this.page.getByText(CC022_SALES_ORDER_UPDATED_MESSAGE);
+    await successToast.waitFor({ state: 'visible', timeout: 15_000 }).catch(() => {});
+
+    await expect(this.page).toHaveURL(/\/SalesOrderList/i, { timeout: 60_000 });
+    await expect(this.salesOrderListSearchBox).toBeVisible({ timeout: 30_000 });
+  }
+
+  /** CC-022: Policy Management hub label must stay hidden for the full window (default 5s). */
+  async isPolicyManagementHubMenuVisible(): Promise<boolean> {
+    return (await this.countVisibleHubMenuLabels(CC022_POLICY_MANAGEMENT_MODULE_NAME)) > 0;
+  }
+
+  /** CC-022: true when Policy Management hub label becomes visible within `timeoutMs` (hub loads after login). */
+  async isPolicyManagementHubMenuVisibleWithin(
+    timeoutMs = CC022_POLICY_HUB_VISIBILITY_TIMEOUT_MS,
+  ): Promise<boolean> {
+    const pollIntervalMs = 250;
+    const deadline = Date.now() + timeoutMs;
+
+    while (Date.now() < deadline) {
+      if (await this.isPolicyManagementHubMenuVisible()) {
+        return true;
+      }
+      await this.page.waitForTimeout(pollIntervalMs);
+    }
+
+    return false;
+  }
+
+  /**
+   * CC-022 preflight: ensure Policy Management is off on the active sales order for `clientName`.
+   * When hub access and the checkbox disagree, grant then revoke so Update persists a real change.
+   */
+  async ensurePolicyManagementRevokedOnActiveSalesOrderForClient(clientName: string) {
+    await this.openSalesOrderList();
+    await this.searchSalesOrderListByOrganization(clientName);
+    await this.openEditOnActiveSalesOrderForClient(clientName);
+
+    const row = this.salesOrderModulePackageRow(CC022_POLICY_MANAGEMENT_MODULE_NAME);
+    const checkbox = row.getByRole('checkbox');
+
+    if (await checkbox.isChecked()) {
+      await this.setPolicyManagementModuleIncluded(false);
+      await this.submitSalesOrderEditUpdate();
+      return;
+    }
+
+    await this.setPolicyManagementModuleIncluded(true);
+    await this.submitSalesOrderEditUpdate();
+
+    await this.openSalesOrderList();
+    await this.searchSalesOrderListByOrganization(clientName);
+    await this.openEditOnActiveSalesOrderForClient(clientName);
+    await this.setPolicyManagementModuleIncluded(false);
+    await this.submitSalesOrderEditUpdate();
+  }
+
+  async expectPolicyManagementHubNotVisible(timeoutMs = CC022_POLICY_HUB_VISIBILITY_TIMEOUT_MS) {
+    const pollIntervalMs = 250;
+    const deadline = Date.now() + timeoutMs;
+
+    while (Date.now() < deadline) {
+      expect(await this.countVisibleHubMenuLabels(CC022_POLICY_MANAGEMENT_MODULE_NAME)).toBe(0);
+      await this.page.waitForTimeout(pollIntervalMs);
+    }
+  }
+
+  async expectPolicyManagementHubVisible() {
+    await expect(
+      this.page.getByText(CC022_POLICY_MANAGEMENT_MODULE_NAME, { exact: true }),
+    ).toBeVisible({ timeout: 60_000 });
+  }
+
+  /** SB-067: direct navigation to sales order detail (cross-org data leak check). */
+  async openViewSalesOrder(salesOrderId: number) {
+    await this.page.goto(
+      `${CSI_BASE_URL}${CSI_VIEW_SALES_ORDER_PATH}?SalesOrderId=${salesOrderId}`,
+    );
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  async expectViewSalesOrderNoPermissionMessage(
+    timeoutMs = SB067_NO_PERMISSION_MESSAGE_TIMEOUT_MS,
+  ) {
+    await expect(
+      this.page.getByText("You don't have permissions to view this screen.", { exact: true }),
+    ).toBeVisible({ timeout: timeoutMs });
+  }
+
+  /** SB-057: settle after custom-org login before logo / theme assertions. */
+  async waitSb057PostLoginSettle() {
+    await this.safeSleep(SB057_POST_LOGIN_WAIT_MS);
+    await this.page.waitForFunction((srcFragment) => {
+      return Array.from(document.querySelectorAll('img')).some((image) =>
+        (image.currentSrc || image.src || '').includes(srcFragment),
+      );
+    }, SB057_ORG_LOGO_SRC_FRAGMENT);
+  }
+
+  sb057HeaderOrgLogo() {
+    return sb057HeaderOrgLogoLocator(this.page);
+  }
+
+  sb057WelcomeCardOrgLogo() {
+    return sb057WelcomeCardOrgLogoLocator(this.page);
+  }
+
+  sb057VisibleOrgLogoImages() {
+    return this.page.locator(`img[src*="${SB057_ORG_LOGO_SRC_FRAGMENT}"]`).filter({ visible: true });
+  }
+
+  async expectSb057LogosVisible(timeoutMs = 30_000) {
+    await expect(this.sb057WelcomeCardOrgLogo()).toBeVisible({ timeout: timeoutMs });
+    if ((await this.sb057VisibleOrgLogoImages().count()) >= 2) {
+      await expect(this.sb057HeaderOrgLogo()).toBeVisible({ timeout: timeoutMs });
     }
   }
 }

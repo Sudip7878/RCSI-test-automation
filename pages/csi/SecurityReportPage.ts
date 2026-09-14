@@ -1,6 +1,11 @@
 import { expect, type Locator } from '@playwright/test';
 import * as path from 'node:path';
-import { CSI_ATTACK_SURFACE_PATH, CSI_BASE_URL, CSI_REQUEST_HISTORY_PATH } from '../../config/csi';
+import {
+  CSI_ATTACK_SURFACE_PATH,
+  CSI_BASE_URL,
+  CSI_DARKWEB_REPORT_PATH,
+  CSI_REQUEST_HISTORY_PATH,
+} from '../../config/csi';
 import { BasePage } from '../BasePage';
 
 export class CsiSecurityReportPage extends BasePage {
@@ -28,6 +33,18 @@ export class CsiSecurityReportPage extends BasePage {
     const metric = nth === 0 ? this.attackSurfaceDashboardMetricLabel(label).first() : this.attackSurfaceDashboardMetricLabel(label).nth(nth);
     await metric.scrollIntoViewIfNeeded();
     await expect(metric).toBeVisible({ timeout: 60_000 });
+  }
+
+  /** SR-009: direct navigation to dark web report (cross-org leak check). */
+  async openDarkwebReport(darkWebRequestId: number) {
+    await this.page.goto(`${CSI_BASE_URL}${CSI_DARKWEB_REPORT_PATH}?DarkWebRequestId=${darkWebRequestId}`);
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  async expectDarkwebReportNoPermissionMessage() {
+    await expect(
+      this.page.getByText("You don't have permissions to view this screen.", { exact: true }),
+    ).toBeVisible({ timeout: 60_000 });
   }
 
   async openAttackSurface() {
