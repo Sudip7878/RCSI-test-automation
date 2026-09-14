@@ -154,3 +154,21 @@ export function csiPenetrationTesterTestPassword(): string {
   }
   return p;
 }
+
+/** CI-009: regular user without Cyber Insurance module access. */
+export function csiUserTestEmail(): string {
+  const e = process.env.CSI_USER_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_USER_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiUserTestEmail}. */
+export function csiUserTestPassword(): string {
+  const p = process.env.CSI_USER_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_USER_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}

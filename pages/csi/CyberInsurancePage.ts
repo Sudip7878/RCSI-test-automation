@@ -5,6 +5,9 @@ import { BasePage } from '../BasePage';
 export class CsiCyberInsurancePage extends BasePage {
   readonly applyNowButton = this.page.getByRole('button', { name: 'Apply Now' });
   readonly editFormButton = this.page.getByRole('button', { name: 'Edit Form' });
+  readonly permissionDeniedMessage = this.page.getByText(
+    "You don't have permissions to view this screen.",
+  );
 
   private insuranceMain(): Locator {
     return this.page.getByRole('main');
@@ -18,6 +21,13 @@ export class CsiCyberInsurancePage extends BasePage {
     await this.page.goto(`${CSI_BASE_URL}${CSI_CYBER_INSURANCE_PATH}`);
     await this.page.waitForLoadState('domcontentloaded');
     await this.safeSleep(5_000);
+  }
+
+  /** CI-009: `/CyberInsurance` must show the no-access message (no 5s Apply/Edit wait). */
+  async openCyberInsuranceAndExpectPermissionDenied(): Promise<void> {
+    await this.page.goto(`${CSI_BASE_URL}${CSI_CYBER_INSURANCE_PATH}`);
+    await this.page.waitForLoadState('domcontentloaded');
+    await expect(this.permissionDeniedMessage).toBeVisible({ timeout: 60_000 });
   }
 
   private businessDescriptionField(main: Locator): Locator {

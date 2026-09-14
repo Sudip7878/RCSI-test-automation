@@ -2,6 +2,8 @@ import { test } from '../../../fixtures/csi/testSetup';
 import {
   csiPenetrationTesterTestEmail,
   csiPenetrationTesterTestPassword,
+  csiUserTestEmail,
+  csiUserTestPassword,
 } from '../../../utils/csi/credentials';
 import {
   csiCyberInsuranceAddress,
@@ -38,6 +40,26 @@ test.describe('CSI · Cyber Insurance', () => {
         businessDescription: csiCyberInsuranceBusinessDescription(uniqueNumeric),
         address: csiCyberInsuranceAddress(uniqueNumeric),
       });
+    });
+  });
+
+  test.describe('CI-009 — no permission to view cyber insurance', () => {
+    test.beforeEach(async ({ csiLoginPage }) => {
+      if (
+        !process.env.CSI_USER_TEST_PASSWORD?.length ||
+        !process.env.CSI_USER_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(csiUserTestEmail(), csiUserTestPassword());
+      await csiLoginPage.expectOnHome();
+    });
+
+    test('CI-009', async ({ csiCyberInsurancePage }) => {
+      await csiCyberInsurancePage.openCyberInsuranceAndExpectPermissionDenied();
     });
   });
 });
