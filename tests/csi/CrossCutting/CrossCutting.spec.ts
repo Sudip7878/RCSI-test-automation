@@ -1,18 +1,39 @@
 import { test } from '../../../fixtures/csi/testSetup';
 import {
+  csiAdminTestEmail,
+  csiAdminTestPassword,
   csiExpiredSalesSystemOwnerTestEmail,
   csiExpiredSalesSystemOwnerTestPassword,
   csiNoPolicySystemOwnerTestEmail,
   csiNoPolicySystemOwnerTestPassword,
+  csiPhishingAdminTestEmail,
+  csiPhishingAdminTestPassword,
+  csiSystemOwnerTestEmail,
+  csiSystemOwnerTestPassword,
   csiTestEmail,
   csiTestPassword,
   csiTpPhisingAdminTestEmail,
   csiTpPhisingAdminTestPassword,
   csiTpTrainingAdminTestEmail,
   csiTpTrainingAdminTestPassword,
+  csiTrainingAdminTestEmail,
+  csiTrainingAdminTestPassword,
   csiTrainingPhisingSysOwnerTestEmail,
   csiTrainingPhisingSysOwnerTestPassword,
 } from '../../../utils/csi/credentials';
+import {
+  CC009_ADMIN_ACCESSIBLE_MODULE_PATHS,
+  CC009_ADMIN_DENIED_MODULE_PATHS,
+  CC009_CC010_PERMISSION_DENIED_TIMEOUT_MS,
+  CC009_MODULE_ACCESS_TIMEOUT_MS,
+  CC009_SALES_MODULE_PATHS,
+  CC010_MODULE_ACCESS_TIMEOUT_MS,
+  CC010_PHISHING_ADMIN_DENIED_TRAINING_PATHS,
+  CC010_PHISHING_MODULE_PATHS,
+  CC010_TRAINING_MODULE_PATHS,
+  cc009SystemOwnerAccessibleModulePaths,
+  cc010PhishingAdminAccessibleTrainingPaths,
+} from '../../../utils/csi/crossCuttingTestData';
 import {
   csiPhisingUserSearchToken,
   csiUniquePhisingTestName,
@@ -199,6 +220,145 @@ test.describe('CSI · Cross Cutting', () => {
       await csiSalesAndBillingPage.openEditOnActiveSalesOrderForClient(organizationName);
       await csiSalesAndBillingPage.setPolicyManagementModuleIncluded(false);
       await csiSalesAndBillingPage.submitSalesOrderEditUpdate();
+    });
+  });
+
+  test.describe('CC-009 admin and system owner module URL access', () => {
+    test.describe.configure({ timeout: 900_000 });
+
+    test('CC-009', async ({ csiLoginPage, csiAccountManagementPage }) => {
+      if (
+        !process.env.CSI_ADMIN_TEST_PASSWORD?.length ||
+        !process.env.CSI_ADMIN_TEST_EMAIL?.trim()?.length ||
+        !process.env.CSI_SYSTEM_OWNER_TEST_PASSWORD?.length ||
+        !process.env.CSI_SYSTEM_OWNER_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      const moduleAccessTimeoutMs = CC009_MODULE_ACCESS_TIMEOUT_MS;
+      const permissionDeniedTimeoutMs = CC009_CC010_PERMISSION_DENIED_TIMEOUT_MS;
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(csiAdminTestEmail(), csiAdminTestPassword());
+      await csiLoginPage.expectAuthenticatedAppSession();
+
+      for (const modulePath of CC009_ADMIN_ACCESSIBLE_MODULE_PATHS) {
+        await csiAccountManagementPage.openModulePathAndExpectAccessible(
+          modulePath,
+          moduleAccessTimeoutMs,
+        );
+      }
+
+      for (const modulePath of CC009_ADMIN_DENIED_MODULE_PATHS) {
+        await csiAccountManagementPage.openModulePathAndExpectPermissionDenied(
+          modulePath,
+          permissionDeniedTimeoutMs,
+        );
+      }
+
+      await csiLoginPage.logoutViaHeaderMenu();
+      await csiLoginPage.expectEmailStepVisible();
+
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiSystemOwnerTestEmail(),
+        csiSystemOwnerTestPassword(),
+      );
+      await csiLoginPage.expectAuthenticatedAppSession();
+
+      for (const modulePath of cc009SystemOwnerAccessibleModulePaths()) {
+        await csiAccountManagementPage.openModulePathAndExpectAccessible(
+          modulePath,
+          moduleAccessTimeoutMs,
+        );
+      }
+
+      for (const modulePath of CC009_SALES_MODULE_PATHS) {
+        await csiAccountManagementPage.openModulePathAndExpectPermissionDenied(
+          modulePath,
+          permissionDeniedTimeoutMs,
+        );
+      }
+    });
+  });
+
+  /**
+   * CC-010: Training Admin and Phishing Admin module URL access
+   * (recorded-steps/CrossCutting/CC-010.txt).
+   * No suite beforeEach. Both sessions log in inside the test:
+   * CSI_TRAINING_ADMIN_TEST_EMAIL, then CSI_PHISHING_ADMIN_TEST_EMAIL after header logout
+   * once the email field is visible.
+   * Training admin is denied phishing URLs. Phishing admin can open phishing URLs and training URLs
+   * except /CourseDistribution and /CourseReport, which stay permission-denied.
+   */
+  test.describe('CC-010 training admin and phishing admin module URL isolation', () => {
+    test.describe.configure({ timeout: 600_000 });
+
+    test('CC-010', async ({ csiLoginPage, csiAccountManagementPage }) => {
+      if (
+        !process.env.CSI_TRAINING_ADMIN_TEST_PASSWORD?.length ||
+        !process.env.CSI_TRAINING_ADMIN_TEST_EMAIL?.trim()?.length ||
+        !process.env.CSI_PHISHING_ADMIN_TEST_PASSWORD?.length ||
+        !process.env.CSI_PHISHING_ADMIN_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      const moduleAccessTimeoutMs = CC010_MODULE_ACCESS_TIMEOUT_MS;
+      const permissionDeniedTimeoutMs = CC009_CC010_PERMISSION_DENIED_TIMEOUT_MS;
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiTrainingAdminTestEmail(),
+        csiTrainingAdminTestPassword(),
+      );
+      await csiLoginPage.expectAuthenticatedAppSession();
+
+      for (const modulePath of CC010_TRAINING_MODULE_PATHS) {
+        await csiAccountManagementPage.openModulePathAndExpectAccessible(
+          modulePath,
+          moduleAccessTimeoutMs,
+        );
+      }
+
+      for (const modulePath of CC010_PHISHING_MODULE_PATHS) {
+        await csiAccountManagementPage.openModulePathAndExpectPermissionDenied(
+          modulePath,
+          permissionDeniedTimeoutMs,
+        );
+      }
+
+      await csiLoginPage.logoutViaHeaderMenu();
+      await csiLoginPage.expectEmailStepVisible();
+
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiPhishingAdminTestEmail(),
+        csiPhishingAdminTestPassword(),
+      );
+      await csiLoginPage.expectAuthenticatedAppSession();
+
+      for (const modulePath of CC010_PHISHING_MODULE_PATHS) {
+        await csiAccountManagementPage.openModulePathAndExpectAccessible(
+          modulePath,
+          moduleAccessTimeoutMs,
+        );
+      }
+
+      for (const modulePath of cc010PhishingAdminAccessibleTrainingPaths()) {
+        await csiAccountManagementPage.openModulePathAndExpectAccessible(
+          modulePath,
+          moduleAccessTimeoutMs,
+        );
+      }
+
+      for (const modulePath of CC010_PHISHING_ADMIN_DENIED_TRAINING_PATHS) {
+        await csiAccountManagementPage.openModulePathAndExpectPermissionDenied(
+          modulePath,
+          permissionDeniedTimeoutMs,
+        );
+      }
     });
   });
 

@@ -193,6 +193,24 @@ export function csiPhisingAdminTestPassword(): string {
   return p;
 }
 
+/** `CSI_PHISHING_ADMIN_TEST_EMAIL` — Phishing admin for CC-010 (recorded-steps/CrossCutting/CC-010.txt). */
+export function csiPhishingAdminTestEmail(): string {
+  const e = process.env.CSI_PHISHING_ADMIN_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_PHISHING_ADMIN_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiPhishingAdminTestEmail}. */
+export function csiPhishingAdminTestPassword(): string {
+  const p = process.env.CSI_PHISHING_ADMIN_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_PHISHING_ADMIN_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
 /** PH-014: phishing victim with completed course on `/phishingCourse` (`CSI_PHISING_VICTIM_TEST_*`). */
 export function csiPhisingVictimTestEmail(): string {
   const e = process.env.CSI_PHISING_VICTIM_TEST_EMAIL?.trim();
