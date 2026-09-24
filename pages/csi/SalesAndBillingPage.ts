@@ -1391,4 +1391,29 @@ export class CsiSalesAndBillingPage extends BasePage {
       await expect(this.sb057HeaderOrgLogo()).toBeVisible({ timeout: timeoutMs });
     }
   }
+
+  /** CC-006: header (`img.app-logo`) and welcome-card (`img#AppLogo`) logos, independent of the org's logo file name. */
+  cc006VisibleOrgLogoImages() {
+    return this.page.locator('img.app-logo, img#AppLogo').filter({ visible: true });
+  }
+
+  cc006HeaderOrgLogo() {
+    return this.cc006VisibleOrgLogoImages().first();
+  }
+
+  cc006WelcomeCardOrgLogo() {
+    return this.cc006VisibleOrgLogoImages().last();
+  }
+
+  /** CC-006: settle after org login before logo / theme assertions. */
+  async waitCc006PostLoginSettle() {
+    await this.safeSleep(SB057_POST_LOGIN_WAIT_MS);
+  }
+
+  async expectCc006LogosVisible(timeoutMs = 30_000) {
+    await expect(this.cc006WelcomeCardOrgLogo()).toBeVisible({ timeout: timeoutMs });
+    if ((await this.cc006VisibleOrgLogoImages().count()) >= 2) {
+      await expect(this.cc006HeaderOrgLogo()).toBeVisible({ timeout: timeoutMs });
+    }
+  }
 }

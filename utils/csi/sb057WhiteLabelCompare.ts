@@ -38,14 +38,48 @@ export async function extractSb057ThemeCssVariables(
   }, keys);
 }
 
+function hasThemeValues(values: Record<string, string>): boolean {
+  return Object.values(values).some((value) => value.length > 0);
+}
+
+/** True when the baseline JSON is absent, unreadable, or holds no non-empty CSS variable value. */
+function isThemeBaselineMissingOrEmpty(baselinePath: string): boolean {
+  if (!fs.existsSync(baselinePath)) {
+    return true;
+  }
+  try {
+    const parsed = JSON.parse(fs.readFileSync(baselinePath, 'utf8')) as Record<string, string>;
+    return !hasThemeValues(parsed);
+  } catch {
+    return true;
+  }
+}
+
+export interface Sb057ThemeAssertOptions {
+  updateBaselinesCommand?: string;
+  /** Capture the baseline from the live app when the JSON is missing or empty instead of failing. */
+  createBaselineIfMissingOrEmpty?: boolean;
+}
+
 export async function assertSb057ThemeMatchesBaseline(
   page: Page,
   orgSlug = sb057OrgFileSlug(),
+  {
+    updateBaselinesCommand = 'npm run test:sb057:update-baselines',
+    createBaselineIfMissingOrEmpty = false,
+  }: Sb057ThemeAssertOptions = {},
 ): Promise<void> {
   const baselinePath = sb057ThemeBaselinePath(orgSlug);
   const live = await extractSb057ThemeCssVariables(page);
 
-  if (sb057ShouldUpdateThemeBaseline()) {
+  const shouldCapture =
+    sb057ShouldUpdateThemeBaseline() ||
+    (createBaselineIfMissingOrEmpty && isThemeBaselineMissingOrEmpty(baselinePath));
+
+  if (shouldCapture) {
+    if (!hasThemeValues(live)) {
+      throw new Error(`Cannot capture theme baseline ${baselinePath}: no CSS variable values found on the page.`);
+    }
     fs.mkdirSync(SB057_BASELINE_DIR, { recursive: true });
     fs.writeFileSync(baselinePath, `${JSON.stringify(live, null, 2)}\n`, 'utf8');
     return;
@@ -53,7 +87,7 @@ export async function assertSb057ThemeMatchesBaseline(
 
   if (!fs.existsSync(baselinePath)) {
     throw new Error(
-      `SB-057 theme baseline missing: ${baselinePath}. Run npm run test:sb057:update-baselines to capture CSS variables.`,
+      `Theme baseline missing: ${baselinePath}. Run ${updateBaselinesCommand} to capture CSS variables.`,
     );
   }
 

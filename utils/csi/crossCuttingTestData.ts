@@ -19,6 +19,10 @@ export const CC023_REVOKED_HUB_MODULE_LABELS = [
 
 export const CC023_HUB_MODULE_VISIBILITY_TIMEOUT_MS = 10_000;
 
+/** CC-006: org names used only for baseline file naming (`logo-CC-006-Org-A.png`, `theme-color-CC-006-Org-A.json`). */
+export const CC006_ORG_A_THEME_NAME = 'CC-006 Org A';
+export const CC006_ORG_B_THEME_NAME = 'CC-006 Org B';
+
 export const CC009_ADMIN_ACCESSIBLE_MODULE_PATHS = [
   '/AccountManagement',
   '/courseDashboard',

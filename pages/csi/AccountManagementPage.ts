@@ -735,6 +735,29 @@ export class CsiAccountManagementPage extends BasePage {
     await expect(this.page.getByRole('button', { name: 'Add' })).toBeVisible({ timeout: 60_000 });
   }
 
+  /**
+   * CC-005: the organization list table must render its headers, at least one data row,
+   * and a non-zero total in the pagination counter.
+   */
+  async expectOrganizationListTableLoadedCc005() {
+    const table = this.page.getByRole('grid');
+    await expect(table).toBeVisible({ timeout: 60_000 });
+
+    for (const header of ['Organization Name', 'Type', 'Employees', 'Plan', 'Start time', 'Status']) {
+      await expect(table.getByRole('columnheader', { name: header })).toBeVisible({
+        timeout: 30_000,
+      });
+    }
+
+    await expect(table.getByRole('row').nth(1)).toBeVisible({ timeout: 60_000 });
+    expect(await table.getByRole('row').count()).toBeGreaterThan(1);
+
+    const pagination = this.page.getByRole('status').filter({ hasText: /\d+\s+to\s+\d+\s+of\s+\d+\s+items/i });
+    await expect(pagination).toBeVisible({ timeout: 30_000 });
+    const totalMatch = (await pagination.innerText()).match(/of\s+(\d+)\s+items/i);
+    expect(Number(totalMatch?.[1] ?? 0)).toBeGreaterThan(0);
+  }
+
   async startAddOrganization(options?: { waitBeforeAddMs?: number }) {
     if (options?.waitBeforeAddMs) {
       await this.page.waitForTimeout(options.waitBeforeAddMs);

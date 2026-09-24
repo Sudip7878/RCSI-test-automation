@@ -1,5 +1,11 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
+import { expect, type Locator, type Page, type TestInfo } from '@playwright/test';
+
 import { CSI_ACCOUNT_MANAGEMENT_PATH } from '../../../config/csi';
 import { test } from '../../../fixtures/csi/testSetup';
+import type { CsiSalesAndBillingPage } from '../../../pages/csi/SalesAndBillingPage';
 import { CsiAccountManagementPage } from '../../../pages/csi/AccountManagementPage';
 import { CsiAvotechLoginPage } from '../../../pages/csi/AvotechLoginPage';
 import {
@@ -11,6 +17,10 @@ import {
   csiExpiredSalesSystemOwnerTestPassword,
   csiNoPolicySystemOwnerTestEmail,
   csiNoPolicySystemOwnerTestPassword,
+  csiOrgASystemOwnerTestEmail,
+  csiOrgASystemOwnerTestPassword,
+  csiOrgBSystemOwnerTestEmail,
+  csiOrgBSystemOwnerTestPassword,
   csiPhishingAdminTestEmail,
   csiPhishingAdminTestPassword,
   csiPolicyAuthorTestEmail,
@@ -32,7 +42,16 @@ import {
   csiTrainingPhisingSysOwnerTestEmail,
   csiTrainingPhisingSysOwnerTestPassword,
 } from '../../../utils/csi/credentials';
+import { assertSb057ThemeMatchesBaseline } from '../../../utils/csi/sb057WhiteLabelCompare';
 import {
+  SB057_LOGO_MAX_DIFF_PIXEL_RATIO,
+  SB057_VIEWPORT,
+  sb057LogoSnapshotName,
+  sb057OrgFileSlug,
+} from '../../../utils/csi/sb057WhiteLabelTestData';
+import {
+  CC006_ORG_A_THEME_NAME,
+  CC006_ORG_B_THEME_NAME,
   CC009_ADMIN_ACCESSIBLE_MODULE_PATHS,
   CC009_ADMIN_DENIED_MODULE_PATHS,
   CC009_CC010_PERMISSION_DENIED_TIMEOUT_MS,
@@ -63,6 +82,59 @@ function cc001RequiredEnvPresent(): boolean {
     !!process.env.CSI_TP_PHISING_ADMIN_TEST_PASSWORD?.length &&
     !!process.env.CSI_TP_PHISING_ADMIN_TEST_EMAIL?.trim()?.length
   );
+}
+
+/**
+ * CC-006: logo snapshot compare; when the base image does not exist yet it is captured from the
+ * live app instead of failing, so the first run bootstraps the baseline.
+ */
+async function expectCc006LogoMatchesBaseline(
+  logo: Locator,
+  snapshotName: string,
+  testInfo: TestInfo,
+): Promise<void> {
+  const snapshotPath = testInfo.snapshotPath(snapshotName);
+  if (!fs.existsSync(snapshotPath)) {
+    fs.mkdirSync(path.dirname(snapshotPath), { recursive: true });
+    await logo.screenshot({ path: snapshotPath });
+    return;
+  }
+  await expect(logo).toHaveScreenshot(snapshotName, {
+    maxDiffPixelRatio: SB057_LOGO_MAX_DIFF_PIXEL_RATIO,
+    timeout: 30_000,
+  });
+}
+
+/** CC-006: same logo + CSS variable checks as SB-057, against the baselines stored for `orgName`. */
+async function expectCc006OrgWhiteLabelTheme(
+  page: Page,
+  salesAndBillingPage: CsiSalesAndBillingPage,
+  orgName: string,
+  testInfo: TestInfo,
+): Promise<void> {
+  await salesAndBillingPage.waitCc006PostLoginSettle();
+  await salesAndBillingPage.expectCc006LogosVisible();
+
+  const orgSlug = sb057OrgFileSlug(orgName);
+
+  await expectCc006LogoMatchesBaseline(
+    salesAndBillingPage.cc006WelcomeCardOrgLogo(),
+    sb057LogoSnapshotName(orgSlug, 'welcome'),
+    testInfo,
+  );
+
+  if ((await salesAndBillingPage.cc006VisibleOrgLogoImages().count()) >= 2) {
+    await expectCc006LogoMatchesBaseline(
+      salesAndBillingPage.cc006HeaderOrgLogo(),
+      sb057LogoSnapshotName(orgSlug, 'header'),
+      testInfo,
+    );
+  }
+
+  await assertSb057ThemeMatchesBaseline(page, orgSlug, {
+    updateBaselinesCommand: 'npm run test:cc006:update-baselines',
+    createBaselineIfMissingOrEmpty: true,
+  });
 }
 
 test.describe('CSI · Cross Cutting', () => {
@@ -148,6 +220,66 @@ test.describe('CSI · Cross Cutting', () => {
     await csiPhisingPage.fillPhisingTestDetailsAndContinue(phisingTestName);
     await csiPhisingPage.finalizeAndDistribute();
     await csiPhisingPage.expectPhisingTestCreated(phisingTestName);
+  });
+
+  /**
+   * CC-006: white-label theming isolated per Sales Partner (recorded-steps/CrossCutting/CC-006.txt).
+   * Org A owner (CSI_ORG_A_SYSTEM_OWNER_TEST_EMAIL) is signed in by beforeEach; Org B owner
+   * (CSI_ORG_B_SYSTEM_OWNER_TEST_EMAIL) signs in inside the test after header logout.
+   * After each login, wait 5 seconds, then run the SB-057 checks against that org's own baselines:
+   * header and welcome-card logo snapshots (95% match) and the theme CSS variables JSON.
+   * A missing logo snapshot, or a theme JSON that is missing or empty, is captured from the live app
+   * on the first run instead of failing. To overwrite existing baselines, run
+   * `npm run test:cc006:update-baselines`.
+   */
+  test.describe('CC-006 white-label theming isolated per sales partner', () => {
+    test.describe.configure({ timeout: 300_000 });
+    test.use({ viewport: SB057_VIEWPORT });
+
+    test.beforeEach(async ({ csiLoginPage }) => {
+      if (
+        !process.env.CSI_ORG_A_SYSTEM_OWNER_TEST_PASSWORD?.length ||
+        !process.env.CSI_ORG_A_SYSTEM_OWNER_TEST_EMAIL?.trim()?.length ||
+        !process.env.CSI_ORG_B_SYSTEM_OWNER_TEST_PASSWORD?.length ||
+        !process.env.CSI_ORG_B_SYSTEM_OWNER_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiOrgASystemOwnerTestEmail(),
+        csiOrgASystemOwnerTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+    });
+
+    test('CC-006', async ({ page, csiLoginPage, csiSalesAndBillingPage }, testInfo) => {
+      await expectCc006OrgWhiteLabelTheme(
+        page,
+        csiSalesAndBillingPage,
+        CC006_ORG_A_THEME_NAME,
+        testInfo,
+      );
+
+      await csiLoginPage.logoutViaHeaderMenu();
+      await csiLoginPage.expectEmailStepVisible();
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiOrgBSystemOwnerTestEmail(),
+        csiOrgBSystemOwnerTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+
+      await expectCc006OrgWhiteLabelTheme(
+        page,
+        csiSalesAndBillingPage,
+        CC006_ORG_B_THEME_NAME,
+        testInfo,
+      );
+    });
   });
 
   /**
@@ -355,6 +487,40 @@ test.describe('CSI · Cross Cutting', () => {
         await csiAccountManagementPage.openModulePathAndExpectAccessible(
           modulePath,
           moduleAccessTimeoutMs,
+        );
+      }
+    });
+  });
+
+  /**
+   * CC-005: Super Admin sees all organizations and can open Sales & Billing
+   * (recorded-steps/CrossCutting/CC-005.txt).
+   * No suite beforeEach. Logs in inside the test as CSI_TEST_EMAIL (csiTestEmail).
+   * After login it waits 5 seconds before opening /avo_organizationlist, which must render
+   * the table with data rows and a non-zero item total.
+   * Each Sales & Billing URL must show no permission denial for 5 seconds.
+   */
+  test.describe('CC-005 super admin sees all organizations', () => {
+    test.describe.configure({ timeout: 300_000 });
+
+    test('CC-005', async ({ csiLoginPage, csiAccountManagementPage }) => {
+      if (!process.env.CSI_TEST_PASSWORD?.length || !process.env.CSI_TEST_EMAIL?.trim()?.length) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(csiTestEmail(), csiTestPassword());
+      await csiLoginPage.expectAuthenticatedAppSession();
+      await csiLoginPage.page.waitForTimeout(5_000);
+
+      await csiAccountManagementPage.openOrganizationList();
+      await csiAccountManagementPage.expectOrganizationListTableLoadedCc005();
+
+      for (const modulePath of CC009_SALES_MODULE_PATHS) {
+        await csiAccountManagementPage.openModulePathAndExpectAccessible(
+          modulePath,
+          CC009_MODULE_ACCESS_TIMEOUT_MS,
         );
       }
     });
