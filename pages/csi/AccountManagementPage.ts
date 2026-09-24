@@ -394,6 +394,50 @@ export class CsiAccountManagementPage extends BasePage {
     return roleGrid;
   }
 
+  /**
+   * CC-013: the first Assign-to-Role checkbox is the Admin row.
+   * `td[data-header="Assign to Role"] input[type="checkbox"]` — same grid as AM-033.
+   * Clicks only when the checked state differs from `shouldCheck`.
+   */
+  private async setFirstRoleAssignmentCheckboxCc013(roleGrid: Locator, shouldCheck: boolean) {
+    const firstCheckbox = roleGrid
+      .locator('td[data-header="Assign to Role"] input[type="checkbox"]')
+      .first();
+    await expect(firstCheckbox).toBeVisible({ timeout: 30_000 });
+    const firstRow = firstCheckbox.locator('xpath=ancestor::tr[1]');
+    await expect(firstRow.getByRole('gridcell', { name: /^Admin\b/i })).toBeVisible();
+
+    const updated = await firstCheckbox.evaluate((checkbox, wantChecked) => {
+      const input = checkbox as HTMLInputElement;
+      if (input.disabled) {
+        return false;
+      }
+      if (wantChecked !== input.checked) {
+        input.click();
+      }
+      return true;
+    }, shouldCheck);
+    expect(updated).toBe(true);
+  }
+
+  /** CC-013: uncheck the first role checkbox (Admin) and confirm. Leaves other roles unchanged. */
+  async revokeAdminViaFirstRoleCheckboxCc013(email: string) {
+    const roleGrid = await this.openChangeRoleDialogForUser(email);
+    await this.setFirstRoleAssignmentCheckboxCc013(roleGrid, false);
+    await this.confirmRoleChange();
+    await this.expectRecordUpdatedSuccess();
+    await this.dismissRecordUpdatedNotice();
+  }
+
+  /** CC-013: check the first role checkbox (Admin) and confirm. Leaves other roles unchanged. */
+  async assignAdminViaFirstRoleCheckboxCc013(email: string) {
+    const roleGrid = await this.openChangeRoleDialogForUser(email);
+    await this.setFirstRoleAssignmentCheckboxCc013(roleGrid, true);
+    await this.confirmRoleChange();
+    await this.expectRecordUpdatedSuccess();
+    await this.dismissRecordUpdatedNotice();
+  }
+
   /** AM-033: clear all assignable roles, assign only `roleName`, confirm. */
   async assignExclusiveRoleToUserOnUserList(email: string, roleName: string) {
     const roleGrid = await this.openChangeRoleDialogForUser(email);

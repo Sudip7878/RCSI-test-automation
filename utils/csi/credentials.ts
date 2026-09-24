@@ -211,6 +211,42 @@ export function csiPhishingAdminTestPassword(): string {
   return p;
 }
 
+/** CC-011: Policy Owner (`CSI_POLICY_OWNER_TEST_*`, recorded-steps/CrossCutting/CC-011.txt). */
+export function csiPolicyOwnerTestEmail(): string {
+  const e = process.env.CSI_POLICY_OWNER_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_POLICY_OWNER_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiPolicyOwnerTestEmail}. */
+export function csiPolicyOwnerTestPassword(): string {
+  const p = process.env.CSI_POLICY_OWNER_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_POLICY_OWNER_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
+/** CC-011: Policy Author (`CSI_POLICY_AUTHOR_TEST_*`, recorded-steps/CrossCutting/CC-011.txt). */
+export function csiPolicyAuthorTestEmail(): string {
+  const e = process.env.CSI_POLICY_AUTHOR_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_POLICY_AUTHOR_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiPolicyAuthorTestEmail}. */
+export function csiPolicyAuthorTestPassword(): string {
+  const p = process.env.CSI_POLICY_AUTHOR_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_POLICY_AUTHOR_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
 /** PH-014: phishing victim with completed course on `/phishingCourse` (`CSI_PHISING_VICTIM_TEST_*`). */
 export function csiPhisingVictimTestEmail(): string {
   const e = process.env.CSI_PHISING_VICTIM_TEST_EMAIL?.trim();
@@ -518,6 +554,28 @@ export function csiAdminTestPassword(): string {
   const p = process.env.CSI_ADMIN_TEST_PASSWORD;
   if (p == null || p.length === 0) {
     throw new Error('Set CSI_ADMIN_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
+/**
+ * CC-013: Admin user whose Admin role is revoked and restored while the session stays open
+ * (`CSI_ADMIN_USER_TEST_*`). The account must start with the Admin role assigned.
+ * Role edits are performed by `CSI_TEST_EMAIL` in a second browser.
+ */
+export function csiAdminUserTestEmail(): string {
+  const e = process.env.CSI_ADMIN_USER_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_ADMIN_USER_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiAdminUserTestEmail}. */
+export function csiAdminUserTestPassword(): string {
+  const p = process.env.CSI_ADMIN_USER_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_ADMIN_USER_TEST_PASSWORD in the environment (see .env.example).');
   }
   return p;
 }

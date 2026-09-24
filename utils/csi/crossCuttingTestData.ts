@@ -72,6 +72,39 @@ export function cc009SystemOwnerAccessibleModulePaths(): string[] {
   return [...CC009_ADMIN_ACCESSIBLE_MODULE_PATHS, ...adminDeniedExceptSales];
 }
 
+/**
+ * CC-008: Super Admin (CSI_TEST_EMAIL) may open every System Owner module URL
+ * plus Sales & Billing. System Owner is denied CC009_SALES_MODULE_PATHS.
+ * (recorded-steps/CrossCutting/CC-008.txt)
+ */
+export function cc008SuperAdminAccessibleModulePaths(): string[] {
+  return [...cc009SystemOwnerAccessibleModulePaths(), ...CC009_SALES_MODULE_PATHS];
+}
+
+/**
+ * CC-012: the only module URLs a regular user may open
+ * (recorded-steps/CrossCutting/CC-012.txt).
+ */
+export const CC012_USER_ACCESSIBLE_MODULE_PATHS = [
+  '/courseDashboard',
+  '/myCourse',
+  '/courseLibrary',
+  '/MyPolicies',
+] as const;
+
+/**
+ * CC-012: every Admin / System Owner / Sales URL except the four learner pages above.
+ * System Owner paths already include every Admin-accessible path plus the modules
+ * Admin cannot open. Sales and Billing is appended because both higher roles are
+ * denied those URLs and the regular user must be denied them as well.
+ */
+export function cc012UserDeniedModulePaths(): string[] {
+  const allowed = new Set<string>(CC012_USER_ACCESSIBLE_MODULE_PATHS);
+  return [...cc009SystemOwnerAccessibleModulePaths(), ...CC009_SALES_MODULE_PATHS].filter(
+    (modulePath) => !allowed.has(modulePath),
+  );
+}
+
 /** CC-010: Training Admin module URLs (recorded-steps/CrossCutting/CC-010.txt). */
 export const CC010_TRAINING_MODULE_PATHS = [
   '/courseDashboard',
@@ -102,3 +135,21 @@ export const CC010_PHISHING_MODULE_PATHS = [
 ] as const;
 
 export const CC010_MODULE_ACCESS_TIMEOUT_MS = 5_000;
+
+/** CC-011: View Policies role separation (recorded-steps/CrossCutting/CC-011.txt). */
+export const CC011_VIEW_POLICIES_PATH = '/ViewPolicies' as const;
+
+export const CC011_PENDING_FOR_APPROVAL_TEXT = 'Pending for Approval' as const;
+
+export const CC011_REVIEW_TEXT = 'Review' as const;
+
+export const CC011_CREATE_NEW_POLICY_BUTTON_NAME = 'Create a New Policy' as const;
+
+/** List content (pending status, create button, Review) after View Policies loads. */
+export const CC011_CONTENT_TIMEOUT_MS = 60_000;
+
+/**
+ * After the list is ready, a control the role must not see has this long to stay hidden.
+ * Same window as CC-009 / CC-010 permission denial.
+ */
+export const CC011_HIDDEN_CONTROL_TIMEOUT_MS = CC009_CC010_PERMISSION_DENIED_TIMEOUT_MS;

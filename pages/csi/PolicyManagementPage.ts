@@ -1,6 +1,14 @@
 import { expect, type Locator } from '@playwright/test';
 import * as path from 'path';
 import { CSI_BASE_URL, CSI_POLICY_DETAIL_PATH } from '../../config/csi';
+import {
+  CC011_CONTENT_TIMEOUT_MS,
+  CC011_CREATE_NEW_POLICY_BUTTON_NAME,
+  CC011_HIDDEN_CONTROL_TIMEOUT_MS,
+  CC011_PENDING_FOR_APPROVAL_TEXT,
+  CC011_REVIEW_TEXT,
+  CC011_VIEW_POLICIES_PATH,
+} from '../../utils/csi/crossCuttingTestData';
 import { BasePage } from '../BasePage';
 
 export class CsiPolicyManagementPage extends BasePage {
@@ -446,6 +454,86 @@ export class CsiPolicyManagementPage extends BasePage {
     await this.page.goto(`${CSI_BASE_URL}/ViewPolicies`);
     await this.page.waitForLoadState('domcontentloaded');
     await expect(this.viewPoliciesGrid()).toBeVisible({ timeout: 60_000 });
+  }
+
+  /**
+   * CC-011: View Policies after document load, then the policy grid.
+   * The Pending for Approval tab renders before the list finishes loading.
+   */
+  async openViewPoliciesCc011() {
+    await this.page.goto(`${CSI_BASE_URL}${CC011_VIEW_POLICIES_PATH}`);
+    await this.page.waitForLoadState('domcontentloaded');
+    await expect(this.viewPoliciesGrid()).toBeVisible({ timeout: CC011_CONTENT_TIMEOUT_MS });
+  }
+
+  /** Tab label includes a count, e.g. "Pending for Approval (1)". First text match is that tab, not the status cell. */
+  private pendingForApprovalTextCc011() {
+    return this.page.getByText(CC011_PENDING_FOR_APPROVAL_TEXT).first();
+  }
+
+  private reviewTextCc011() {
+    return this.page.getByText(CC011_REVIEW_TEXT, { exact: true });
+  }
+
+  private createNewPolicyButtonCc011() {
+    return this.page.getByRole('button', { name: CC011_CREATE_NEW_POLICY_BUTTON_NAME });
+  }
+
+  /** CC-011: status text is on the list before the row action is used. */
+  async expectPendingForApprovalTextCc011() {
+    await expect(this.pendingForApprovalTextCc011()).toBeVisible({
+      timeout: CC011_CONTENT_TIMEOUT_MS,
+    });
+  }
+
+  /** CC-011: click the pending status (getByText) once it is visible. */
+  async clickPendingForApprovalTextCc011() {
+    const pending = this.pendingForApprovalTextCc011();
+    await expect(pending).toBeVisible({ timeout: CC011_CONTENT_TIMEOUT_MS });
+    await pending.click();
+  }
+
+  /** CC-011: Policy Owner sees Review after the pending status is clicked. */
+  async expectReviewTextVisibleCc011() {
+    await expect(this.reviewTextCc011().first()).toBeVisible({
+      timeout: CC011_CONTENT_TIMEOUT_MS,
+    });
+  }
+
+  /**
+   * CC-011: Policy Author must not see Review after the same pending-status click.
+   * Polls the full window so a late render still fails.
+   */
+  async expectReviewTextHiddenCc011(timeoutMs = CC011_HIDDEN_CONTROL_TIMEOUT_MS) {
+    await this.expectStaysHiddenCc011(this.reviewTextCc011(), timeoutMs);
+  }
+
+  /** CC-011: Policy Author sees Create a New Policy once View Policies has loaded. */
+  async expectCreateNewPolicyButtonVisibleCc011() {
+    await expect(this.createNewPolicyButtonCc011()).toBeVisible({
+      timeout: CC011_CONTENT_TIMEOUT_MS,
+    });
+  }
+
+  /**
+   * CC-011: Policy Owner must not see Create a New Policy on View Policies.
+   * Call after the pending status is visible so the list has rendered.
+   */
+  async expectCreateNewPolicyButtonHiddenCc011(timeoutMs = CC011_HIDDEN_CONTROL_TIMEOUT_MS) {
+    await this.expectStaysHiddenCc011(this.createNewPolicyButtonCc011(), timeoutMs);
+  }
+
+  private async expectStaysHiddenCc011(locator: Locator, timeoutMs: number) {
+    const pollIntervalMs = 250;
+    const deadline = Date.now() + timeoutMs;
+
+    while (Date.now() < deadline) {
+      const count = await locator.count();
+      for (let i = 0; i < count; i += 1) {
+        expect(await locator.nth(i).isVisible()).toBe(false);
+      }
+      await this.page.waitForTimeout(pollIntervalMs);
+    }
   }
 
   /** PM-010: walk policy rows top-down; first ● Pending For Approval → status cell + Review link. */
