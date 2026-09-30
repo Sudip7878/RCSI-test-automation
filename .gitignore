@@ -13,3 +13,13 @@ node_modules/
 
 # SB-062 optional invoice compare debug dumps (see writeInvoiceCompareDebugJsonFiles)
 /debug-output/
+
+# Local environment and machine-specific files
+.env.*
+!.env.example
+.claude/settings.local.json
+.DS_Store
+
+# Generated logs
+*.log
+/log/

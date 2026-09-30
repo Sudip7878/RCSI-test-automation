@@ -42,6 +42,7 @@ import {
   csiTrainingPhisingSysOwnerTestEmail,
   csiTrainingPhisingSysOwnerTestPassword,
 } from '../../../utils/csi/credentials';
+import { extractInvoicePdfText } from '../../../utils/csi/invoicePdfPreviewCompare';
 import { assertSb057ThemeMatchesBaseline } from '../../../utils/csi/sb057WhiteLabelCompare';
 import {
   SB057_LOGO_MAX_DIFF_PIXEL_RATIO,
@@ -279,6 +280,76 @@ test.describe('CSI · Cross Cutting', () => {
         CC006_ORG_B_THEME_NAME,
         testInfo,
       );
+    });
+  });
+
+  /**
+   * CC-004: reports contain only own-tenant data.
+   * Org A owner (CSI_ORG_A_SYSTEM_OWNER_TEST_EMAIL) is signed in by beforeEach; Org B owner
+   * (CSI_ORG_B_SYSTEM_OWNER_TEST_EMAIL) signs in inside the test after header logout.
+   * Each org opens its first completed Attack Surface report (same navigation as SR-001) and exports it.
+   * The extracted text of the two reports must differ, otherwise one org is seeing the other's data.
+   */
+  test.describe('CC-004 reports contain only own-tenant data', () => {
+    test.describe.configure({ timeout: 600_000 });
+
+    test.beforeEach(async ({ csiLoginPage }) => {
+      if (
+        !process.env.CSI_ORG_A_SYSTEM_OWNER_TEST_PASSWORD?.length ||
+        !process.env.CSI_ORG_A_SYSTEM_OWNER_TEST_EMAIL?.trim()?.length ||
+        !process.env.CSI_ORG_B_SYSTEM_OWNER_TEST_PASSWORD?.length ||
+        !process.env.CSI_ORG_B_SYSTEM_OWNER_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiOrgASystemOwnerTestEmail(),
+        csiOrgASystemOwnerTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+    });
+
+    test('CC-004', async ({ csiLoginPage, csiSecurityReportPage }) => {
+      const exportFirstCompletedAttackSurfaceReport = async (): Promise<Buffer> => {
+        await csiSecurityReportPage.openAttackSurface();
+        await csiSecurityReportPage.openFirstCompletedAttackSurfaceReportDetails();
+        await csiSecurityReportPage.expectAttackSurfaceReportDashboardView();
+        return csiSecurityReportPage.exportReportAndReadContent();
+      };
+
+      const orgAReport = await exportFirstCompletedAttackSurfaceReport();
+
+      await csiLoginPage.logoutViaHeaderMenu();
+      await csiLoginPage.expectEmailStepVisible();
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiOrgBSystemOwnerTestEmail(),
+        csiOrgBSystemOwnerTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+
+      const orgBReport = await exportFirstCompletedAttackSurfaceReport();
+
+      for (const [orgName, report] of [
+        ['Org A', orgAReport],
+        ['Org B', orgBReport],
+      ] as const) {
+        expect(report.length, `${orgName} report should have bytes`).toBeGreaterThan(512);
+        expect(
+          report.subarray(0, 8).toString('latin1').startsWith('%PDF'),
+          `${orgName} export should be a PDF (starts with %PDF)`,
+        ).toBe(true);
+      }
+
+      const orgAText = await extractInvoicePdfText(orgAReport);
+      const orgBText = await extractInvoicePdfText(orgBReport);
+      expect(orgAText.length, 'Org A report should contain text').toBeGreaterThan(0);
+      expect(orgBText.length, 'Org B report should contain text').toBeGreaterThan(0);
+      expect(orgAText, 'Org A and Org B reports must not be identical').not.toBe(orgBText);
     });
   });
 

@@ -2,7 +2,8 @@
   "packageDefaults": {
     "namePrefix": "Package-",
     "description": "Automation created package",
-    "unitPricePerModule": 100
+    "unitPricePerModule": 100,
+    "salesPartner": "Avotech"
   },
   "salesOrderDefaults": {
     "duration": 6,

@@ -1,6 +1,7 @@
 import { test as base } from '@playwright/test';
 import { CsiAccountManagementPage } from '../../pages/csi/AccountManagementPage';
 import { CsiAvotechLoginPage } from '../../pages/csi/AvotechLoginPage';
+import { CsiPackageCreationPage } from '../../pages/csi/CsiPackageCreationPage';
 import { CsiIncidentReportPage } from '../../pages/csi/IncidentReportPage';
 import { CsiItAssetManagementPage } from '../../pages/csi/ITAssetManagementPage';
 import { CsiPhisingPage } from '../../pages/csi/PhisingPage';
@@ -13,6 +14,7 @@ import { CsiTrainingPage } from '../../pages/csi/TrainingPage';
 
 type CsiFixtures = {
   csiLoginPage: CsiAvotechLoginPage;
+  csiPackagePage: CsiPackageCreationPage;
   csiSalesAndBillingPage: CsiSalesAndBillingPage;
   csiAccountManagementPage: CsiAccountManagementPage;
   csiTrainingPage: CsiTrainingPage;
@@ -29,6 +31,10 @@ export const test = base.extend<CsiFixtures>({
   csiLoginPage: async ({ page }, use) => {
     await use(new CsiAvotechLoginPage(page));
   },
+  csiPackagePage: async ({ page }, use) => {
+    await use(new CsiPackageCreationPage(page));
+  },
+  
   csiSalesAndBillingPage: async ({ page }, use) => {
     await use(new CsiSalesAndBillingPage(page));
   },

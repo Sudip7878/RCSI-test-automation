@@ -1,4 +1,5 @@
 import { expect, type Locator } from '@playwright/test';
+import { readFileSync } from 'node:fs';
 import * as path from 'node:path';
 import {
   CSI_ATTACK_SURFACE_PATH,
@@ -228,6 +229,16 @@ export class CsiSecurityReportPage extends BasePage {
     const download = await downloadPromise;
     const suggested = download.suggestedFilename();
     expect(suggested != null && suggested.length > 0).toBe(true);
+  }
+
+  /** CC-004: Export Report and return the downloaded file bytes so callers can inspect the content. */
+  async exportReportAndReadContent(): Promise<Buffer> {
+    const downloadPromise = this.page.waitForEvent('download', { timeout: 120_000 });
+    await this.page.getByRole('button', { name: 'Export Report' }).click();
+    const download = await downloadPromise;
+    const downloadedPath = await download.path();
+    expect(downloadedPath, 'exported report should be written to a temp path').toBeTruthy();
+    return readFileSync(downloadedPath as string);
   }
 
   /** First grid row whose Status shows Pending; then See Details (SR-005 HTML). */
