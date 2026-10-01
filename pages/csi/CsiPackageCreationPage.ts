@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page } from '@playwright/test';
-import { BasePage } from '../BasePage'; // Adjust path as needed
+import { BasePage } from '../BasePage';
 
 export class CsiPackageCreationPage extends BasePage {
   // 1. Define reusable locators
