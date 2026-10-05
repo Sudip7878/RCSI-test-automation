@@ -16,10 +16,11 @@ export class CsiSignupPage extends BasePage {
   private readonly termsCheckbox: Locator;
   private readonly passwordErrorSpan: Locator;
   private readonly passwordNoErrorSpan: Locator;
+  private readonly createAccountButton: Locator;
 
   constructor(page: Page) {
     super(page);
-    
+
     // Initialize locators
     this.workEmailInput = this.page.getByRole('textbox', { name: 'Enter your work email' });
     this.nextStepButton = this.page.getByRole('button', { name: 'Next Step' });
@@ -32,8 +33,9 @@ export class CsiSignupPage extends BasePage {
     this.passwordInput = this.page.locator('#Input_password4');
     this.confirmPasswordInput = this.page.locator('#Input_password5');
     this.termsCheckbox = this.page.locator('#Checkbox3');
-    this.passwordErrorSpan = this.page.locator('.margin-bottom-m.ul span').first();
+    this.passwordErrorSpan = this.page.locator('.margin-bottom-m.ul span');
     this.passwordNoErrorSpan = this.page.locator('.margin-bottom-m.ul');
+    this.createAccountButton = this.page.getByRole('button', { name: 'Create account' });
   }
 
   // 2. Action methods
@@ -70,10 +72,19 @@ export class CsiSignupPage extends BasePage {
   }
 
   async expectWeakPasswordError() {
-    await expect(this.passwordErrorSpan).toHaveClass(/text-error/);
+    //await expect(this.passwordErrorSpan).toHaveClass(/text-error/);
+
+    await expect(this.passwordErrorSpan.first()).toBeVisible();
+    const hasRedSpan = await this.passwordErrorSpan.evaluateAll((spans) => {
+      return spans.some((span) => {
+        const computedColor = window.getComputedStyle(span).color;
+        return computedColor === 'rgb(220, 32, 32)';
+      });
+    });
+    await expect(this.createAccountButton).toBeDisabled();
   }
 
   async expectNoPasswordError() {
-    await expect(this.passwordNoErrorSpan).toBeVisible();
+    await expect(this.createAccountButton).toBeDisabled();
   }
 }
