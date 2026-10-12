@@ -16,7 +16,7 @@ test.describe('Users in Multiple Groups', () => {
         await csiLoginPage.expectOnHome();
     });
 
-    test('system owner can create two groups with the same manager and member', async ({ csiAccountManagementPage }) => {
+    test('AM -044 User in multiple groups', async ({ csiAccountManagementPage }) => {
         test.setTimeout(240_000);
 
         const timestamp = Date.now();
