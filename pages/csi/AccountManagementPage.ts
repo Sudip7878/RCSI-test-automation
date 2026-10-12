@@ -1135,6 +1135,16 @@ export class CsiAccountManagementPage extends BasePage {
       timeout: 30_000,
     });
   }
+
+  /** AM-041: open a searched group and verify the member email in its second table row. */
+  async openGroupAndExpectMemberEmailAm041(groupTitle: string, memberEmail: string) {
+    await this.page.getByRole('gridcell', { name: groupTitle }).click();
+    const memberEmailCell = this.page
+      .locator('tr.table-row')
+      .nth(1)
+      .locator('td[data-header="Email"]');
+    await expect(memberEmailCell).toHaveText(memberEmail, { timeout: 30_000 });
+  }
   
 
   /**

@@ -1,4 +1,4 @@
-import { expect, test } from '../../../fixtures/csi/testSetup';
+import { test } from '../../../fixtures/csi/testSetup';
 import {
     csiGroupManagerName,
     csiGroupMemberEmail,
@@ -16,7 +16,7 @@ test.describe('Users in Multiple Groups', () => {
         await csiLoginPage.expectOnHome();
     });
 
-    test('system owner can create two groups with the same manager and member', async ({ page, csiAccountManagementPage }) => {
+    test('system owner can create two groups with the same manager and member', async ({ csiAccountManagementPage }) => {
         test.setTimeout(240_000);
 
         const timestamp = Date.now();
@@ -36,13 +36,7 @@ test.describe('Users in Multiple Groups', () => {
         for (const groupTitle of groupTitles) {
             await csiAccountManagementPage.openGroupListWithSearchReadyAm041();
             await csiAccountManagementPage.searchAndExpectGroupInGridAm041(groupTitle);
-            const groupCell = page.getByRole('gridcell', { name: groupTitle });
-            await groupCell.click();
-            const memberEmailCell = page
-                .locator('tr.table-row')
-                .nth(1)
-                .locator('td[data-header="Email"]');
-            await expect(memberEmailCell).toHaveText(memberEmail, { timeout: 30_000 });
+            await csiAccountManagementPage.openGroupAndExpectMemberEmailAm041(groupTitle, memberEmail);
         }
     });
 });
