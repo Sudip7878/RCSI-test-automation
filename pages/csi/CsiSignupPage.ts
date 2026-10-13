@@ -17,6 +17,7 @@ export class CsiSignupPage extends BasePage {
   private readonly passwordErrorSpan: Locator;
   private readonly passwordNoErrorSpan: Locator;
   private readonly createAccountButton: Locator;
+  private readonly accountCreationSuccessMessage: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -36,6 +37,7 @@ export class CsiSignupPage extends BasePage {
     this.passwordErrorSpan = this.page.locator('.margin-bottom-m.ul span');
     this.passwordNoErrorSpan = this.page.locator('.margin-bottom-m.ul');
     this.createAccountButton = this.page.getByRole('button', { name: 'Create account' });
+    this.accountCreationSuccessMessage = this.page.locator('.margin-y-m');
   }
 
   // 2. Action methods
@@ -48,7 +50,7 @@ export class CsiSignupPage extends BasePage {
     await this.nextStepButton.click();
   }
 
-  async fillSignupDetails(firstName: string, lastName: string, orgName: string, category: string, phone: string, language: string, weakPassword: string) {
+  async fillSignupDetails(firstName: string, lastName: string, orgName: string, category: string, phone: string, language: string, Password: string) {
     await this.firstNameInput.fill(firstName);
     await this.lastNameInput.fill(lastName);
     await this.organizationNameInput.fill(orgName);
@@ -64,8 +66,8 @@ export class CsiSignupPage extends BasePage {
     await this.page.locator('.vscomp-dropbox:visible').getByText(language, { exact: true }).click();
 
     // Fill weak passwords
-    await this.passwordInput.fill(weakPassword);
-    await this.confirmPasswordInput.fill(weakPassword);
+    await this.passwordInput.fill(Password);
+    await this.confirmPasswordInput.fill(Password);
 
     // Agree to terms checkbox
     await this.termsCheckbox.check();
@@ -87,4 +89,16 @@ export class CsiSignupPage extends BasePage {
   async expectNoPasswordError() {
     await expect(this.createAccountButton).toBeDisabled();
   }
+
+  async clickCreateAccount() {
+    await this.createAccountButton.click();
+  }
+
+async expectAccountCreationSuccess() { 
+  await expect(this.accountCreationSuccessMessage).toHaveText(
+    /Your account has been created/, 
+    { timeout: 30_000 }
+  ); 
+}
+
 }
