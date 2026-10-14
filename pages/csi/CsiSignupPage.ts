@@ -18,6 +18,7 @@ export class CsiSignupPage extends BasePage {
   private readonly passwordNoErrorSpan: Locator;
   private readonly createAccountButton: Locator;
   private readonly accountCreationSuccessMessage: Locator;
+  private readonly missingFieldsToast: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -38,6 +39,7 @@ export class CsiSignupPage extends BasePage {
     this.passwordNoErrorSpan = this.page.locator('.margin-bottom-m.ul');
     this.createAccountButton = this.page.getByRole('button', { name: 'Create account' });
     this.accountCreationSuccessMessage = this.page.locator('.margin-y-m');
+    this.missingFieldsToast = this.page.locator('.toast-message');
   }
 
   // 2. Action methods
@@ -57,7 +59,10 @@ export class CsiSignupPage extends BasePage {
 
     // Select Category dropdown
     await this.categoryDropdown.click();
-    await this.page.locator('.vscomp-dropbox:visible').getByText(category, { exact: true }).click();
+    await this.page
+      .locator('.vscomp-dropbox:visible')
+      .getByText(category,)
+      .click({ timeout: 30_000 });
 
     await this.phoneNumberInput.fill(phone);
 
@@ -94,11 +99,20 @@ export class CsiSignupPage extends BasePage {
     await this.createAccountButton.click();
   }
 
-async expectAccountCreationSuccess() { 
-  await expect(this.accountCreationSuccessMessage).toHaveText(
-    /Your account has been created/, 
-    { timeout: 30_000 }
-  ); 
-}
+  async expectOrganizationNameLength(expectedLength: number) {
+    const organizationName = await this.organizationNameInput.inputValue();
+    expect(organizationName.length).toBe(expectedLength);
+  }
+
+  async expectMissingFieldsToast() {
+    await expect(this.missingFieldsToast).toHaveText('Some fields are missing.', { timeout: 30_000 });
+  }
+
+  async expectAccountCreationSuccess() {
+    await expect(this.accountCreationSuccessMessage).toHaveText(
+      /Your account has been created/,
+      { timeout: 30_000 }
+    );
+  }
 
 }

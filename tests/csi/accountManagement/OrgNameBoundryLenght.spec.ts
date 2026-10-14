@@ -1,29 +1,33 @@
 import { test } from '../../../fixtures/csi/testSetup';
+import { csiAccountManagementFirstName, csiAccountManagementLastName, } from '../../../utils/csi/accountManagementTestData';
 import { SignUpDetails } from '../../../data/csi/SignUpWithWeakPassword.json';
+import { randomEmail, orgNameBoundaryScenarios } from '../../../utils/csi/am008OrganizationTestData';
 
-const orgNameBoundaryScenarios = [
-    { label: 'minimum length (1 character)', orgName: 'z' },
-    { label: 'maximum length (100 characters)', orgName: 'z'.repeat(100) },
-    { label: 'exceeding maximum length (101 characters)', orgName: 'z'.repeat(101) }
-];
-
-for (const { label, orgName } of orgNameBoundaryScenarios) {
-    test(`should validate organization name behavior for: ${label}`, async ({ csiSignupPage }) => {
+for (const { label, orgName, expected } of orgNameBoundaryScenarios) {
+    test(`AM-008: Organization Name Boundary Length -: ${label}`, async ({ csiSignupPage }) => {
         await csiSignupPage.gotoSignup();
-        await csiSignupPage.enterEmail(SignUpDetails.testEmail);
+        await csiSignupPage.enterEmail(randomEmail());
 
         await csiSignupPage.fillSignupDetails(
-            SignUpDetails.FirstName,
-            SignUpDetails.LastName,
-            orgName,
+            csiAccountManagementFirstName(),
+            csiAccountManagementLastName(),
+            orgName(),
             'Banking',
             SignUpDetails.PhoneNumber,
             'English',
             '123qweQWE!@#'
         );
 
+        if (expected === 'truncated') {
+            await csiSignupPage.expectOrganizationNameLength(50);
+        }
+
         await csiSignupPage.clickCreateAccount();
-        await csiSignupPage.expectAccountCreationSuccess();
-    })
+        if (expected === 'missing-fields') {
+            await csiSignupPage.expectMissingFieldsToast();
+        } else {
+            await csiSignupPage.expectAccountCreationSuccess();
+        }
+    });
 };
 
