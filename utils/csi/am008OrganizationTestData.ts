@@ -10,8 +10,11 @@ export  const randomCjkOrganizationName = (length: number) =>
 
 export const randomEmail = () => `${randomUUID()}@example.com`;
 
+export const organizationCategory = 'Banking';
+export const signupLanguage = 'English';
+
 export const orgNameBoundaryScenarios = [
-    { label: 'minimum length (1 character)', orgName: () => randomOrganizationName(1), expected: 'success' },
+    { label: 'minimum length (1 character)', orgName: () => randomOrganizationName(1), expected: 'success-or-duplicate' },
     { label: 'maximum length (50 characters)', orgName: () => randomOrganizationName(50), expected: 'success' },
     { label: 'exceeding maximum length (51 characters)', orgName: () => randomOrganizationName(51), expected: 'truncated' },
     { label: 'spaces only', orgName: () => ' '.repeat(10), expected: 'missing-fields' },

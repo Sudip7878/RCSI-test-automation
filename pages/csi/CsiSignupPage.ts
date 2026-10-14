@@ -53,11 +53,13 @@ export class CsiSignupPage extends BasePage {
   }
 
   async fillSignupDetails(firstName: string, lastName: string, orgName: string, category: string, phone: string, language: string, Password: string) {
+    await this.page.waitForTimeout(3_000);
     await this.firstNameInput.fill(firstName);
     await this.lastNameInput.fill(lastName);
     await this.organizationNameInput.fill(orgName);
 
     // Select Category dropdown
+
     await this.categoryDropdown.click();
     await this.page
       .locator('.vscomp-dropbox:visible')
@@ -113,6 +115,13 @@ export class CsiSignupPage extends BasePage {
       /Your account has been created/,
       { timeout: 30_000 }
     );
+  }
+
+  async expectAccountCreationSuccessOrOrganizationAlreadyExists() {
+    await Promise.any([
+      expect(this.accountCreationSuccessMessage).toHaveText(/Your account has been created/, { timeout: 30_000 }),
+      expect(this.missingFieldsToast).toHaveText(/Organization name already Exist/, { timeout: 30_000 })
+    ]);
   }
 
 }
