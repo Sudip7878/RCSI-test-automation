@@ -1,12 +1,12 @@
 import { test } from '../../../fixtures/csi/testSetup';
 import { csiAccountManagementFirstName, csiAccountManagementLastName, } from '../../../utils/csi/accountManagementTestData';
 import { csiTestPassword } from '../../../utils/csi/credentials';
-import { SignUpDetails } from '../../../data/csi/SignUpWithWeakPassword.json';
 import {
     organizationCategory,
     randomEmail,
     orgNameBoundaryScenarios,
     signupLanguage,
+    phoneNumber,
 } from '../../../utils/csi/am008OrganizationTestData';
 
 for (const { label, orgName, expected } of orgNameBoundaryScenarios) {
@@ -20,7 +20,7 @@ for (const { label, orgName, expected } of orgNameBoundaryScenarios) {
             csiAccountManagementLastName(),
             orgName(),
             organizationCategory,
-            SignUpDetails.PhoneNumber,
+            phoneNumber,
             signupLanguage,
             csiTestPassword()
         );

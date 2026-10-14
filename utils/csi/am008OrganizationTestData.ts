@@ -12,6 +12,7 @@ export const randomEmail = () => `${randomUUID()}@example.com`;
 
 export const organizationCategory = 'Banking';
 export const signupLanguage = 'English';
+export const phoneNumber = '1234567890';
 
 export const orgNameBoundaryScenarios = [
     { label: 'minimum length (1 character)', orgName: () => randomOrganizationName(1), expected: 'success-or-duplicate' },

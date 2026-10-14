@@ -1,6 +1,6 @@
 import { test } from '../../../fixtures/csi/testSetup';
 import { csiAccountManagementFirstName, csiAccountManagementLastName } from '../../../utils/csi/accountManagementTestData';
-import { SignUpDetails } from '../../../data/csi/SignUpWithWeakPassword.json';
+import { phoneNumber } from '../../../utils/csi/am008OrganizationTestData';
 import {
   organizationCategory,
   randomEmail,
@@ -30,7 +30,7 @@ test.describe('Signup with weak password validations', () => {
         csiAccountManagementLastName(),
         randomOrganizationName(5),
         organizationCategory,
-        SignUpDetails.PhoneNumber,
+        phoneNumber,
         signupLanguage,
         password
       );
