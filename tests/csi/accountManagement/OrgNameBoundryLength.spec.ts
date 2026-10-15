@@ -10,33 +10,35 @@ import {
 } from '../../../utils/csi/am008OrganizationTestData';
 
 for (const { label, orgName, expected } of orgNameBoundaryScenarios) {
-    test(`AM-008: Organization Name Boundary Length -: ${label}`, async ({ csiSignupPage }) => {
-        test.setTimeout(30_000);
-        await csiSignupPage.gotoSignup();
-        await csiSignupPage.enterEmail(randomEmail());
-        
-        await csiSignupPage.fillSignupDetails(
-            csiAccountManagementFirstName(),
-            csiAccountManagementLastName(),
-            orgName(),
-            organizationCategory,
-            phoneNumber,
-            signupLanguage,
-            csiTestPassword()
-        );
+    test.describe(`Organization Name Boundary Length - ${label}`, () => {
+        test('AM-008', async ({ csiSignupPage }) => {
+            test.setTimeout(30_000);
+            await csiSignupPage.gotoSignup();
+            await csiSignupPage.enterEmail(randomEmail());
 
-        if (expected === 'truncated') {
-            await csiSignupPage.expectOrganizationNameLength(50);
-        }
+            await csiSignupPage.fillSignupDetails(
+                csiAccountManagementFirstName(),
+                csiAccountManagementLastName(),
+                orgName(),
+                organizationCategory,
+                phoneNumber,
+                signupLanguage,
+                csiTestPassword()
+            );
 
-        await csiSignupPage.clickCreateAccount();
-        if (expected === 'missing-fields') {
-            await csiSignupPage.expectMissingFieldsToast();
-        } else if (expected === 'success-or-duplicate') {
-            await csiSignupPage.expectAccountCreationSuccessOrOrganizationAlreadyExists();
-        } else {
-            await csiSignupPage.expectAccountCreationSuccess();
-        }
+            if (expected === 'truncated') {
+                await csiSignupPage.expectOrganizationNameLength(50);
+            }
+
+            await csiSignupPage.clickCreateAccount();
+            if (expected === 'missing-fields') {
+                await csiSignupPage.expectMissingFieldsToast();
+            } else if (expected === 'success-or-duplicate') {
+                await csiSignupPage.expectAccountCreationSuccessOrOrganizationAlreadyExists();
+            } else {
+                await csiSignupPage.expectAccountCreationSuccess();
+            }
+        });
     });
-};
+}
 
