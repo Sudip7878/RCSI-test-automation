@@ -9,9 +9,9 @@ import {
     phoneNumber,
 } from '../../../utils/csi/am008OrganizationTestData';
 
-for (const { label, orgName, expected } of orgNameBoundaryScenarios) {
-    test.describe(`Organization Name Boundary Length - ${label}`, () => {
-        test('AM-008', async ({ csiSignupPage }) => {
+test.describe('AM-008: Organization Name Boundary Length', () => {
+    for (const { label, orgName, expected } of orgNameBoundaryScenarios) {
+        test(`AM-008 ${label}`, async ({ csiSignupPage }) => {
             test.setTimeout(30_000);
             await csiSignupPage.gotoSignup();
             await csiSignupPage.enterEmail(randomEmail());
@@ -39,6 +39,6 @@ for (const { label, orgName, expected } of orgNameBoundaryScenarios) {
                 await csiSignupPage.expectAccountCreationSuccess();
             }
         });
-    });
-}
+    }
+});
 
