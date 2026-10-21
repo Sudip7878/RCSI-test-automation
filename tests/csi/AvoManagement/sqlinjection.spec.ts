@@ -6,8 +6,8 @@ import {
     randomOrganizationName,
 } from '../../../utils/csi/am008OrganizationTestData';
 
-test.describe('CSI · SQL Injection Tests', () => {
-    test('SQL injection while creating organization', async ({ page, csiLoginPage, csiAvoManagementPage }) => {
+test.describe('SB - 033 Add client — SQL injection in org name', () => {
+    test('SB - 033', async ({ page, csiLoginPage, csiAvoManagementPage }) => {
         test.setTimeout(30_000);
 
         const password = csiTestPassword();
