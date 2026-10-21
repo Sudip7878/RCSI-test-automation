@@ -198,7 +198,7 @@ test.describe('CSI · Sales and Billing', () => {
 
         await csiSalesAndBillingPage.openClientList();
         await csiSalesAndBillingPage.clickAddClient();
-        await csiSalesAndBillingPage.fillAddClientFormSb029(sb029AddClientFormSteps(formData));
+        await csiSalesAndBillingPage.fillAddClientFormSb030(sb029AddClientFormSteps(formData));
         await csiSalesAndBillingPage.submitPackage();
         await csiSalesAndBillingPage.expectClientCreated();
       });
@@ -210,7 +210,7 @@ test.describe('CSI · Sales and Billing', () => {
 
         await csiSalesAndBillingPage.openClientList();
         await csiSalesAndBillingPage.clickAddClient();
-        await csiSalesAndBillingPage.fillAddClientFormSb029(sb030AddClientFormSteps(formData));
+        await csiSalesAndBillingPage.fillAddClientFormSb030(sb030AddClientFormSteps(formData));
         await csiSalesAndBillingPage.submitPackage();
         await csiSalesAndBillingPage.expectClientDuplicateNameRejected();
       });
@@ -222,12 +222,12 @@ test.describe('CSI · Sales and Billing', () => {
 
         await csiSalesAndBillingPage.openClientList();
         await csiSalesAndBillingPage.clickAddClient();
-        await csiSalesAndBillingPage.fillAddClientFormSb029(sb031AddClientFormSteps(formData));
+        await csiSalesAndBillingPage.fillAddClientFormSb030(sb031AddClientFormSteps(formData));
         await csiSalesAndBillingPage.submitPackage();
         await csiSalesAndBillingPage.expectClientDuplicateEmailRejected();
       });
     });
-    
+
     test.describe('Navigate to Sales Order and create sales order', () => {
       test('Navigate to Sales Order and create sales order', async ({
         csiSalesAndBillingPage,
