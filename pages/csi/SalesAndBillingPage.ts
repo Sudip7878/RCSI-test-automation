@@ -607,7 +607,7 @@ export class CsiSalesAndBillingPage extends BasePage {
     await select.selectOption(firstValue);
   }
 
-  async fillAddClientFormSb030(steps: Sb030AddClientFormStep[]) {
+  async fillAddClientFormSb029(steps: Sb030AddClientFormStep[]) {
     for (const step of steps) {
       if (step.type === 'textbox') {
         const input = this.page.getByRole('textbox', { name: step.name });

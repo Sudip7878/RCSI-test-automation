@@ -38,7 +38,7 @@ export const test = base.extend<CsiFixtures>({
   },
 
   csiSignupPage: async ({ page }, use) => {
-    await use(new CsiSignupPage(page)); // Line 41 (or similar)
+    await use(new CsiSignupPage(page));
   },
 
   csiSalesAndBillingPage: async ({ page }, use) => {
@@ -70,7 +70,7 @@ export const test = base.extend<CsiFixtures>({
   },
   csiCyberInsurancePage: async ({ page }, use) => {
     await use(new CsiCyberInsurancePage(page));
-  },
+  }
 });
 
 export { expect } from '@playwright/test';
