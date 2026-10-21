@@ -61,7 +61,7 @@ export class CsiAvoManagementPage extends BasePage {
 
 
     async expectOrganizationCreated() {
-        await expect(this.page.getByText('Record created.', { exact: true })).toBeVisible({ timeout: 60_000 });
+        await expect(this.page.getByText("You have successfully added this organization.")).toBeVisible({ timeout: 60_000 });
     }
 
 
