@@ -1,13 +1,6 @@
 import { expect, test } from '../../../fixtures/csi/testSetup';
 import { csiTestPassword, csiTestEmail } from '../../../utils/csi/credentials';
 import { avmSqlInjectionTestData } from '../../../utils/csi/avmTestData';
-import {
-    csiAccountManagementFirstName,
-    csiAccountManagementLastName,
-} from '../../../utils/csi/accountManagementTestData';
-import {
-    randomEmail
-} from '../../../utils/csi/am008OrganizationTestData';
 
 test.describe('SB-033 Add client — SQL injection in org name', () => {
     test('SB-033', async ({ page, csiLoginPage, csiAccountManagementPage }) => {
@@ -16,10 +9,10 @@ test.describe('SB-033 Add client — SQL injection in org name', () => {
         const password = csiTestPassword();
         const email = csiTestEmail();
         const organizationDetails = {
-            firstName: csiAccountManagementFirstName(),
-            lastName: csiAccountManagementLastName(),
-            ownerEmail: randomEmail(),
-            phoneNumber: avmSqlInjectionTestData.phoneNumber,
+            firstName: avmSqlInjectionTestData.xssPayload,
+            lastName: avmSqlInjectionTestData.xssPayload,
+            ownerEmail: avmSqlInjectionTestData.xssPayload,
+            phoneNumber: avmSqlInjectionTestData.xssPayload,
             organizationName: avmSqlInjectionTestData.sqlInjectionPayload,
             category: avmSqlInjectionTestData.category,
             size: avmSqlInjectionTestData.size,
@@ -52,7 +45,7 @@ test.describe('SB-033 Add client — SQL injection in org name', () => {
         });
 
         await csiAccountManagementPage.submitCreateOrganization();
-        await csiAccountManagementPage.expectOrganizationCreatedAm015();
+        await csiAccountManagementPage.expectCreateOrganizationOwnerEmailValidationErrorAm016();
         expect(javascriptDialogs).toEqual([]);
     });
 });
