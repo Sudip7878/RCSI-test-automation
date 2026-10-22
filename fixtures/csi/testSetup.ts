@@ -12,6 +12,7 @@ import { CsiCyberInsurancePage } from '../../pages/csi/CyberInsurancePage';
 import { CsiPenetrationTestPage } from '../../pages/csi/PenetrationTestPage';
 import { CsiSecurityReportPage } from '../../pages/csi/SecurityReportPage';
 import { CsiTrainingPage } from '../../pages/csi/TrainingPage';
+import {CsiAvoManagementPage} from '../../pages/csi/CsiAvoManagementPage';
 
 type CsiFixtures = {
   csiLoginPage: CsiAvotechLoginPage;
@@ -27,6 +28,7 @@ type CsiFixtures = {
   csiSecurityReportPage: CsiSecurityReportPage;
   csiPenetrationTestPage: CsiPenetrationTestPage;
   csiCyberInsurancePage: CsiCyberInsurancePage;
+  csiAvoManagementPage: CsiAvoManagementPage;
 };
 
 export const test = base.extend<CsiFixtures>({
@@ -70,6 +72,9 @@ export const test = base.extend<CsiFixtures>({
   },
   csiCyberInsurancePage: async ({ page }, use) => {
     await use(new CsiCyberInsurancePage(page));
+  },
+  csiAvoManagementPage: async ({page}, use) => {
+    await use(new CsiAvoManagementPage(page));
   }
 });
 
