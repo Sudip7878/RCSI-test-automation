@@ -732,6 +732,7 @@ export class CsiAccountManagementPage extends BasePage {
   /** AM-009: `/avo_organizationlist` — Add organization wizard. */
   async openOrganizationList() {
     await this.page.goto(`${CSI_BASE_URL}${CSI_ORGANIZATION_LIST_PATH}`);
+    await this.page.waitForTimeout(3_000);
     await expect(this.page.getByRole('button', { name: 'Add' })).toBeVisible({ timeout: 60_000 });
   }
 
@@ -777,6 +778,7 @@ export class CsiAccountManagementPage extends BasePage {
     category: string;
     size: string;
     plan: string;
+    promoCode?: string;
   }) {
     const dialog = this.addOrganizationDialog();
 
@@ -809,6 +811,10 @@ export class CsiAccountManagementPage extends BasePage {
 
     await dialog.getByText('Plan', { exact: true }).click();
     await this.page.getByRole('option', { name: params.plan }).click();
+
+    if (params.promoCode) {
+      await dialog.locator('#b12-Dropdown_promoCode').selectOption({ label: params.promoCode });
+    }
   }
 
   /** AM-015: fill Create organization fields from ordered steps (no hardcoded field sequence). */
