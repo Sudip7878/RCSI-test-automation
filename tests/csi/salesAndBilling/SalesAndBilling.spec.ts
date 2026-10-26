@@ -113,6 +113,42 @@ test.describe('CSI · Sales and Billing', () => {
       });
     });
 
+    test.describe('SB-006 Create package with per-unit threshold at boundary', () => {
+      const thresholdCases = [
+        { title: 'accepts 0 as unlimited', threshold: 0, accepted: true },
+        { title: 'accepts 1', threshold: 1, accepted: true },
+        { title: 'accepts the large value 100000', threshold: 100000, accepted: true },
+        { title: 'rejects -1', threshold: -1, accepted: false, submitDisabled: true },
+        { title: 'rejects an empty threshold', threshold: null, accepted: false },
+        { title: 'rejects fractional value 1.5', threshold: 1.5, accepted: true },
+      ];
+
+      for (const { title, threshold, accepted, submitDisabled } of thresholdCases) {
+        test(`SB-006 ${title}`, async ({ csiSalesAndBillingPage }) => {
+          const packageName = csiUniquePackageName('SB-006-');
+
+          await csiSalesAndBillingPage.openSalesAndBilling();
+          await csiSalesAndBillingPage.openPackageManagement();
+          await csiSalesAndBillingPage.clickAddPackage();
+          await csiSalesAndBillingPage.fillPackageDetails(packageName, csiPackageDescription());
+          await csiSalesAndBillingPage.selectSalesPartnerAvotech();
+          await csiSalesAndBillingPage.selectAllModulesAndSetUnitPrice(threshold);
+          if (accepted) {
+            await csiSalesAndBillingPage.submitPackage();
+            await csiSalesAndBillingPage.expectPackageCreated(packageName);
+          } else {
+            if (submitDisabled) {
+              await expect(csiSalesAndBillingPage.submitButton).toBeDisabled();
+            } else {
+              await csiSalesAndBillingPage.submitPackage();
+            }
+            await expect(csiSalesAndBillingPage.packageNameInput).toBeVisible();
+            await expect(csiSalesAndBillingPage.page).not.toHaveURL(/\/PackageList/);
+          }
+        });
+      }
+    });
+
     test.describe('SB-022 create billing partner', () => {
       test('SB-022', async ({ csiSalesAndBillingPage }) => {
         const billingPartnerName = csiUniqueBillingPartnerName();
