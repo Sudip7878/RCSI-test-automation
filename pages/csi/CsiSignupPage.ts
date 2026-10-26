@@ -40,7 +40,7 @@ export class CsiSignupPage extends BasePage {
 
   // 2. Action methods
   async gotoSignup() {
-    await this.page.goto('https://rcsi-tst.avotech.com/signup', { waitUntil: 'networkidle' });
+    await this.page.goto('https://rcsi-tst.avotech.com/signup');
   }
 
   async enterEmail(email: string) {
@@ -53,7 +53,6 @@ export class CsiSignupPage extends BasePage {
     await this.lastNameInput.fill(lastName);
     await this.organizationNameInput.fill(orgName);
 
-    // Select Category dropdown
     await this.categoryDropdown.click();
     await this.page.locator('.vscomp-dropbox:visible').getByText(category, { exact: true }).click();
 
