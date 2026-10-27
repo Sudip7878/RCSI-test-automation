@@ -351,7 +351,7 @@ export class CsiSalesAndBillingPage extends BasePage {
     }
   }
 
-  async selectAllModulesAndSetUnitPrice(unitPrice: number) {
+  async selectAllModulesAndSetUnitPrice(unitPrice: number | null) {
     const moduleGrid = this.page.getByRole('grid');
     const checkboxes = await moduleGrid.getByRole('checkbox').all();
     expect(checkboxes.length).toBeGreaterThan(0);
@@ -365,7 +365,7 @@ export class CsiSalesAndBillingPage extends BasePage {
 
     for (const unitPriceInput of unitPriceInputs) {
       await expect(unitPriceInput).toBeEnabled();
-      await unitPriceInput.fill(String(unitPrice));
+      await unitPriceInput.fill(unitPrice === null ? '' : String(unitPrice));
     }
   }
 
