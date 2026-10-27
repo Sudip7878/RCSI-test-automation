@@ -1,6 +1,8 @@
 import { expect } from '@playwright/test';
 
 import { test } from '../../../fixtures/csi/testSetup';
+import type { CsiSalesAndBillingPage } from '../../../pages/csi/SalesAndBillingPage';
+import type { Sb015LogoFile } from '../../../utils/csi/salesAndBillingTestData';
 import {
   csiCustomOrgOwnerTestEmail,
   csiCustomOrgOwnerTestPassword,
@@ -20,6 +22,9 @@ import {
 } from '../../../utils/csi/sb057WhiteLabelTestData';
 import {
   SB024_SALES_PARTNERS,
+  SB015_LOGO_CASES,
+  SB015_SVG_SCRIPT_MARKER,
+  SB015_VALID_FALLBACK_LOGO,
   csiExistingBillingPartnerNameForSb027,
   csiOrgASalesOrderIdForSb067,
   csiUniqueBillingPartnerName,
@@ -145,6 +150,48 @@ test.describe('CSI · Sales and Billing', () => {
             await expect(csiSalesAndBillingPage.packageNameInput).toBeVisible();
             await expect(csiSalesAndBillingPage.page).not.toHaveURL(/\/PackageList/);
           }
+        });
+      }
+    });
+
+    test.describe('SB-015 White-label — upload invalid logo file', () => {
+      const runLogoUploadCase = async (
+        csiSalesAndBillingPage: CsiSalesAndBillingPage,
+        file: Sb015LogoFile,
+        id: string,
+        marker?: string,
+      ) => {
+        const uniqueSuffix = csiUniqueTimestampSuffix();
+        const currentPartnerName = `${csiUniqueSalesPartnerName()}_${id}`;
+        await csiSalesAndBillingPage.openSalesAndBilling();
+        await csiSalesAndBillingPage.openSalesPartnerList();
+        await csiSalesAndBillingPage.clickAddSalesPartner();
+        await csiSalesAndBillingPage.fillSalesPartnerBasicInformation({
+          partnerName: currentPartnerName,
+          domain: csiSalesPartnerDomain(),
+          s3BucketName: csiSalesPartnerS3BucketName(),
+          s3BucketUrl: csiSalesPartnerS3BucketUrl(),
+          sendgridSenderName: csiSalesPartnerSendgridSenderName(),
+          sendgridReplyToEmail: csiSalesPartnerSendgridReplyToEmail(),
+          salesPartnerContactEmail: csiSalesPartnerContactEmail(),
+          subdomainExampleHost: `test-${uniqueSuffix}-${id}.com`,
+        });
+
+        await csiSalesAndBillingPage.openBrandingDetailsLogoPicker(
+          file,
+          SB015_VALID_FALLBACK_LOGO,
+          marker,
+        );
+      };
+
+      for (const { id, title, file } of SB015_LOGO_CASES) {
+        test(`SB-015 ${title}`, async ({ csiSalesAndBillingPage }) => {
+          await runLogoUploadCase(
+            csiSalesAndBillingPage,
+            file,
+            id,
+            id === 'svg' ? SB015_SVG_SCRIPT_MARKER : undefined,
+          );
         });
       }
     });
