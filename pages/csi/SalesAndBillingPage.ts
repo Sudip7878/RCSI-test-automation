@@ -46,6 +46,12 @@ import { BasePage } from '../BasePage';
 /** Pause before each sales-order VirtualSelect open (AM-009, SB-046, SB-052). */
 export const CSI_SALES_ORDER_DROPDOWN_SETTLE_MS = 5_000;
 
+type BrandingLogoFile = {
+  name: string;
+  mimeType: string;
+  buffer: Buffer;
+};
+
 export class CsiSalesAndBillingPage extends BasePage {
   readonly salesOrderLink = this.page.getByRole('link', { name: 'Sales Order' });
   readonly addSalesOrderButton = this.page.getByRole('button', { name: 'Add Sales Order' });
@@ -97,6 +103,12 @@ export class CsiSalesAndBillingPage extends BasePage {
   });
   readonly salesPartnerSubdomainExampleInput = this.page.getByRole('textbox', { name: 'ex: google.com' });
   readonly nextButton = this.page.getByRole('button', { name: 'Next' });
+  readonly brandingDetailsChangeLogoLink = this.page.locator('a[data-link][href="#"]', {
+    hasText: 'Change Logo',
+  });
+  readonly brandingDetailsSelectLogoPrompt = this.page.locator('span[data-expression=""]', {
+    hasText: 'Select or Drop Image File here',
+  });
 
   private salesOrderFieldTrigger(triggerText: string): Locator {
     return this.page.getByText(triggerText, { exact: true });
@@ -856,6 +868,94 @@ export class CsiSalesAndBillingPage extends BasePage {
     await expect(this.addSalesPartnerButton).toBeVisible();
     await this.addSalesPartnerButton.click();
     await expect(this.salesPartnerPartnerNameInput).toBeVisible({ timeout: 30_000 });
+  }
+
+  async expectInvalidLogoFileTypeRejectionToast() {
+    await expect(
+      this.page
+        .locator('.toast-message')
+        .filter({ hasText: /^FIle doesn't correspond to the accepted files type to accept$/ }),
+    ).toBeVisible();
+  }
+
+  async openBrandingDetailsLogoPicker(
+    file: BrandingLogoFile,
+    validFallbackLogo: BrandingLogoFile,
+    svgScriptMarker?: string,
+  ) {
+    await expect(this.brandingDetailsChangeLogoLink).toBeVisible();
+    await this.brandingDetailsChangeLogoLink.click();
+    await expect(this.brandingDetailsSelectLogoPrompt).toBeVisible();
+
+    const logoInput = this.page.locator('input[type="file"]').first();
+    await expect(logoInput).toBeAttached();
+    const existingImageSources = await this.page.locator('img').evaluateAll((images) =>
+      images.map((image) => (image as HTMLImageElement).currentSrc || (image as HTMLImageElement).src),
+    );
+    await logoInput.setInputFiles(file);
+
+    let rejected = false;
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      const fileCount = await logoInput.evaluate(
+        (input: HTMLInputElement) => input.files?.length ?? 0,
+      );
+      const bodyText = await this.page.locator('body').innerText();
+      rejected =
+        (await this.page
+          .locator('.toast-message')
+          .filter({ hasText: /^FIle doesn't correspond to the accepted files type to accept$/ })
+          .isVisible()) ||
+        fileCount === 0 ||
+        /invalid|unsupported|only.*image|image.*only|file size|maximum.*size|too large|upload a valid file|doesn't correspond to the accepted files type/i.test(
+          bodyText,
+        );
+      if (rejected) {
+        break;
+      }
+      await this.page.waitForTimeout(200);
+    }
+
+    if (svgScriptMarker === undefined || rejected) {
+      expect(rejected, `${file.name} should be rejected`).toBe(true);
+      if (file.mimeType === 'application/x-msdownload' || file.mimeType === 'application/pdf') {
+        await this.expectInvalidLogoFileTypeRejectionToast();
+      }
+      await logoInput.setInputFiles(validFallbackLogo);
+    } else {
+      const scriptExecuted = await this.page.evaluate(
+        (marker) => document.documentElement.dataset[marker] === 'true',
+        svgScriptMarker,
+      );
+      expect(scriptExecuted, 'SVG script must not execute').toBe(false);
+
+      const svgWasSanitized = await this.page.evaluate(async (previousSources) => {
+        const svgSources = Array.from(document.querySelectorAll('img'))
+          .map((image) => image.currentSrc || image.src)
+          .filter(
+            (source) =>
+              !previousSources.includes(source) &&
+              (source.startsWith('blob:') || source.startsWith('data:image/svg+xml')),
+          );
+        if (svgSources.length === 0) {
+          return false;
+        }
+
+        for (const source of svgSources) {
+          const content = await fetch(source).then((response) => response.text());
+          if (/<script\b|\bon[a-z]+\s*=|javascript\s*:/i.test(content)) {
+            return false;
+          }
+        }
+        return true;
+      }, existingImageSources);
+      expect(svgWasSanitized, 'Accepted SVG must be sanitized').toBe(true);
+    }
+
+    const uploadDialog = this.page.getByRole('dialog');
+    const saveLogoButton = uploadDialog.getByRole('button', { name: 'Save' });
+    await expect(saveLogoButton).toBeEnabled();
+    await saveLogoButton.click();
+    await expect(uploadDialog).toBeHidden();
   }
 
   async fillSalesPartnerBasicInformation(params: {

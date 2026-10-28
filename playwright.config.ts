@@ -17,7 +17,8 @@ export default defineConfig({
     baseURL: CSI_BASE_URL,
     trace: 'on-first-retry',
     ignoreHTTPSErrors: true,
-    headless: false
+    headless: false,
+    // launchOptions: { slowMo: 1000 },
   },
 
   projects: [

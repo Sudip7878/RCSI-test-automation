@@ -1,5 +1,71 @@
 import salesAndBilling from '../../data/csi/salesAndBilling.json';
 
+export type Sb015LogoFile = {
+  name: string;
+  mimeType: string;
+  buffer: Buffer;
+};
+
+export const SB015_SVG_SCRIPT_MARKER = 'sb015SvgScriptExecuted';
+
+const sb015ValidPng = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jO7sAAAAASUVORK5CYII=',
+  'base64',
+);
+
+export const SB015_VALID_FALLBACK_LOGO: Sb015LogoFile = {
+  name: 'valid-logo.png',
+  mimeType: 'image/png',
+  buffer: sb015ValidPng,
+};
+
+const sb015OversizedPng = Buffer.concat([
+  sb015ValidPng,
+  Buffer.alloc(5 * 1024 * 1024 + 1 - sb015ValidPng.length),
+]);
+
+export const SB015_LOGO_CASES: Array<{ id: string; title: string; file: Sb015LogoFile }> = [
+  {
+    id: 'exe',
+    title: 'rejects an .exe logo',
+    file: {
+      name: 'invalid-logo.exe',
+      mimeType: 'application/x-msdownload',
+      buffer: Buffer.from('MZ invalid executable'),
+    },
+  },
+  {
+    id: 'pdf',
+    title: 'rejects a .pdf logo',
+    file: {
+      name: 'invalid-logo.pdf',
+      mimeType: 'application/pdf',
+      buffer: Buffer.from('%PDF-1.4 invalid logo'),
+    },
+  },
+  {
+    id: 'oversized',
+    title: 'rejects an image larger than 5 MB',
+    file: { name: 'oversized-logo.png', mimeType: 'image/png', buffer: sb015OversizedPng },
+  },
+  {
+    id: 'empty',
+    title: 'rejects a 0-byte image',
+    file: { name: 'empty-logo.png', mimeType: 'image/png', buffer: Buffer.alloc(0) },
+  },
+  {
+    id: 'svg',
+    title: 'sanitizes or rejects an SVG logo with embedded script',
+    file: {
+      name: 'scripted-logo.svg',
+      mimeType: 'image/svg+xml',
+      buffer: Buffer.from(
+        `<svg xmlns="http://www.w3.org/2000/svg" onload="document.documentElement.dataset.${SB015_SVG_SCRIPT_MARKER}='true'"><script>document.documentElement.dataset.${SB015_SVG_SCRIPT_MARKER}='true'</script></svg>`,
+      ),
+    },
+  },
+];
+
 export function csiPackageDescription(): string {
   return salesAndBilling.packageDefaults.description;
 }
