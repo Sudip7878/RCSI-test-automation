@@ -98,7 +98,7 @@ export class CsiSalesAndBillingPage extends BasePage {
   readonly addSalesPartnerButton = this.page.getByRole('button', { name: 'Add Sales Partner' });
   readonly salesPartnerPartnerNameInput = this.page.getByRole('textbox', { name: 'Partner Name*' });
   readonly salesPartnerDomainInput = this.page.getByRole('textbox', { name: 'Domain*' });
-  readonly salesPartnerDomainValidationMessage = this.page.getByText('This field is required.', {
+  readonly salesPartnerEmptyFieldValidationMessage = this.page.getByText('This field is required.', {
     exact: true,
   });
   readonly salesPartnerS3BucketNameInput = this.page.getByRole('textbox', { name: 'S3 Bucket Name*' });
@@ -1031,11 +1031,11 @@ export class CsiSalesAndBillingPage extends BasePage {
 
   async expectSalesPartnerDomainValidationMessage(expectedMessage: string | null) {
     if (expectedMessage === null) {
-      await expect(this.salesPartnerDomainValidationMessage).toBeHidden();
+      await expect(this.salesPartnerEmptyFieldValidationMessage).toBeHidden();
       return;
     }
 
-    await expect(this.salesPartnerDomainValidationMessage).toHaveText(expectedMessage);
+    await expect(this.salesPartnerEmptyFieldValidationMessage).toHaveText(expectedMessage);
   }
 
   async fillSalesPartnerEmailTemplateStep(uniqueSuffix: string) {
