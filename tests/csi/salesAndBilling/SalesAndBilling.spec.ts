@@ -198,12 +198,12 @@ test.describe('CSI · Sales and Billing', () => {
     });
 
     test.describe('SB-017 custom domain validation', () => {
-      for (const { title, domain, validationMessage } of SB017_DOMAIN_CASES) {
+      for (const { title, domain, expectsValidationMessage } of SB017_DOMAIN_CASES) {
         test(`SB-017 ${title}`, async ({ csiSalesAndBillingPage }) => {
           await csiSalesAndBillingPage.fillSalesPartnerBasicInformationSb017(domain);
           await csiSalesAndBillingPage.clickNextOnAddSalesPartnerWizard();
-          await csiSalesAndBillingPage.expectSalesPartnerDomainValidationMessage(
-            validationMessage,
+          await csiSalesAndBillingPage.expectSalesPartnerEmptyFieldValidationMessage(
+            expectsValidationMessage,
           );
         });
       }

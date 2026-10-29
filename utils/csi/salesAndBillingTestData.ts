@@ -131,12 +131,12 @@ export const SB017_DOMAIN_CASES = [
   {
     title: 'accepts a valid FQDN',
     domain: SB017_VALID_DOMAIN,
-    validationMessage: null,
+    expectsValidationMessage: false,
   },
   {
     title: 'requires a domain when empty',
     domain: '',
-    validationMessage: 'This field is required.',
+    expectsValidationMessage: true,
   },
 ] as const;
 

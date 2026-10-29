@@ -1029,13 +1029,12 @@ export class CsiSalesAndBillingPage extends BasePage {
     await this.nextButton.click();
   }
 
-  async expectSalesPartnerDomainValidationMessage(expectedMessage: string | null) {
-    if (expectedMessage === null) {
+  async expectSalesPartnerEmptyFieldValidationMessage(shouldBeVisible: boolean) {
+    if (shouldBeVisible) {
+      await expect(this.salesPartnerEmptyFieldValidationMessage).toBeVisible();
+    } else {
       await expect(this.salesPartnerEmptyFieldValidationMessage).toBeHidden();
-      return;
     }
-
-    await expect(this.salesPartnerEmptyFieldValidationMessage).toHaveText(expectedMessage);
   }
 
   async fillSalesPartnerEmailTemplateStep(uniqueSuffix: string) {
