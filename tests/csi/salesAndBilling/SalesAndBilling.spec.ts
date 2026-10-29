@@ -25,6 +25,7 @@ import {
   SB015_LOGO_CASES,
   SB015_SVG_SCRIPT_MARKER,
   SB015_VALID_FALLBACK_LOGO,
+  SB017_DOMAIN_CASES,
   csiExistingBillingPartnerNameForSb027,
   csiOrgASalesOrderIdForSb067,
   csiUniqueBillingPartnerName,
@@ -191,6 +192,18 @@ test.describe('CSI · Sales and Billing', () => {
             file,
             id,
             id === 'svg' ? SB015_SVG_SCRIPT_MARKER : undefined,
+          );
+        });
+      }
+    });
+
+    test.describe('SB-017 custom domain validation', () => {
+      for (const { title, domain, validationMessage } of SB017_DOMAIN_CASES) {
+        test(`SB-017 ${title}`, async ({ csiSalesAndBillingPage }) => {
+          await csiSalesAndBillingPage.fillSalesPartnerBasicInformationSb017(domain);
+          await csiSalesAndBillingPage.clickNextOnAddSalesPartnerWizard();
+          await csiSalesAndBillingPage.expectSalesPartnerDomainValidationMessage(
+            validationMessage,
           );
         });
       }
