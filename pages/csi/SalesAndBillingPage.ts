@@ -27,6 +27,14 @@ import {
   SB027_BILLING_PARTNER_PAYMENT_METHOD_OPTION,
   SB027_DUPLICATE_BILLING_PARTNER_NAME_ERROR,
   SB067_NO_PERMISSION_MESSAGE_TIMEOUT_MS,
+  csiSalesPartnerContactEmail,
+  csiSalesPartnerDomain,
+  csiSalesPartnerS3BucketName,
+  csiSalesPartnerS3BucketUrl,
+  csiSalesPartnerSendgridReplyToEmail,
+  csiSalesPartnerSendgridSenderName,
+  csiUniqueSalesPartnerName,
+  csiUniqueTimestampSuffix,
 } from '../../utils/csi/salesAndBillingTestData';
 import {
   sb057HeaderOrgLogoLocator,
@@ -90,6 +98,9 @@ export class CsiSalesAndBillingPage extends BasePage {
   readonly addSalesPartnerButton = this.page.getByRole('button', { name: 'Add Sales Partner' });
   readonly salesPartnerPartnerNameInput = this.page.getByRole('textbox', { name: 'Partner Name*' });
   readonly salesPartnerDomainInput = this.page.getByRole('textbox', { name: 'Domain*' });
+  readonly salesPartnerEmptyFieldValidationMessage = this.page.getByText('This field is required.', {
+    exact: true,
+  });
   readonly salesPartnerS3BucketNameInput = this.page.getByRole('textbox', { name: 'S3 Bucket Name*' });
   readonly salesPartnerS3BucketUrlInput = this.page.getByRole('textbox', { name: 'S3 Bucket URL*' });
   readonly salesPartnerSendgridSenderNameInput = this.page.getByRole('textbox', {
@@ -870,6 +881,25 @@ export class CsiSalesAndBillingPage extends BasePage {
     await expect(this.salesPartnerPartnerNameInput).toBeVisible({ timeout: 30_000 });
   }
 
+  async fillSalesPartnerBasicInformationSb017(domain: string) {
+    const uniqueSuffix = csiUniqueTimestampSuffix();
+    const partnerName = `${csiUniqueSalesPartnerName()}_SB017`;
+
+    await this.openSalesPartnerList();
+    await this.clickAddSalesPartner();
+    await this.fillSalesPartnerBasicInformation({
+      partnerName,
+      domain,
+      s3BucketName: csiSalesPartnerS3BucketName(),
+      s3BucketUrl: csiSalesPartnerS3BucketUrl(),
+      sendgridSenderName: csiSalesPartnerSendgridSenderName(),
+      sendgridReplyToEmail: csiSalesPartnerSendgridReplyToEmail(),
+      salesPartnerContactEmail: csiSalesPartnerContactEmail(),
+      subdomainExampleHost: `sb017-${uniqueSuffix}.com`,
+    });
+    await expect(this.salesPartnerDomainInput).toHaveValue(domain);
+  }
+
   async expectInvalidLogoFileTypeRejectionToast() {
     await expect(
       this.page
@@ -997,6 +1027,14 @@ export class CsiSalesAndBillingPage extends BasePage {
   async clickNextOnAddSalesPartnerWizard() {
     await expect(this.nextButton).toBeVisible();
     await this.nextButton.click();
+  }
+
+  async expectSalesPartnerEmptyFieldValidationMessage(shouldBeVisible: boolean) {
+    if (shouldBeVisible) {
+      await expect(this.salesPartnerEmptyFieldValidationMessage).toBeVisible();
+    } else {
+      await expect(this.salesPartnerEmptyFieldValidationMessage).toBeHidden();
+    }
   }
 
   async fillSalesPartnerEmailTemplateStep(uniqueSuffix: string) {

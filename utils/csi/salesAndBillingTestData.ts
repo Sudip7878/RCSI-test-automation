@@ -125,6 +125,21 @@ export function csiSalesPartnerContactEmail(): string {
   return salesAndBilling.salesPartnerDefaults.salesPartnerContactEmail;
 }
 
+export const SB017_VALID_DOMAIN = 'partner.avotech.com';
+
+export const SB017_DOMAIN_CASES = [
+  {
+    title: 'accepts a valid FQDN',
+    domain: SB017_VALID_DOMAIN,
+    expectsValidationMessage: false,
+  },
+  {
+    title: 'requires a domain when empty',
+    domain: '',
+    expectsValidationMessage: true,
+  },
+] as const;
+
 const SB067_DEFAULT_ORG_A_SALES_ORDER_ID = 144;
 
 /** SB-067: Org A sales order id for cross-org leak check (`CSI_ORG_A_SALES_ORDER_ID`; default 144). */
