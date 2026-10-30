@@ -71,6 +71,7 @@ export class CsiSalesAndBillingPage extends BasePage {
 
   readonly packageNameInput = this.page.getByRole('textbox', { name: 'Package Name*' });
   readonly packageDescriptionInput = this.page.getByRole('textbox', { name: /description/i });
+  readonly packageModuleCheckboxes = this.page.getByRole('grid').getByRole('checkbox');
 
   readonly salesPartnerDropdown = this.page.getByText('Select Sales Partner');
   readonly avotechSalesPartnerOption = this.page.getByRole('option', { name: 'Avotech' });
