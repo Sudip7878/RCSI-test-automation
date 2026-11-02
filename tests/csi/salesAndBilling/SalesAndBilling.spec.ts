@@ -103,27 +103,27 @@ test.describe('CSI · Sales and Billing', () => {
       });
     });
 
-    test('SB-003 Create package with no modules selected', async ({
-      csiSalesAndBillingPage,
-    }) => {
-      const packageName = csiUniquePackageName('SB-003-');
+    test.describe('SB-003 Create package with no modules selected', () => {
+      test('SB-003', async ({ csiSalesAndBillingPage }) => {
+        const packageName = csiUniquePackageName('SB-003-');
 
-      await csiSalesAndBillingPage.openSalesAndBilling();
-      await csiSalesAndBillingPage.openPackageManagement();
-      await csiSalesAndBillingPage.clickAddPackage();
-      await csiSalesAndBillingPage.selectSalesPartnerAvotech();
+        await csiSalesAndBillingPage.openSalesAndBilling();
+        await csiSalesAndBillingPage.openPackageManagement();
+        await csiSalesAndBillingPage.clickAddPackage();
+        await csiSalesAndBillingPage.selectSalesPartnerAvotech();
 
-      await csiSalesAndBillingPage.fillPackageDetails(packageName, csiPackageDescription());
+        await csiSalesAndBillingPage.fillPackageDetails(packageName, csiPackageDescription());
 
-      const moduleCheckboxes = csiSalesAndBillingPage.packageModuleCheckboxes;
-      const checkboxCount = await moduleCheckboxes.count();
-      expect(checkboxCount).toBeGreaterThan(0);
+        const moduleCheckboxes = csiSalesAndBillingPage.packageModuleCheckboxes;
+        const checkboxCount = await moduleCheckboxes.count();
+        expect(checkboxCount).toBeGreaterThan(0);
 
-      for (const checkbox of await moduleCheckboxes.all()) {
-        await expect(checkbox).not.toBeChecked();
-      }
+        for (const checkbox of await moduleCheckboxes.all()) {
+          await expect(checkbox).not.toBeChecked();
+        }
 
-      await expect(csiSalesAndBillingPage.submitButton).toBeDisabled();
+        await expect(csiSalesAndBillingPage.submitButton).toBeDisabled();
+      });
     });
 
     test.describe('SB-004 create package with duplicate name', () => {
