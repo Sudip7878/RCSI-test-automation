@@ -26,6 +26,7 @@ import {
   SB015_SVG_SCRIPT_MARKER,
   SB015_VALID_FALLBACK_LOGO,
   SB017_DOMAIN_CASES,
+  SB018_EMAIL_BRANDING_CASES,
   csiExistingBillingPartnerNameForSb027,
   csiOrgASalesOrderIdForSb067,
   csiUniqueBillingPartnerName,
@@ -224,6 +225,33 @@ test.describe('CSI · Sales and Billing', () => {
       for (const { title, domain, expectsValidationMessage } of SB017_DOMAIN_CASES) {
         test(`SB-017 ${title}`, async ({ csiSalesAndBillingPage }) => {
           await csiSalesAndBillingPage.fillSalesPartnerBasicInformationSb017(domain);
+          await csiSalesAndBillingPage.clickNextOnAddSalesPartnerWizard();
+          await csiSalesAndBillingPage.expectSalesPartnerEmptyFieldValidationMessage(
+            expectsValidationMessage,
+          );
+        });
+      }
+    });
+
+    test.describe('SB-018 White-label — email branding with invalid sender', () => {
+      for (const {title,senderName,replyToEmail,expectsValidationMessage} of SB018_EMAIL_BRANDING_CASES) {
+        test(`SB-018 ${title}`, async ({ csiSalesAndBillingPage }) => {
+          const uniqueSuffix = csiUniqueTimestampSuffix();
+          const partnerName = `${csiUniqueSalesPartnerName()}_SB018`;
+
+          await csiSalesAndBillingPage.openSalesPartnerList();
+          await csiSalesAndBillingPage.clickAddSalesPartner();
+          await csiSalesAndBillingPage.fillSalesPartnerBasicInformation({
+            partnerName,
+            domain: csiSalesPartnerDomain(),
+            s3BucketName: csiSalesPartnerS3BucketName(),
+            s3BucketUrl: csiSalesPartnerS3BucketUrl(),
+            sendgridSenderName: senderName,
+            sendgridReplyToEmail: replyToEmail,
+            salesPartnerContactEmail: csiSalesPartnerContactEmail(),
+            subdomainExampleHost: `sb018-${uniqueSuffix}.com`,
+          });
+
           await csiSalesAndBillingPage.clickNextOnAddSalesPartnerWizard();
           await csiSalesAndBillingPage.expectSalesPartnerEmptyFieldValidationMessage(
             expectsValidationMessage,
