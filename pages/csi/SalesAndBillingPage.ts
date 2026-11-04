@@ -283,6 +283,39 @@ export class CsiSalesAndBillingPage extends BasePage {
     }
   }
 
+  async selectOptionByTriggerText(
+    triggerText: string,
+    optionName: string,
+    maxAttempts = 4,
+  ) {
+    const trigger = this.salesOrderFieldTrigger(triggerText);
+    const option = this.page.getByRole('listbox').getByRole('option', {
+      name: optionName,
+      exact: true,
+    });
+    await this.waitForElement(trigger);
+
+    let lastError: unknown;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      await this.waitForSalesOrderDropdownToSettle();
+      await trigger.click();
+
+      try {
+        await expect(option).toBeVisible({ timeout: 15_000 });
+        await option.click();
+        return;
+      } catch (error) {
+        lastError = error;
+        if (attempt === maxAttempts - 1) {
+          throw lastError;
+        }
+        await this.page.keyboard.press('Escape').catch(() => {});
+        await this.safeSleep(500);
+      }
+    }
+  }
+
   /**
    * AM-009: search Client Name for the organization created in the same flow.
    * Separate from {@link selectLastOptionByTriggerText}; uses the same dropdown settle as SB-046.
@@ -344,6 +377,36 @@ export class CsiSalesAndBillingPage extends BasePage {
 
   async selectFirstBillingPartnerOption(maxAttempts = 1) {
     await this.selectFirstOptionByTriggerText('Select Billing Partner', maxAttempts);
+  }
+
+  async expectNoBillingPartnerForSearch(searchTerm: string, maxAttempts = 4) {
+    const trigger = this.salesOrderFieldTrigger('Select Billing Partner');
+    await this.waitForElement(trigger);
+
+    let lastError: unknown;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      await this.waitForSalesOrderDropdownToSettle();
+      await trigger.click();
+
+      try {
+        const searchInput = this.page.locator('input[placeholder*="Search" i]:visible').last();
+        await expect(searchInput).toBeVisible({ timeout: 15_000 });
+        await searchInput.fill(searchTerm);
+        await expect(this.page.locator('.vscomp-no-search-results:visible').last()).toHaveText(
+          'No Result Found',
+          { timeout: 15_000 },
+        );
+        return;
+      } catch (error) {
+        lastError = error;
+        if (attempt === maxAttempts - 1) {
+          throw lastError;
+        }
+        await this.page.keyboard.press('Escape').catch(() => {});
+        await this.safeSleep(500);
+      }
+    }
   }
 
   /** AM-009: Billing Partner listbox is portaled; pick the first option from the open listbox. */
@@ -756,10 +819,10 @@ export class CsiSalesAndBillingPage extends BasePage {
   }
 
   /**
-   * SB-024: fill the Add Billing Partner form assigning to multiple Sales Partners.
+   * Fill the Add Billing Partner form with the specified Sales Partners.
    * Differs from fillAddBillingPartnerForm only in the Sales Partner selection step.
    */
-  async fillAddBillingPartnerFormSb024(
+  async fillAddBillingPartnerFormWithSalesPartners(
     billingPartnerName: string,
     email: string,
     salesPartners: readonly string[],
