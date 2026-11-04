@@ -140,6 +140,21 @@ export const SB017_DOMAIN_CASES = [
   },
 ] as const;
 
+export const SB018_EMAIL_BRANDING_CASES = [
+  {
+    title: 'rejects an empty sender name',
+    senderName: '',
+    replyToEmail: csiSalesPartnerSendgridReplyToEmail(),
+    expectsValidationMessage: true,
+  },
+  {
+    title: 'accepts an XSS payload in the reply-to field without validation errors',
+    senderName: csiSalesPartnerSendgridSenderName(),
+    replyToEmail: '<img src=x onerror="window.__sb018XssExecuted=true">Footer',
+    expectsValidationMessage: false,
+  },
+] as const;
+
 const SB067_DEFAULT_ORG_A_SALES_ORDER_ID = 144;
 
 /** SB-067: Org A sales order id for cross-org leak check (`CSI_ORG_A_SALES_ORDER_ID`; default 144). */
