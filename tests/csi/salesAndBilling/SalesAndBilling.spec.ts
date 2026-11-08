@@ -278,10 +278,9 @@ test.describe('CSI · Sales and Billing', () => {
 
         await csiSalesAndBillingPage.openBillingPartnerList();
         await csiSalesAndBillingPage.clickAddBillingPartner();
-        await csiSalesAndBillingPage.fillAddBillingPartnerFormWithSalesPartners(
+        await csiSalesAndBillingPage.fillAddBillingPartnerFormWithoutSalesPartner(
           billingPartnerName,
           csiTestEmail(),
-          [],
         );
 
         await expect(csiSalesAndBillingPage.submitButton).toBeDisabled();
@@ -294,7 +293,7 @@ test.describe('CSI · Sales and Billing', () => {
 
         await csiSalesAndBillingPage.openBillingPartnerList();
         await csiSalesAndBillingPage.clickAddBillingPartner();
-        await csiSalesAndBillingPage.fillAddBillingPartnerFormWithSalesPartners(
+        await csiSalesAndBillingPage.fillAddBillingPartnerFormSb024(
           billingPartnerName,
           csiTestEmail(),
           SB024_SALES_PARTNERS,
@@ -448,6 +447,40 @@ test.describe('CSI · Sales and Billing', () => {
           'z',
           salesOrderDropdownMaxAttempts,
         );
+      });
+    });
+
+    test.describe('SB-054 Sales Order — select client not linked to Sales Partner', () => {
+      test('SB-054', async ({ csiSalesAndBillingPage }) => {
+        const duration = csiSalesOrderDuration();
+        const unitsPerModule = csiSalesOrderUnitsPerModule();
+        const salesOrderDropdownMaxAttempts = 4;
+        const salesOrderDatePickerMaxAttempts = 4;
+
+        await csiSalesAndBillingPage.openSalesAndBilling();
+        await csiSalesAndBillingPage.openSalesOrder();
+        await csiSalesAndBillingPage.clickAddSalesOrder();
+        await csiSalesAndBillingPage.selectOptionByTriggerText(
+          'Select Sales Partner',
+          'Avotech',
+          salesOrderDropdownMaxAttempts,
+        );
+        await csiSalesAndBillingPage.selectSalesOrderClientByOrganizationNameForAm009(
+          'Ricoh Test',
+          salesOrderDropdownMaxAttempts,
+        );
+        await csiSalesAndBillingPage.selectFirstBillingPartnerOption(salesOrderDropdownMaxAttempts);
+        await csiSalesAndBillingPage.selectFirstOptionByTriggerText(
+          'Select Package Type',
+          salesOrderDropdownMaxAttempts,
+        );
+        await csiSalesAndBillingPage.pickTodaySalesStartDate(salesOrderDatePickerMaxAttempts);
+        await csiSalesAndBillingPage.fillSalesOrderDuration(duration);
+        await csiSalesAndBillingPage.selectFirstBillingMode();
+        await csiSalesAndBillingPage.selectAllSalesOrderModulesAndSetUnits(unitsPerModule);
+        await csiSalesAndBillingPage.continueSalesOrderToReview();
+        await csiSalesAndBillingPage.submitPackage();
+        await csiSalesAndBillingPage.expectSalesOrderCreated();
       });
     });
 
