@@ -272,13 +272,29 @@ test.describe('CSI · Sales and Billing', () => {
       });
     });
 
+    test.describe('SB-023 Create Billing Partner with no Sales Partner linked', () => {
+      test('SB-023', async ({ csiSalesAndBillingPage }) => {
+        const billingPartnerName = csiUniqueBillingPartnerName();
+
+        await csiSalesAndBillingPage.openBillingPartnerList();
+        await csiSalesAndBillingPage.clickAddBillingPartner();
+        await csiSalesAndBillingPage.fillAddBillingPartnerFormWithSalesPartners(
+          billingPartnerName,
+          csiTestEmail(),
+          [],
+        );
+
+        await expect(csiSalesAndBillingPage.submitButton).toBeDisabled();
+      });
+    });
+
     test.describe('SB-024 assign 1 billing partner to multiple sales partners', () => {
       test('SB-024', async ({ csiSalesAndBillingPage }) => {
         const billingPartnerName = csiUniqueBillingPartnerName();
 
         await csiSalesAndBillingPage.openBillingPartnerList();
         await csiSalesAndBillingPage.clickAddBillingPartner();
-        await csiSalesAndBillingPage.fillAddBillingPartnerFormSb024(
+        await csiSalesAndBillingPage.fillAddBillingPartnerFormWithSalesPartners(
           billingPartnerName,
           csiTestEmail(),
           SB024_SALES_PARTNERS,
@@ -409,6 +425,29 @@ test.describe('CSI · Sales and Billing', () => {
         await csiSalesAndBillingPage.continueSalesOrderToReview();
         await csiSalesAndBillingPage.submitPackage();
         await csiSalesAndBillingPage.expectSalesOrderCreated();
+      });
+    });
+
+    test.describe('SB-048 Sales Order — select Billing Partner not linked to Sales Partner', () => {
+      test('SB-048', async ({ csiSalesAndBillingPage }) => {
+        const salesOrderDropdownMaxAttempts = 4;
+
+        await csiSalesAndBillingPage.openSalesAndBilling();
+        await csiSalesAndBillingPage.openSalesOrder();
+        await csiSalesAndBillingPage.clickAddSalesOrder();
+        await csiSalesAndBillingPage.selectLastOptionByTriggerText(
+          'Select Client',
+          salesOrderDropdownMaxAttempts,
+        );
+        await csiSalesAndBillingPage.selectOptionByTriggerText(
+          'Select Sales Partner',
+          'Asia Insurance',
+          salesOrderDropdownMaxAttempts,
+        );
+        await csiSalesAndBillingPage.expectNoBillingPartnerForSearch(
+          'z',
+          salesOrderDropdownMaxAttempts,
+        );
       });
     });
 
