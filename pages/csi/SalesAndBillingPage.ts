@@ -390,7 +390,7 @@ export class CsiSalesAndBillingPage extends BasePage {
       await trigger.click();
 
       try {
-        const searchInput = this.page.locator('input[placeholder*="Search" i]:visible').last();
+        const searchInput = this.page.getByPlaceholder(/Search/i).filter({ visible: true }).last();
         await expect(searchInput).toBeVisible({ timeout: 15_000 });
         await searchInput.fill(searchTerm);
         await expect(this.page.locator('.vscomp-no-search-results:visible').last()).toHaveText(
@@ -773,6 +773,28 @@ export class CsiSalesAndBillingPage extends BasePage {
     await addressInput.fill('Test Address');
   }
 
+  /** SB-023: fill required Billing Partner details without selecting a Sales Partner. */
+  async fillAddBillingPartnerFormWithoutSalesPartner(
+    billingPartnerName: string,
+    email: string,
+  ) {
+    await this.billingPartnerNameInput.click();
+    await this.billingPartnerNameInput.fill(billingPartnerName);
+
+    const emailInput = this.page.getByRole('textbox', { name: 'Email*' });
+    await emailInput.click();
+    await emailInput.fill(email);
+
+    await this.selectVirtualSelectOption(
+      'Select Payment Method',
+      SB027_BILLING_PARTNER_PAYMENT_METHOD_OPTION,
+    );
+
+    const addressInput = this.page.getByRole('textbox', { name: 'Address*' });
+    await addressInput.click();
+    await addressInput.fill('Test Address');
+  }
+
   /** SB-022: successful creation must redirect back to BillingPartnerList with a success message. */
   async expectBillingPartnerCreated() {
     await expect(
@@ -819,10 +841,10 @@ export class CsiSalesAndBillingPage extends BasePage {
   }
 
   /**
-   * Fill the Add Billing Partner form with the specified Sales Partners.
+   * SB-024: fill the Add Billing Partner form assigning to multiple Sales Partners.
    * Differs from fillAddBillingPartnerForm only in the Sales Partner selection step.
    */
-  async fillAddBillingPartnerFormWithSalesPartners(
+  async fillAddBillingPartnerFormSb024(
     billingPartnerName: string,
     email: string,
     salesPartners: readonly string[],

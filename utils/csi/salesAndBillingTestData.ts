@@ -179,6 +179,9 @@ export const SB067_NO_PERMISSION_MESSAGE_TIMEOUT_MS = 5_000;
  */
 export const SB024_SALES_PARTNERS = ['Avotech', 'Ricoh'] as const;
 
+/** SB-054: existing client not linked to the selected Sales Partner. */
+export const SB054_CLIENT_NAME = 'Ricoh Test';
+
 /** SB-022: unique billing partner name prefix; suffix is timestamp-based to avoid collisions. */
 const SB022_BILLING_PARTNER_NAME_PREFIX = 'Billing Test ';
 
