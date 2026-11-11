@@ -27,6 +27,7 @@ import {
   SB015_VALID_FALLBACK_LOGO,
   SB017_DOMAIN_CASES,
   SB018_EMAIL_BRANDING_CASES,
+  SB054_CLIENT_NAME,
   csiExistingBillingPartnerNameForSb027,
   csiOrgASalesOrderIdForSb067,
   csiUniqueBillingPartnerName,
@@ -466,7 +467,7 @@ test.describe('CSI · Sales and Billing', () => {
           salesOrderDropdownMaxAttempts,
         );
         await csiSalesAndBillingPage.selectSalesOrderClientByOrganizationNameForAm009(
-          'Ricoh Test',
+          SB054_CLIENT_NAME,
           salesOrderDropdownMaxAttempts,
         );
         await csiSalesAndBillingPage.selectFirstBillingPartnerOption(salesOrderDropdownMaxAttempts);
