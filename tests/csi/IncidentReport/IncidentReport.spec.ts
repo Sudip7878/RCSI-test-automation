@@ -3,6 +3,8 @@ import { test } from '../../../fixtures/csi/testSetup';
 import {
   csiIncidentReporterTestEmail,
   csiIncidentReporterTestPassword,
+  csiIncidentReporterOnlyTestEmail,
+  csiIncidentReporterOnlyTestPassword,
   csiOrgAIncidentReporterTestEmail,
   csiOrgAIncidentReporterTestPassword,
   csiOrgBIncidentReporterTestEmail,
@@ -152,7 +154,7 @@ test.describe('CSI · Incident Report', () => {
 
       await csiLoginPage.signInWithEmailAndPassword(reporterEmail, reporterPassword);
       await csiLoginPage.expectOnHome();
-      await csiIncidentReportPage.expectDashboardIncidentHandlerAndStatus(
+      await csiIncidentReportPage.expectDIRashboardIncidentHandlerAndStatus(
         caseId,
         handlerDisplayName,
         'UNDER ASSESMENT',
@@ -334,6 +336,46 @@ test.describe('CSI · Incident Report', () => {
     test('IR-017', async ({ csiIncidentReportPage }) => {
       await csiIncidentReportPage.clickIncidentResponseAndExpectBlackpandaAuthRedirectNoPhoneNumber();
     });
+  });
+});
+
+test.describe("IR-015 — Customer cannot modify IR Partner's comments", () => {
+  test.describe.configure({ timeout: 300_000 });
+
+  test('IR-015', async ({ csiLoginPage, csiIncidentReportPage }) => {
+    if (
+      !process.env.CSI_TEST_EMAIL?.trim()?.length ||
+      !process.env.CSI_TEST_PASSWORD?.length ||
+      !process.env.CSI_INCIDENT_REPORTER_ONLY_TEST_EMAIL?.trim()?.length ||
+      !process.env.CSI_INCIDENT_REPORTER_ONLY_TEST_PASSWORD?.length
+    ) {
+      test.skip();
+      return;
+    }
+
+    const reporterOnlyEmail = csiIncidentReporterOnlyTestEmail();
+    const reporterOnlyPassword = csiIncidentReporterOnlyTestPassword();
+    const commentText = `Comment Test ${Date.now()}`;
+    const reporterName = 'Dax Manning196';
+
+    await csiLoginPage.gotoLogin();
+    await csiLoginPage.signInWithEmailAndPassword(csiTestEmail(), csiTestPassword());
+    await csiLoginPage.expectOnHome();
+    await csiIncidentReportPage.openIncidentResponseFromSidebar();
+    await csiIncidentReportPage.openDashboard();
+    const caseId = await csiIncidentReportPage.openIncidentDetailsForReporterName(reporterName);
+    await csiIncidentReportPage.postDetailComment(commentText);
+    await csiIncidentReportPage.expectDetailViewShowsCommentText(commentText);
+
+    await csiLoginPage.logoutViaHeaderMenu();
+    await csiLoginPage.expectEmailStepVisible();
+    await csiLoginPage.gotoLogin();
+    await csiLoginPage.signInWithEmailAndPassword(reporterOnlyEmail, reporterOnlyPassword);
+    await csiLoginPage.expectOnHome();
+    await csiIncidentReportPage.openIncidentResponseFromSidebar();
+    await csiIncidentReportPage.openDashboard();
+    await csiIncidentReportPage.openIncidentDetailsForCaseId(caseId);
+    await csiIncidentReportPage.expectDetailCommentNotEditable(commentText);
   });
 });
 

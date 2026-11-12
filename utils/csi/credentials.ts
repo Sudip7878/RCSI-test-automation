@@ -299,6 +299,24 @@ export function csiIncidentReporterTestPassword(): string {
   return p;
 }
 
+/** IR-015: incident reporter account that must not edit another user's comment. */
+export function csiIncidentReporterOnlyTestEmail(): string {
+  const e = process.env.CSI_INCIDENT_REPORTER_ONLY_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_INCIDENT_REPORTER_ONLY_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiIncidentReporterOnlyTestEmail}. */
+export function csiIncidentReporterOnlyTestPassword(): string {
+  const p = process.env.CSI_INCIDENT_REPORTER_ONLY_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_INCIDENT_REPORTER_ONLY_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
 /** `CSI_SYSTEM_OWNER_TEST_EMAIL` — used to assign roles on user list (IR-001). */
 export function csiSystemOwnerTestEmail(): string {
   const e = process.env.CSI_SYSTEM_OWNER_TEST_EMAIL?.trim();
