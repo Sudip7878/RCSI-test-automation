@@ -326,8 +326,8 @@ export class CsiIncidentReportPage extends BasePage {
     await this.ensureIncidentDetailView();
   }
 
-  /** IR-015: scan Reporter column pages, optionally restricting to a previously found CaseId. */
-  async openIncidentDetailsForReporterName(reporterName: string, expectedCaseId?: string): Promise<string> {
+  /** IR-015: scan dashboard pages and return the CaseId for a matching Reporter. */
+  async findIncidentReportCaseIdByReporterName(reporterName: string): Promise<string> {
     const grid = this.incidentDashboardGrid();
     await expect(grid).toBeVisible({ timeout: 60_000 });
 
@@ -349,9 +349,7 @@ export class CsiIncidentReportPage extends BasePage {
 
         const rowReporter = (await cells.nth(reporterColumn).innerText()).trim();
         const caseId = (await cells.nth(caseIdColumn).innerText()).trim();
-        if (rowReporter === reporterName && (!expectedCaseId || caseId === expectedCaseId)) {
-          await row.getByRole('button', { name: 'See Details' }).click();
-          await this.ensureIncidentDetailView();
+        if (rowReporter === reporterName) {
           return caseId;
         }
       }
@@ -374,10 +372,7 @@ export class CsiIncidentReportPage extends BasePage {
       }).toPass({ timeout: 30_000 });
     }
 
-    const target = expectedCaseId
-      ? `Reporter "${reporterName}" with CaseId "${expectedCaseId}"`
-      : `Reporter "${reporterName}"`;
-    throw new Error(`IR-015: could not find ${target} in the incident report grid`);
+    throw new Error(`IR-015: could not find Reporter "${reporterName}" in the incident report grid`);
   }
 
   /**

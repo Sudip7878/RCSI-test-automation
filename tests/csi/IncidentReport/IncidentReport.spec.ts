@@ -31,6 +31,7 @@ import {
   CSI_INCIDENT_STATUS_TRANSITIONS_IR013,
   parseTestIncidentDescriptionSuffix,
 } from '../../../utils/csi/incidentReportTestData';
+import { csiUniqueTimestampSuffix } from '../../../utils/csi/salesAndBillingTestData';
 
 test.describe('CSI · Incident Report', () => {
   test.describe.configure({ timeout: 180_000 });
@@ -154,7 +155,7 @@ test.describe('CSI · Incident Report', () => {
 
       await csiLoginPage.signInWithEmailAndPassword(reporterEmail, reporterPassword);
       await csiLoginPage.expectOnHome();
-      await csiIncidentReportPage.expectDIRashboardIncidentHandlerAndStatus(
+      await csiIncidentReportPage.expectDashboardIncidentHandlerAndStatus(
         caseId,
         handlerDisplayName,
         'UNDER ASSESMENT',
@@ -343,27 +344,28 @@ test.describe("IR-015 — Customer cannot modify IR Partner's comments", () => {
   test.describe.configure({ timeout: 300_000 });
 
   test('IR-015', async ({ csiLoginPage, csiIncidentReportPage }) => {
+    const reporterName = process.env.CSI_IR015_REPORTER_NAME?.trim();
     if (
       !process.env.CSI_TEST_EMAIL?.trim()?.length ||
       !process.env.CSI_TEST_PASSWORD?.length ||
       !process.env.CSI_INCIDENT_REPORTER_ONLY_TEST_EMAIL?.trim()?.length ||
-      !process.env.CSI_INCIDENT_REPORTER_ONLY_TEST_PASSWORD?.length
+      !process.env.CSI_INCIDENT_REPORTER_ONLY_TEST_PASSWORD?.length ||
+      !reporterName
     ) {
       test.skip();
       return;
     }
-
     const reporterOnlyEmail = csiIncidentReporterOnlyTestEmail();
     const reporterOnlyPassword = csiIncidentReporterOnlyTestPassword();
-    const commentText = `Comment Test ${Date.now()}`;
-    const reporterName = 'Dax Manning196';
+    const commentText = `Comment Test ${csiUniqueTimestampSuffix()}`;
 
     await csiLoginPage.gotoLogin();
     await csiLoginPage.signInWithEmailAndPassword(csiTestEmail(), csiTestPassword());
     await csiLoginPage.expectOnHome();
     await csiIncidentReportPage.openIncidentResponseFromSidebar();
     await csiIncidentReportPage.openDashboard();
-    const caseId = await csiIncidentReportPage.openIncidentDetailsForReporterName(reporterName);
+    const caseId = await csiIncidentReportPage.findIncidentReportCaseIdByReporterName(reporterName);
+    await csiIncidentReportPage.openIncidentDetailsForCaseId(caseId);
     await csiIncidentReportPage.postDetailComment(commentText);
     await csiIncidentReportPage.expectDetailViewShowsCommentText(commentText);
 
