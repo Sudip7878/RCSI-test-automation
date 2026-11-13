@@ -317,6 +317,24 @@ export function csiIncidentReporterOnlyTestPassword(): string {
   return p;
 }
 
+/** IR-018: Ricoh incident reporter (`CSI_RICOH_INCIDENT_REPORTER_TEST_EMAIL`). */
+export function csiRicohIncidentReporterTestEmail(): string {
+  const e = process.env.CSI_RICOH_INCIDENT_REPORTER_TEST_EMAIL?.trim();
+  if (e == null || e.length === 0) {
+    throw new Error('Set CSI_RICOH_INCIDENT_REPORTER_TEST_EMAIL in the environment (see .env.example).');
+  }
+  return e;
+}
+
+/** Paired with {@link csiRicohIncidentReporterTestEmail}. */
+export function csiRicohIncidentReporterTestPassword(): string {
+  const p = process.env.CSI_RICOH_INCIDENT_REPORTER_TEST_PASSWORD;
+  if (p == null || p.length === 0) {
+    throw new Error('Set CSI_RICOH_INCIDENT_REPORTER_TEST_PASSWORD in the environment (see .env.example).');
+  }
+  return p;
+}
+
 /** `CSI_SYSTEM_OWNER_TEST_EMAIL` — used to assign roles on user list (IR-001). */
 export function csiSystemOwnerTestEmail(): string {
   const e = process.env.CSI_SYSTEM_OWNER_TEST_EMAIL?.trim();

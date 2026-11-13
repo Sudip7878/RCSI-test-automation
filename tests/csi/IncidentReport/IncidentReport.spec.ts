@@ -9,6 +9,8 @@ import {
   csiOrgAIncidentReporterTestPassword,
   csiOrgBIncidentReporterTestEmail,
   csiOrgBIncidentReporterTestPassword,
+  csiRicohIncidentReporterTestEmail,
+  csiRicohIncidentReporterTestPassword,
   csiPenetrationTesterTestEmail,
   csiPenetrationTesterTestPassword,
   csiRicohOrgOwnerTestEmail,
@@ -336,6 +338,26 @@ test.describe('CSI · Incident Report', () => {
 
     test('IR-017', async ({ csiIncidentReportPage }) => {
       await csiIncidentReportPage.clickIncidentResponseAndExpectBlackpandaAuthRedirectNoPhoneNumber();
+    });
+  });
+
+  test.describe('IR-018 — redirect URL uses HTTPS and has no internal data leakage', () => {
+    test.describe.configure({ timeout: 180_000 });
+
+    test('IR-018', async ({ csiLoginPage, csiIncidentReportPage }) => {
+      if (
+        !process.env.CSI_RICOH_INCIDENT_REPORTER_TEST_EMAIL?.trim()?.length ||
+        !process.env.CSI_RICOH_INCIDENT_REPORTER_TEST_PASSWORD?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      const email = csiRicohIncidentReporterTestEmail();
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(email, csiRicohIncidentReporterTestPassword());
+      await csiLoginPage.expectOnHome();
+      await csiIncidentReportPage.clickIncidentResponseAndExpectSecureRedirect(email);
     });
   });
 });

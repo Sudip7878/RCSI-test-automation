@@ -231,6 +231,92 @@ export class CsiIncidentReportPage extends BasePage {
     await expect(authPage.getByText('Phone number', { exact: true })).not.toBeVisible({ timeout: 1_000 });
   }
 
+  /** IR-018: verify Incident Response redirects securely without exposing internal identifiers. */
+  async clickIncidentResponseAndExpectSecureRedirect(internalEmail: string) {
+    const link = this.page.getByRole('link', { name: 'Incident Response' });
+    await expect(link).toBeVisible({ timeout: 60_000 });
+
+    const context = this.page.context();
+    const authRequests: Array<Promise<{ url: URL; headers: Record<string, string> }>> = [];
+    const onRequest = (request: import('@playwright/test').Request) => {
+      const requestUrl = new URL(request.url());
+      if (requestUrl.hostname === CSI_BLACKPANDA_AUTH_HOST) {
+        authRequests.push(request.allHeaders().then((headers) => ({ url: requestUrl, headers })));
+      }
+    };
+
+    context.on('request', onRequest);
+    try {
+      const popupPromise = context.waitForEvent('page', { timeout: 10_000 }).catch(() => null);
+      await link.click();
+      const popup = await popupPromise;
+      const authPage = popup ?? this.page;
+
+      await authPage.waitForURL(
+        (url) => {
+          try {
+            return url.hostname === CSI_BLACKPANDA_AUTH_HOST;
+          } catch {
+            return false;
+          }
+        },
+        { timeout: 120_000, waitUntil: 'domcontentloaded' },
+      );
+
+      const finalUrl = new URL(authPage.url());
+      expect(finalUrl.protocol).toBe('https:');
+
+      const requests = await Promise.all(authRequests);
+      expect(requests.length).toBeGreaterThan(0);
+
+      const forbiddenIdentifier = /(?:^|[^a-z0-9])(?:org|user)[_-]?id(?:$|[^a-z0-9])/i;
+      const internalMarkers = [
+        { label: 'reporter email', value: internalEmail.toLowerCase() },
+        { label: 'CSI hostname', value: new URL(CSI_BASE_URL).hostname.toLowerCase() },
+      ];
+      const violations: string[] = [];
+
+      const checkUrl = (url: URL, label: string) => {
+        if (url.protocol !== 'https:') {
+          violations.push(`${label}: non-HTTPS URL`);
+        }
+        for (const [name, value] of url.searchParams) {
+          if (forbiddenIdentifier.test(name) || forbiddenIdentifier.test(value)) {
+            violations.push(`${label}: internal identifier in query`);
+          }
+          const internalMarker = internalMarkers.find((marker) =>
+            `${name}=${value}`.toLowerCase().includes(marker.value),
+          );
+          if (internalMarker) {
+            violations.push(`${label}: ${internalMarker.label} in query`);
+          }
+        }
+      };
+
+      checkUrl(finalUrl, 'redirect URL');
+      for (const [index, request] of requests.entries()) {
+        checkUrl(request.url, `redirect request ${index + 1}`);
+        for (const [name, value] of Object.entries(request.headers)) {
+          if (forbiddenIdentifier.test(name) || forbiddenIdentifier.test(value)) {
+            violations.push(`redirect request ${index + 1}: internal identifier in header`);
+          }
+          const internalMarker = internalMarkers.find((marker) =>
+            `${name}=${value}`.toLowerCase().includes(marker.value),
+          );
+          if (internalMarker) {
+            violations.push(
+              `redirect request ${index + 1}: ${internalMarker.label} in header "${name}"`,
+            );
+          }
+        }
+      }
+
+      expect(violations).toEqual([]);
+    } finally {
+      context.off('request', onRequest);
+    }
+  }
+
   async startNewIncidentForm() {
     await expect(this.addNewIncidentButton).toBeVisible();
     await this.addNewIncidentButton.click();
