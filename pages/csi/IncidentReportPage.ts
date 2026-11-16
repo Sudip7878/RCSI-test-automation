@@ -414,6 +414,36 @@ export class CsiIncidentReportPage extends BasePage {
     await this.ensureIncidentDetailView();
   }
 
+  /** IR-020: open the first listed incident detail and capture its URL for access checks. */
+  async openFirstIncidentDetailsAndCaptureUrl(): Promise<string> {
+    const grid = this.incidentDashboardGrid();
+    await expect(grid).toBeVisible({ timeout: 60_000 });
+
+    const rows = await grid.getByRole('row').all();
+    for (const row of rows) {
+      const seeDetails = row.getByRole('button', { name: 'See Details' });
+      if (await seeDetails.isVisible().catch(() => false)) {
+        await seeDetails.click();
+        await this.ensureIncidentDetailView();
+        return this.page.url();
+      }
+    }
+
+    throw new Error('IR-020: no incident report with a See Details action was found');
+  }
+
+  /** IR-020: revisit a previously captured incident detail URL under another account. */
+  async openIncidentReportDetailUrl(detailUrl: string) {
+    const target = new URL(detailUrl);
+    const app = new URL(CSI_BASE_URL);
+    if (target.origin !== app.origin || target.pathname !== CSI_INCIDENT_REPORT_DETAIL_PATH) {
+      throw new Error('IR-020: captured URL is not an Incident Report detail URL on this CSI instance');
+    }
+
+    await this.page.goto(target.toString());
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
   /** IR-015: scan dashboard pages and return the CaseId for a matching Reporter. */
   async findIncidentReportCaseIdByReporterName(reporterName: string): Promise<string> {
     const grid = this.incidentDashboardGrid();

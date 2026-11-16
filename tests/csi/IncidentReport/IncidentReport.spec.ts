@@ -447,4 +447,39 @@ test.describe('CSI · Incident Report — org incident report isolation', () => 
       await csiIncidentReportPage.expectIncidentReportDetailNoPermissionMessage();
     });
   });
+
+  test.describe('IR-020 IR Partner can only see assigned org tickets', () => {
+    test('IR-020', async ({ csiLoginPage, csiIncidentReportPage }) => {
+      if (
+        !process.env.CSI_INCIDENT_REPORTER_ONLY_TEST_EMAIL?.trim()?.length ||
+        !process.env.CSI_INCIDENT_REPORTER_ONLY_TEST_PASSWORD?.length ||
+        !process.env.CSI_ORG_B_INCIDNET_REPORTER_TEST_EMAIL?.trim()?.length ||
+        !process.env.CSI_ORG_B_INCIDNET_REPORTER_TEST_PASSWORD?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiIncidentReporterOnlyTestEmail(),
+        csiIncidentReporterOnlyTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+      await csiIncidentReportPage.openIncidentResponseFromSidebar();
+      await csiIncidentReportPage.openDashboard();
+      const detailUrl = await csiIncidentReportPage.openFirstIncidentDetailsAndCaptureUrl();
+
+      await csiLoginPage.logoutViaHeaderMenu();
+      await csiLoginPage.expectEmailStepVisible();
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiOrgBIncidentReporterTestEmail(),
+        csiOrgBIncidentReporterTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+      await csiIncidentReportPage.openIncidentReportDetailUrl(detailUrl);
+      await csiIncidentReportPage.expectIncidentReportDetailNoPermissionMessage();
+    });
+  });
 });
