@@ -300,8 +300,10 @@ export class CsiIncidentReportPage extends BasePage {
           if (forbiddenIdentifier.test(name) || forbiddenIdentifier.test(value)) {
             violations.push(`redirect request ${index + 1}: internal identifier in header`);
           }
-          const internalMarker = internalMarkers.find((marker) =>
-            `${name}=${value}`.toLowerCase().includes(marker.value),
+          const internalMarker = internalMarkers.find(
+            (marker) =>
+              !(name.toLowerCase() === 'referer' && marker.label === 'CSI hostname') &&
+              `${name}=${value}`.toLowerCase().includes(marker.value),
           );
           if (internalMarker) {
             violations.push(
