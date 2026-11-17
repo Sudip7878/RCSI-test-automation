@@ -48,8 +48,8 @@ export class CsiIncidentReportPage extends BasePage {
     return this.page.getByRole('tabpanel', { name: 'Comment' });
   }
 
-  private async revealCommentIfOlder(commentText: string) {
-    const comment = this.commentTabPanel().getByText(commentText, { exact: true });
+  private async revealCommentIfOlder(commentText: string, exact = true) {
+    const comment = this.commentTabPanel().getByText(commentText, { exact });
     const showOlderComments = this.commentTabPanel().getByRole('link', {
       name: 'Show older comments',
       exact: true,
@@ -630,6 +630,101 @@ export class CsiIncidentReportPage extends BasePage {
     await expect(this.page.getByText('Comment added successfully!', { exact: true })).toBeVisible({
       timeout: 60_000,
     });
+  }
+
+  /** IR-014: upload an inert file sample and require explicit rejection or sandbox evidence. */
+  async uploadIr014InertFile(params: { fileName: string; mimeType: string; contents: string }) {
+    await this.ensureIncidentDetailView();
+    await this.ensureCommentTabSelected();
+
+    const commentBox = this.page.getByRole('textbox', { name: /Add a Comment/i });
+    await expect(commentBox).toBeVisible({ timeout: 30_000 });
+    await commentBox.click();
+    const dialogMessagePromise = this.page
+      .waitForEvent('dialog', { timeout: 5_000 })
+      .then(async (dialog) => {
+        const message = dialog.message();
+        await dialog.accept();
+        return message;
+      })
+      .catch((error: unknown) => {
+        if (error instanceof Error && error.name === 'TimeoutError') {
+          return undefined;
+        }
+        throw error;
+      });
+    const fileChooserPromise = this.page.waitForEvent('filechooser');
+    await this.page.getByText('Upload File', { exact: true }).click();
+    const fileChooser = await fileChooserPromise;
+    await fileChooser.setFiles({
+      name: params.fileName,
+      mimeType: params.mimeType,
+      buffer: Buffer.from(params.contents, 'utf8'),
+    });
+
+    const dialogMessage = await dialogMessagePromise;
+    const rejectionMessage =
+      /doesn['’]t correspond to the accepted files? type|does not correspond to the accepted files? type|blocked|rejected|sandbox(?:ed)?|quarantined|unsupported file|file type.*not allowed|invalid file/i;
+    if (dialogMessage && rejectionMessage.test(dialogMessage)) {
+      return;
+    }
+
+    const securityNotice = this.page.getByText(
+      rejectionMessage,
+    ).last();
+    const uploadedNotice = this.page.getByText('File uploaded successfully!', { exact: true });
+
+    await expect(async () => {
+      expect(
+        (await securityNotice.isVisible().catch(() => false)) ||
+          (await uploadedNotice.isVisible().catch(() => false)),
+      ).toBe(true);
+    }).toPass({ timeout: 60_000 });
+
+    if (await uploadedNotice.isVisible()) {
+      throw new Error(`IR-014: "${params.fileName}" was accepted instead of blocked or sandboxed`);
+    }
+
+    await expect(
+      securityNotice,
+      `IR-014: "${params.fileName}" should be blocked or show sandbox/quarantine handling`,
+    ).toBeVisible();
+  }
+
+  /** IR-014: verify comment markup is rendered as text and does not execute. */
+  async postIr014XssCommentAndExpectSanitized(commentText: string) {
+    const commentPrefix = commentText.split('<', 1)[0]?.trim();
+    if (!commentPrefix) {
+      throw new Error('IR-014: XSS test comment must include a visible text prefix');
+    }
+
+    await this.page.evaluate(() => {
+      delete document.body.dataset.ir014XssExecuted;
+    });
+
+    await this.postDetailComment(commentText);
+    await this.ensureCommentTabSelected();
+    await this.revealCommentIfOlder(commentPrefix, false);
+
+    const comment = this.commentTabPanel().getByText(commentPrefix, { exact: false }).last();
+    const executableMarkupExists = await comment.evaluate((commentNode) => {
+      const executableSelector = 'script, [onerror], [onload], [onclick], [onmouseover]';
+      return (
+        commentNode.matches(executableSelector) ||
+        commentNode.querySelector(executableSelector) != null ||
+        commentNode.parentElement?.querySelector(executableSelector) != null
+      );
+    });
+    expect(
+      executableMarkupExists,
+      'IR-014: comment markup must not retain executable HTML or event handlers',
+    ).toBe(false);
+
+    const executed = await this.page.evaluate(
+      () => document.body.dataset.ir014XssExecuted === 'true',
+    );
+    expect(executed, 'IR-014: XSS test marker must not execute').toBe(false);
+    await expect(comment).toBeVisible();
   }
 
   async expectDetailViewShowsCommentText(commentText: string) {

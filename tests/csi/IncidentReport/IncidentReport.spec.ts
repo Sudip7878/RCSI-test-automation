@@ -28,8 +28,10 @@ import {
   csiIncidentCommentUploadedPdfAliasName,
   csiIncidentDescription,
   csiIncidentHandlerDisplayName,
+  csiIncidentIr014XssComment,
   csiOrgAIncidentReportId,
   csiOrgBIncidentReportId,
+  CSI_INCIDENT_IR014_UPLOAD_CASES,
   CSI_INCIDENT_STATUS_TRANSITIONS_IR013,
   parseTestIncidentDescriptionSuffix,
 } from '../../../utils/csi/incidentReportTestData';
@@ -286,6 +288,38 @@ test.describe('CSI · Incident Report', () => {
         await csiLoginPage.logoutViaHeaderMenu();
         await csiLoginPage.expectEmailStepVisible();
         await csiLoginPage.gotoLogin();
+      }
+    });
+  });
+
+  test.describe('IR-014 — IR Partner uploads malicious file to ticket', () => {
+    test.describe.configure({ timeout: 300_000 });
+
+    test('IR-014', async ({ csiLoginPage, csiIncidentReportPage }) => {
+      if (
+        !process.env.CSI_INCIDENT_REPORTER_ONLY_TEST_EMAIL?.trim()?.length ||
+        !process.env.CSI_INCIDENT_REPORTER_ONLY_TEST_PASSWORD?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiIncidentReporterOnlyTestEmail(),
+        csiIncidentReporterOnlyTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+      await csiIncidentReportPage.openIncidentResponseFromSidebar();
+      await csiIncidentReportPage.openDashboard();
+      await csiIncidentReportPage.openFirstIncidentDetailsAndCaptureUrl();
+
+      await csiIncidentReportPage.postIr014XssCommentAndExpectSanitized(
+        csiIncidentIr014XssComment(),
+      );
+
+      for (const uploadCase of CSI_INCIDENT_IR014_UPLOAD_CASES) {
+        await csiIncidentReportPage.uploadIr014InertFile(uploadCase);
       }
     });
   });
