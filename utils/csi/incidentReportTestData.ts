@@ -1,6 +1,7 @@
 import * as path from 'node:path';
 import incidentReport from '../../data/csi/incidentReport.json';
 import { utcDateBasedNumber } from '../dateUtils';
+import { csiUniqueTimestampSuffix } from './salesAndBillingTestData';
 
 /** IR-019: Org A incident report id (`data/csi/incidentReport.json`). */
 export function csiOrgAIncidentReportId(): number {
@@ -38,6 +39,28 @@ export function csiIncidentCommentBody(suffix: string): string {
 export function csiIncidentCommentReplyBody(suffix: string): string {
   return `Test Comment Reply ${suffix}`;
 }
+
+/** IR-014: XSS test comment with a per-run unique marker. */
+export function csiIncidentIr014XssComment(): string {
+  return (
+    `IR-014 ${csiUniqueTimestampSuffix()} ` +
+    '<img src="invalid-ir014-image" onerror="document.body.dataset.ir014XssExecuted=\'true\'">'
+  );
+}
+
+/** IR-014: inert samples used to verify file-type and filename rejection behavior. */
+export const CSI_INCIDENT_IR014_UPLOAD_CASES = [
+  {
+    fileName: 'ir014-inert-sample.exe',
+    mimeType: 'application/octet-stream',
+    contents: 'IR-014 inert executable-extension test sample; not executable.',
+  },
+  {
+    fileName: 'ir014-malware-name-test.txt',
+    mimeType: 'text/plain',
+    contents: 'IR-014 inert filename-detection test sample; no malware content.',
+  },
+] as const;
 
 export function csiIncidentCommentUploadedPdfAliasName(suffix: string): string {
   return `Comment_Document_${suffix}.pdf`;
