@@ -58,6 +58,8 @@ import {
   csiAccountManagementLastName,
   csiDuplicateGroupFallbackTitleAm043,
   csiGroupTitleAm041,
+  AM036_ROLE_NAMES,
+  AM036_TARGET_USER_EMAIL,
 } from '../../../utils/csi/accountManagementTestData';
 import {
   csiAdminTestEmail,
@@ -1386,6 +1388,43 @@ test.describe('CSI · Account Management', () => {
             `[AM-033] Failure cleanup could not clear roles for ${subjectEmail} (loggedInAs=${session.loggedInAs}):`,
             cleanupError,
           );
+        }
+      }
+    });
+  });
+
+  test.describe('AM-036 assign multiple roles to same user', () => {
+    test.describe.configure({ timeout: 180_000 });
+
+    test('AM-036', async ({ csiLoginPage, csiAccountManagementPage }) => {
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(csiTestEmail(), csiTestPassword());
+      await csiLoginPage.expectOnHome();
+
+      let testFailed = false;
+      try {
+        await csiAccountManagementPage.assignMultipleRolesToUserOnUserList(
+          AM036_TARGET_USER_EMAIL,
+          AM036_ROLE_NAMES,
+        );
+        await csiAccountManagementPage.expectUserListShowsRoles(
+          AM036_TARGET_USER_EMAIL,
+          AM036_ROLE_NAMES,
+        );
+      } catch (error) {
+        testFailed = true;
+        throw error;
+      } finally {
+        try {
+          await csiAccountManagementPage.removeMultipleRolesFromUserOnUserList(
+            AM036_TARGET_USER_EMAIL,
+            AM036_ROLE_NAMES,
+          );
+        } catch (cleanupError) {
+          if (!testFailed) {
+            throw cleanupError;
+          }
+          console.error(`[AM-036] Cleanup failed for ${AM036_TARGET_USER_EMAIL}:`, cleanupError);
         }
       }
     });
