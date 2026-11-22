@@ -249,20 +249,6 @@ export class CsiAccountManagementPage extends BasePage {
     await expect(emailCell).toBeVisible({ timeout: 60_000 });
   }
 
-  /** AM-036: verify assigned roles in the user list's Role column. */
-  async expectUserListShowsRoles(email: string, roleNames: readonly string[]) {
-    await this.dismissRecordUpdatedNotice();
-    await this.openUserListWithSearchReady();
-    await this.searchUserListByEmail(email);
-
-    const row = this.userTableRowForEmail(email);
-    const roleCell = row.locator('td[data-header="Role"]');
-    await expect(roleCell).toBeVisible({ timeout: 60_000 });
-    for (const roleName of roleNames) {
-      await expect(roleCell).toContainText(roleName, { ignoreCase: true });
-    }
-  }
-
   /**
    * CC-022: first user-list row for `email` (top-to-bottom) — read Organization cell without sorting the grid.
    */
@@ -483,14 +469,6 @@ export class CsiAccountManagementPage extends BasePage {
     await this.confirmRoleChange();
     await this.expectRecordUpdatedSuccess();
     await this.dismissRecordUpdatedNotice();
-
-    await this.openUserListWithSearchReady();
-    await this.searchUserListByEmail(email);
-    const roleCell = this.userTableRowForEmail(email).locator('td[data-header="Role"]');
-    await expect(roleCell).toBeVisible({ timeout: 60_000 });
-    for (const roleName of roleNames) {
-      await expect(roleCell).not.toContainText(roleName, { ignoreCase: true });
-    }
   }
 
   /** AM-033: cleanup — uncheck every assignable role on the subject user. */

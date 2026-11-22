@@ -1,10 +1,20 @@
 const DEFAULT_FIRST_NAME = 'Test';
 
 /** AM-036: user whose role assignments are updated and verified. */
-export const AM036_TARGET_USER_EMAIL = 'dax.manning+217@avotech.com';
+export function csiAm036TargetUserEmail(): string {
+  const email = process.env.AM036_TARGET_USER_EMAIL?.trim();
+  if (!email) {
+    throw new Error('Set AM036_TARGET_USER_EMAIL in the environment (see .env.example).');
+  }
+  return email;
+}
 
 /** AM-036: roles to assign, verify in the user list, and remove during cleanup. */
 export const AM036_ROLE_NAMES = ['Phishing admin', 'Training Admin'] as const;
+
+/** AM-036: representative module routes used to verify role-based access. */
+export const AM036_PHISHING_MODULE_PATH = '/phishingDashboard';
+export const AM036_TRAINING_MODULE_PATH = '/courseDashboard';
 
 export function csiAccountManagementFirstName(): string {
   return DEFAULT_FIRST_NAME;

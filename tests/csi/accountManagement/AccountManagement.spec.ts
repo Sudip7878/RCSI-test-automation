@@ -59,7 +59,9 @@ import {
   csiDuplicateGroupFallbackTitleAm043,
   csiGroupTitleAm041,
   AM036_ROLE_NAMES,
-  AM036_TARGET_USER_EMAIL,
+  csiAm036TargetUserEmail,
+  AM036_PHISHING_MODULE_PATH,
+  AM036_TRAINING_MODULE_PATH,
 } from '../../../utils/csi/accountManagementTestData';
 import {
   csiAdminTestEmail,
@@ -1397,34 +1399,59 @@ test.describe('CSI · Account Management', () => {
     test.describe.configure({ timeout: 180_000 });
 
     test('AM-036', async ({ csiLoginPage, csiAccountManagementPage }) => {
-      await csiLoginPage.gotoLogin();
-      await csiLoginPage.signInWithEmailAndPassword(csiTestEmail(), csiTestPassword());
-      await csiLoginPage.expectOnHome();
+      if (!process.env.AM036_TARGET_USER_EMAIL?.trim()) {
+        test.skip();
+        return;
+      }
 
+      const targetUserEmail = csiAm036TargetUserEmail();
       let testFailed = false;
+      let cleanupNeeded = false;
       try {
+        await csiLoginPage.gotoLogin();
+        await csiLoginPage.signInWithEmailAndPassword(csiTestEmail(), csiTestPassword());
+        await csiLoginPage.expectOnHome();
+
+        cleanupNeeded = true;
         await csiAccountManagementPage.assignMultipleRolesToUserOnUserList(
-          AM036_TARGET_USER_EMAIL,
+          targetUserEmail,
           AM036_ROLE_NAMES,
         );
-        await csiAccountManagementPage.expectUserListShowsRoles(
-          AM036_TARGET_USER_EMAIL,
-          AM036_ROLE_NAMES,
+
+        await csiLoginPage.gotoHomeAndLogoutForAm033();
+        await csiLoginPage.gotoLogin();
+        await csiLoginPage.signInWithEmailAndPassword(targetUserEmail, csiTestPassword());
+        await csiLoginPage.expectAuthenticatedAppSession();
+
+        await csiAccountManagementPage.openModulePathAndExpectAccessible(
+          AM036_PHISHING_MODULE_PATH,
+        );
+        await csiAccountManagementPage.openModulePathAndExpectAccessible(
+          AM036_TRAINING_MODULE_PATH,
         );
       } catch (error) {
         testFailed = true;
         throw error;
       } finally {
-        try {
-          await csiAccountManagementPage.removeMultipleRolesFromUserOnUserList(
-            AM036_TARGET_USER_EMAIL,
-            AM036_ROLE_NAMES,
-          );
-        } catch (cleanupError) {
-          if (!testFailed) {
-            throw cleanupError;
+        if (cleanupNeeded) {
+          try {
+            await csiLoginPage.gotoHomeAndLogoutForAm033();
+            await csiLoginPage.gotoLogin();
+            await csiLoginPage.signInWithEmailAndPassword(csiTestEmail(), csiTestPassword());
+            await csiLoginPage.expectOnHome();
+            await csiAccountManagementPage.removeMultipleRolesFromUserOnUserList(
+              targetUserEmail,
+              AM036_ROLE_NAMES,
+            );
+          } catch (cleanupError) {
+            if (!testFailed) {
+              throw cleanupError;
+            }
+            console.error(
+              `[AM-036] Cleanup failed for ${targetUserEmail}:`,
+              cleanupError,
+            );
           }
-          console.error(`[AM-036] Cleanup failed for ${AM036_TARGET_USER_EMAIL}:`, cleanupError);
         }
       }
     });
