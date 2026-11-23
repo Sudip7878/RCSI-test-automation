@@ -12,10 +12,6 @@ export function csiAm036TargetUserEmail(): string {
 /** AM-036: roles to assign, verify in the user list, and remove during cleanup. */
 export const AM036_ROLE_NAMES = ['Phishing admin', 'Training Admin'] as const;
 
-/** AM-036: representative module routes used to verify role-based access. */
-export const AM036_PHISHING_MODULE_PATH = '/phishingDashboard';
-export const AM036_TRAINING_MODULE_PATH = '/courseDashboard';
-
 export function csiAccountManagementFirstName(): string {
   return DEFAULT_FIRST_NAME;
 }

@@ -60,9 +60,12 @@ import {
   csiGroupTitleAm041,
   AM036_ROLE_NAMES,
   csiAm036TargetUserEmail,
-  AM036_PHISHING_MODULE_PATH,
-  AM036_TRAINING_MODULE_PATH,
 } from '../../../utils/csi/accountManagementTestData';
+import {
+  CC010_PHISHING_MODULE_PATHS,
+  CC010_TRAINING_MODULE_PATHS,
+  CC010_MODULE_ACCESS_TIMEOUT_MS,
+} from '../../../utils/csi/crossCuttingTestData';
 import {
   csiAdminTestEmail,
   csiAdminTestPassword,
@@ -1396,7 +1399,7 @@ test.describe('CSI · Account Management', () => {
   });
 
   test.describe('AM-036 assign multiple roles to same user', () => {
-    test.describe.configure({ timeout: 180_000 });
+    test.describe.configure({ timeout: 600_000 });
 
     test('AM-036', async ({ csiLoginPage, csiAccountManagementPage }) => {
       if (!process.env.AM036_TARGET_USER_EMAIL?.trim()) {
@@ -1423,12 +1426,18 @@ test.describe('CSI · Account Management', () => {
         await csiLoginPage.signInWithEmailAndPassword(targetUserEmail, csiTestPassword());
         await csiLoginPage.expectAuthenticatedAppSession();
 
-        await csiAccountManagementPage.openModulePathAndExpectAccessible(
-          AM036_PHISHING_MODULE_PATH,
-        );
-        await csiAccountManagementPage.openModulePathAndExpectAccessible(
-          AM036_TRAINING_MODULE_PATH,
-        );
+        for (const modulePath of CC010_PHISHING_MODULE_PATHS) {
+          await csiAccountManagementPage.openModulePathAndExpectAccessible(
+            modulePath,
+            CC010_MODULE_ACCESS_TIMEOUT_MS,
+          );
+        }
+        for (const modulePath of CC010_TRAINING_MODULE_PATHS) {
+          await csiAccountManagementPage.openModulePathAndExpectAccessible(
+            modulePath,
+            CC010_MODULE_ACCESS_TIMEOUT_MS,
+          );
+        }
       } catch (error) {
         testFailed = true;
         throw error;
