@@ -8,7 +8,7 @@ export const randomOrganizationName = (length: number) => {
 export  const randomCjkOrganizationName = (length: number) =>
     Array.from({ length }, () => String.fromCodePoint(randomInt(0x4e00, 0xa000))).join('');
 
-export const randomEmail = () => `${randomUUID()}@example.com`;
+export const randomEmail = (domain = 'example.com') => `${randomUUID()}@${domain}`;
 
 export const organizationCategory = 'Banking';
 export const signupLanguage = 'English';

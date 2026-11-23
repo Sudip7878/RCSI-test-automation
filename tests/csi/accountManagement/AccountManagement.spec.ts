@@ -58,10 +58,10 @@ import {
   csiAccountManagementLastName,
   csiDuplicateGroupFallbackTitleAm043,
   csiGroupTitleAm041,
-  buildUniqueGmailAm059,
   AM036_ROLE_NAMES,
   csiAm036TargetUserEmail,
 } from '../../../utils/csi/accountManagementTestData';
+import { randomEmail } from '../../../utils/csi/am008OrganizationTestData';
 import {
   CC010_PHISHING_MODULE_PATHS,
   CC010_TRAINING_MODULE_PATHS,
@@ -1263,7 +1263,7 @@ test.describe('CSI · Account Management', () => {
       await csiLoginPage.gotoLogin();
       await csiLoginPage.openForgotPasswordAm059();
 
-      await csiLoginPage.submitForgotPasswordEmailAm059(buildUniqueGmailAm059());
+      await csiLoginPage.submitForgotPasswordEmailAm059(randomEmail('gmail.com'));
       await csiLoginPage.expectNoSuchEmailErrorAm059();
     });
   });
