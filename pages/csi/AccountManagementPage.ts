@@ -450,6 +450,27 @@ export class CsiAccountManagementPage extends BasePage {
     await this.dismissRecordUpdatedNotice();
   }
 
+  /** AM-036: add multiple roles to an existing user without removing current assignments. */
+  async assignMultipleRolesToUserOnUserList(email: string, roleNames: readonly string[]) {
+    const roleGrid = await this.openChangeRoleDialogForUser(email);
+    for (const roleName of roleNames) {
+      await this.checkRoleAssignmentByName(roleGrid, roleName);
+    }
+    await this.confirmRoleChange();
+    await this.expectRecordUpdatedSuccess();
+  }
+
+  /** AM-036: remove the role assignments after verification so the test can be rerun. */
+  async removeMultipleRolesFromUserOnUserList(email: string, roleNames: readonly string[]) {
+    const roleGrid = await this.openChangeRoleDialogForUser(email);
+    for (const roleName of roleNames) {
+      await this.uncheckRoleAssignmentByName(roleGrid, roleName);
+    }
+    await this.confirmRoleChange();
+    await this.expectRecordUpdatedSuccess();
+    await this.dismissRecordUpdatedNotice();
+  }
+
   /** AM-033: cleanup — uncheck every assignable role on the subject user. */
   async removeAllRoleAssignmentsFromUser(email: string) {
     const roleGrid = await this.openChangeRoleDialogForUser(email);

@@ -58,7 +58,14 @@ import {
   csiAccountManagementLastName,
   csiDuplicateGroupFallbackTitleAm043,
   csiGroupTitleAm041,
+  AM036_ROLE_NAMES,
+  csiAm036TargetUserEmail,
 } from '../../../utils/csi/accountManagementTestData';
+import {
+  CC010_PHISHING_MODULE_PATHS,
+  CC010_TRAINING_MODULE_PATHS,
+  CC010_MODULE_ACCESS_TIMEOUT_MS,
+} from '../../../utils/csi/crossCuttingTestData';
 import {
   csiAdminTestEmail,
   csiAdminTestPassword,
@@ -1386,6 +1393,74 @@ test.describe('CSI · Account Management', () => {
             `[AM-033] Failure cleanup could not clear roles for ${subjectEmail} (loggedInAs=${session.loggedInAs}):`,
             cleanupError,
           );
+        }
+      }
+    });
+  });
+
+  test.describe('AM-036 assign multiple roles to same user', () => {
+    test.describe.configure({ timeout: 600_000 });
+
+    test('AM-036', async ({ csiLoginPage, csiAccountManagementPage }) => {
+      if (!process.env.AM036_TARGET_USER_EMAIL?.trim()) {
+        test.skip();
+        return;
+      }
+
+      const targetUserEmail = csiAm036TargetUserEmail();
+      let testFailed = false;
+      let cleanupNeeded = false;
+      try {
+        await csiLoginPage.gotoLogin();
+        await csiLoginPage.signInWithEmailAndPassword(csiTestEmail(), csiTestPassword());
+        await csiLoginPage.expectOnHome();
+
+        cleanupNeeded = true;
+        await csiAccountManagementPage.assignMultipleRolesToUserOnUserList(
+          targetUserEmail,
+          AM036_ROLE_NAMES,
+        );
+
+        await csiLoginPage.gotoHomeAndLogoutForAm033();
+        await csiLoginPage.gotoLogin();
+        await csiLoginPage.signInWithEmailAndPassword(targetUserEmail, csiTestPassword());
+        await csiLoginPage.expectAuthenticatedAppSession();
+
+        for (const modulePath of CC010_PHISHING_MODULE_PATHS) {
+          await csiAccountManagementPage.openModulePathAndExpectAccessible(
+            modulePath,
+            CC010_MODULE_ACCESS_TIMEOUT_MS,
+          );
+        }
+        for (const modulePath of CC010_TRAINING_MODULE_PATHS) {
+          await csiAccountManagementPage.openModulePathAndExpectAccessible(
+            modulePath,
+            CC010_MODULE_ACCESS_TIMEOUT_MS,
+          );
+        }
+      } catch (error) {
+        testFailed = true;
+        throw error;
+      } finally {
+        if (cleanupNeeded) {
+          try {
+            await csiLoginPage.gotoHomeAndLogoutForAm033();
+            await csiLoginPage.gotoLogin();
+            await csiLoginPage.signInWithEmailAndPassword(csiTestEmail(), csiTestPassword());
+            await csiLoginPage.expectOnHome();
+            await csiAccountManagementPage.removeMultipleRolesFromUserOnUserList(
+              targetUserEmail,
+              AM036_ROLE_NAMES,
+            );
+          } catch (cleanupError) {
+            if (!testFailed) {
+              throw cleanupError;
+            }
+            console.error(
+              `[AM-036] Cleanup failed for ${targetUserEmail}:`,
+              cleanupError,
+            );
+          }
         }
       }
     });
