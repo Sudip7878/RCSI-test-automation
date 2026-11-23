@@ -1,4 +1,11 @@
+import { randomUUID } from 'node:crypto';
+
 const DEFAULT_FIRST_NAME = 'Test';
+
+/** AM-059: generates a unique Gmail address that is safe to use as an unregistered email. */
+export function buildUniqueGmailAm059(): string {
+  return `am059-${randomUUID()}@gmail.com`;
+}
 
 /** AM-036: user whose role assignments are updated and verified. */
 export function csiAm036TargetUserEmail(): string {

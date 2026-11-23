@@ -19,6 +19,7 @@ export class CsiAvotechLoginPage extends BasePage {
 
   readonly emailField = this.page.getByRole('textbox', { name: 'Enter your email' });
   readonly nextButton = this.page.getByRole('button', { name: 'Next' });
+  readonly forgotPasswordLink = this.page.getByRole('link', { name: /Forgot Password\?/i });
   readonly passwordField = this.page.getByRole('textbox', { name: 'Enter your password' });
   readonly staySignedInCheckbox = this.page.getByRole('checkbox', { name: 'Stay signed in for a week' });
   readonly loginButton = this.page.getByRole('button', { name: 'Log in' });
@@ -101,6 +102,21 @@ export class CsiAvotechLoginPage extends BasePage {
 
   async enterEmail(email: string) {
     await this.emailField.fill(email);
+  }
+
+  async openForgotPasswordAm059() {
+    await expect(this.forgotPasswordLink).toBeVisible();
+    await this.forgotPasswordLink.click();
+    await expect(this.emailField).toBeVisible();
+  }
+
+  async submitForgotPasswordEmailAm059(email: string) {
+    await this.emailField.fill(email);
+    await this.emailField.press('Enter');
+  }
+
+  async expectNoSuchEmailErrorAm059() {
+    await expect(this.page.getByText('No such email', { exact: false })).toBeVisible();
   }
 
   async goToPasswordStep() {
