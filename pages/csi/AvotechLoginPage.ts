@@ -20,7 +20,9 @@ export class CsiAvotechLoginPage extends BasePage {
   readonly emailField = this.page.getByRole('textbox', { name: 'Enter your email' });
   readonly nextButton = this.page.getByRole('button', { name: 'Next' });
   readonly forgotPasswordLink = this.page.getByText('Forgot Password?', { exact: true });
-  readonly forgotPasswordForm = this.page.locator('#forgotPasswordForm');
+  readonly forgotPasswordForm = this.page.locator('form').filter({
+    has: this.page.getByRole('button', { name: 'Reset password' }),
+  });
   readonly forgotPasswordEmailField = this.forgotPasswordForm.getByRole('textbox', {
     name: 'Enter your email',
   });
