@@ -19,6 +19,16 @@ export class CsiAvotechLoginPage extends BasePage {
 
   readonly emailField = this.page.getByRole('textbox', { name: 'Enter your email' });
   readonly nextButton = this.page.getByRole('button', { name: 'Next' });
+  readonly forgotPasswordLink = this.page.getByText('Forgot Password?', { exact: true });
+  readonly forgotPasswordForm = this.page.locator('form').filter({
+    has: this.page.getByRole('button', { name: 'Reset password' }),
+  });
+  readonly forgotPasswordEmailField = this.forgotPasswordForm.getByRole('textbox', {
+    name: 'Enter your email',
+  });
+  readonly resetPasswordButton = this.forgotPasswordForm.getByRole('button', {
+    name: 'Reset password',
+  });
   readonly passwordField = this.page.getByRole('textbox', { name: 'Enter your password' });
   readonly staySignedInCheckbox = this.page.getByRole('checkbox', { name: 'Stay signed in for a week' });
   readonly loginButton = this.page.getByRole('button', { name: 'Log in' });
@@ -101,6 +111,22 @@ export class CsiAvotechLoginPage extends BasePage {
 
   async enterEmail(email: string) {
     await this.emailField.fill(email);
+  }
+
+  async openForgotPasswordAm059() {
+    await expect(this.forgotPasswordLink).toBeVisible();
+    await this.forgotPasswordLink.click();
+    await expect(this.forgotPasswordEmailField).toBeVisible();
+  }
+
+  async submitForgotPasswordEmailAm059(email: string) {
+    await this.forgotPasswordEmailField.fill(email);
+    await expect(this.forgotPasswordEmailField).toHaveValue(email);
+    await this.resetPasswordButton.click();
+  }
+
+  async expectNoSuchEmailErrorAm059() {
+    await expect(this.page.getByText('No such email', { exact: false })).toBeVisible();
   }
 
   async goToPasswordStep() {

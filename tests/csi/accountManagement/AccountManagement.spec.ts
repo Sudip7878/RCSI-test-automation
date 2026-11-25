@@ -61,6 +61,7 @@ import {
   AM036_ROLE_NAMES,
   csiAm036TargetUserEmail,
 } from '../../../utils/csi/accountManagementTestData';
+import { randomEmail } from '../../../utils/csi/am008OrganizationTestData';
 import {
   CC010_PHISHING_MODULE_PATHS,
   CC010_TRAINING_MODULE_PATHS,
@@ -1250,6 +1251,20 @@ test.describe('CSI · Account Management', () => {
       await csiLoginPage.gotoLogin();
       await csiLoginPage.signInWithEmailAndPassword(userEmail, newPassword);
       await csiLoginPage.expectOnHome();
+    });
+  });
+
+  /**
+   * AM-059: request a password reset for an unregistered Gmail address and expect
+   * the "No such email" message.
+   */
+  test.describe('AM-059 Forgot password — unregistered email', () => {
+    test('AM-059', async ({ csiLoginPage }) => {
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.openForgotPasswordAm059();
+
+      await csiLoginPage.submitForgotPasswordEmailAm059(randomEmail('gmail.com'));
+      await csiLoginPage.expectNoSuchEmailErrorAm059();
     });
   });
 
