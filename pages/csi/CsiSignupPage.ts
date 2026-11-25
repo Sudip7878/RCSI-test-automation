@@ -17,8 +17,6 @@ export class CsiSignupPage extends BasePage {
   private readonly passwordErrorSpan: Locator;
   private readonly passwordNoErrorSpan: Locator;
   private readonly createAccountButton: Locator;
-  private readonly accountCreationSuccessMessage: Locator;
-  private readonly missingFieldsToast: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -38,8 +36,6 @@ export class CsiSignupPage extends BasePage {
     this.passwordErrorSpan = this.page.locator('.margin-bottom-m.ul span');
     this.passwordNoErrorSpan = this.page.locator('.margin-bottom-m.ul');
     this.createAccountButton = this.page.getByRole('button', { name: 'Create account' });
-    this.accountCreationSuccessMessage = this.page.locator('.margin-y-m');
-    this.missingFieldsToast = this.page.locator('.toast-message');
   }
 
   // 2. Action methods
@@ -52,17 +48,13 @@ export class CsiSignupPage extends BasePage {
     await this.nextStepButton.click();
   }
 
-  async fillSignupDetails(firstName: string, lastName: string, orgName: string, category: string, phone: string, language: string, Password: string) {
-    await this.page.waitForTimeout(3_000);
+  async fillSignupDetails(firstName: string, lastName: string, orgName: string, category: string, phone: string, language: string, weakPassword: string) {
     await this.firstNameInput.fill(firstName);
     await this.lastNameInput.fill(lastName);
     await this.organizationNameInput.fill(orgName);
 
     await this.categoryDropdown.click();
-    await this.page
-      .locator('.vscomp-dropbox:visible')
-      .getByText(category,)
-      .click({ timeout: 30_000 });
+    await this.page.locator('.vscomp-dropbox:visible').getByText(category, { exact: true }).click();
 
     await this.phoneNumberInput.fill(phone);
 
@@ -71,8 +63,8 @@ export class CsiSignupPage extends BasePage {
     await this.page.locator('.vscomp-dropbox:visible').getByText(language, { exact: true }).click();
 
     // Fill weak passwords
-    await this.passwordInput.fill(Password);
-    await this.confirmPasswordInput.fill(Password);
+    await this.passwordInput.fill(weakPassword);
+    await this.confirmPasswordInput.fill(weakPassword);
 
     // Agree to terms checkbox
     await this.termsCheckbox.check();
@@ -94,32 +86,4 @@ export class CsiSignupPage extends BasePage {
   async expectNoPasswordError() {
     await expect(this.createAccountButton).toBeDisabled();
   }
-
-  async clickCreateAccount() {
-    await this.createAccountButton.click();
-  }
-
-  async expectOrganizationNameLength(expectedLength: number) {
-    const organizationName = await this.organizationNameInput.inputValue();
-    expect(organizationName.length).toBe(expectedLength);
-  }
-
-  async expectMissingFieldsToast() {
-    await expect(this.missingFieldsToast).toHaveText('Some fields are missing.', { timeout: 30_000 });
-  }
-
-  async expectAccountCreationSuccess() {
-    await expect(this.accountCreationSuccessMessage).toHaveText(
-      /Your account has been created/,
-      { timeout: 30_000 }
-    );
-  }
-
-  async expectAccountCreationSuccessOrOrganizationAlreadyExists() {
-    await Promise.any([
-      expect(this.accountCreationSuccessMessage).toHaveText(/Your account has been created/, { timeout: 30_000 }),
-      expect(this.missingFieldsToast).toHaveText(/Organization name already Exist/, { timeout: 30_000 })
-    ]);
-  }
-
 }

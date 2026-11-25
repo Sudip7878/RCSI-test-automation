@@ -1,6 +1,8 @@
 import { expect } from '@playwright/test';
 
 import { test } from '../../../fixtures/csi/testSetup';
+import type { CsiSalesAndBillingPage } from '../../../pages/csi/SalesAndBillingPage';
+import type { Sb015LogoFile } from '../../../utils/csi/salesAndBillingTestData';
 import {
   csiCustomOrgOwnerTestEmail,
   csiCustomOrgOwnerTestPassword,
@@ -20,6 +22,12 @@ import {
 } from '../../../utils/csi/sb057WhiteLabelTestData';
 import {
   SB024_SALES_PARTNERS,
+  SB015_LOGO_CASES,
+  SB015_SVG_SCRIPT_MARKER,
+  SB015_VALID_FALLBACK_LOGO,
+  SB017_DOMAIN_CASES,
+  SB018_EMAIL_BRANDING_CASES,
+  SB054_CLIENT_NAME,
   csiExistingBillingPartnerNameForSb027,
   csiOrgASalesOrderIdForSb067,
   csiUniqueBillingPartnerName,
@@ -97,6 +105,29 @@ test.describe('CSI · Sales and Billing', () => {
       });
     });
 
+    test.describe('SB-003 Create package with no modules selected', () => {
+      test('SB-003', async ({ csiSalesAndBillingPage }) => {
+        const packageName = csiUniquePackageName('SB-003-');
+
+        await csiSalesAndBillingPage.openSalesAndBilling();
+        await csiSalesAndBillingPage.openPackageManagement();
+        await csiSalesAndBillingPage.clickAddPackage();
+        await csiSalesAndBillingPage.selectSalesPartnerAvotech();
+
+        await csiSalesAndBillingPage.fillPackageDetails(packageName, csiPackageDescription());
+
+        const moduleCheckboxes = csiSalesAndBillingPage.packageModuleCheckboxes;
+        const checkboxCount = await moduleCheckboxes.count();
+        expect(checkboxCount).toBeGreaterThan(0);
+
+        for (const checkbox of await moduleCheckboxes.all()) {
+          await expect(checkbox).not.toBeChecked();
+        }
+
+        await expect(csiSalesAndBillingPage.submitButton).toBeDisabled();
+      });
+    });
+
     test.describe('SB-004 create package with duplicate name', () => {
       test('SB-004', async ({ csiSalesAndBillingPage }) => {
         const packageName = csiExistingPackageNameForSb004();
@@ -113,6 +144,123 @@ test.describe('CSI · Sales and Billing', () => {
       });
     });
 
+    test.describe('SB-006 Create package with per-unit threshold at boundary', () => {
+      const thresholdCases = [
+        { title: 'accepts 0 as unlimited', threshold: 0, accepted: true },
+        { title: 'accepts 1', threshold: 1, accepted: true },
+        { title: 'accepts the large value 100000', threshold: 100000, accepted: true },
+        { title: 'rejects -1', threshold: -1, accepted: false, submitDisabled: true },
+        { title: 'rejects an empty threshold', threshold: null, accepted: false },
+        { title: 'rejects fractional value 1.5', threshold: 1.5, accepted: true },
+      ];
+
+      for (const { title, threshold, accepted, submitDisabled } of thresholdCases) {
+        test(`SB-006 ${title}`, async ({ csiSalesAndBillingPage }) => {
+          const packageName = csiUniquePackageName('SB-006-');
+
+          await csiSalesAndBillingPage.openSalesAndBilling();
+          await csiSalesAndBillingPage.openPackageManagement();
+          await csiSalesAndBillingPage.clickAddPackage();
+          await csiSalesAndBillingPage.fillPackageDetails(packageName, csiPackageDescription());
+          await csiSalesAndBillingPage.selectSalesPartnerAvotech();
+          await csiSalesAndBillingPage.selectAllModulesAndSetUnitPrice(threshold);
+          if (accepted) {
+            await csiSalesAndBillingPage.submitPackage();
+            await csiSalesAndBillingPage.expectPackageCreated(packageName);
+          } else {
+            if (submitDisabled) {
+              await expect(csiSalesAndBillingPage.submitButton).toBeDisabled();
+            } else {
+              await csiSalesAndBillingPage.submitPackage();
+            }
+            await expect(csiSalesAndBillingPage.packageNameInput).toBeVisible();
+            await expect(csiSalesAndBillingPage.page).not.toHaveURL(/\/PackageList/);
+          }
+        });
+      }
+    });
+
+    test.describe('SB-015 White-label — upload invalid logo file', () => {
+      const runLogoUploadCase = async (
+        csiSalesAndBillingPage: CsiSalesAndBillingPage,
+        file: Sb015LogoFile,
+        id: string,
+        marker?: string,
+      ) => {
+        const uniqueSuffix = csiUniqueTimestampSuffix();
+        const currentPartnerName = `${csiUniqueSalesPartnerName()}_${id}`;
+        await csiSalesAndBillingPage.openSalesAndBilling();
+        await csiSalesAndBillingPage.openSalesPartnerList();
+        await csiSalesAndBillingPage.clickAddSalesPartner();
+        await csiSalesAndBillingPage.fillSalesPartnerBasicInformation({
+          partnerName: currentPartnerName,
+          domain: csiSalesPartnerDomain(),
+          s3BucketName: csiSalesPartnerS3BucketName(),
+          s3BucketUrl: csiSalesPartnerS3BucketUrl(),
+          sendgridSenderName: csiSalesPartnerSendgridSenderName(),
+          sendgridReplyToEmail: csiSalesPartnerSendgridReplyToEmail(),
+          salesPartnerContactEmail: csiSalesPartnerContactEmail(),
+          subdomainExampleHost: `test-${uniqueSuffix}-${id}.com`,
+        });
+
+        await csiSalesAndBillingPage.openBrandingDetailsLogoPicker(
+          file,
+          SB015_VALID_FALLBACK_LOGO,
+          marker,
+        );
+      };
+
+      for (const { id, title, file } of SB015_LOGO_CASES) {
+        test(`SB-015 ${title}`, async ({ csiSalesAndBillingPage }) => {
+          await runLogoUploadCase(
+            csiSalesAndBillingPage,
+            file,
+            id,
+            id === 'svg' ? SB015_SVG_SCRIPT_MARKER : undefined,
+          );
+        });
+      }
+    });
+
+    test.describe('SB-017 custom domain validation', () => {
+      for (const { title, domain, expectsValidationMessage } of SB017_DOMAIN_CASES) {
+        test(`SB-017 ${title}`, async ({ csiSalesAndBillingPage }) => {
+          await csiSalesAndBillingPage.fillSalesPartnerBasicInformationSb017(domain);
+          await csiSalesAndBillingPage.clickNextOnAddSalesPartnerWizard();
+          await csiSalesAndBillingPage.expectSalesPartnerEmptyFieldValidationMessage(
+            expectsValidationMessage,
+          );
+        });
+      }
+    });
+
+    test.describe('SB-018 White-label — email branding with invalid sender', () => {
+      for (const {title,senderName,replyToEmail,expectsValidationMessage} of SB018_EMAIL_BRANDING_CASES) {
+        test(`SB-018 ${title}`, async ({ csiSalesAndBillingPage }) => {
+          const uniqueSuffix = csiUniqueTimestampSuffix();
+          const partnerName = `${csiUniqueSalesPartnerName()}_SB018`;
+
+          await csiSalesAndBillingPage.openSalesPartnerList();
+          await csiSalesAndBillingPage.clickAddSalesPartner();
+          await csiSalesAndBillingPage.fillSalesPartnerBasicInformation({
+            partnerName,
+            domain: csiSalesPartnerDomain(),
+            s3BucketName: csiSalesPartnerS3BucketName(),
+            s3BucketUrl: csiSalesPartnerS3BucketUrl(),
+            sendgridSenderName: senderName,
+            sendgridReplyToEmail: replyToEmail,
+            salesPartnerContactEmail: csiSalesPartnerContactEmail(),
+            subdomainExampleHost: `sb018-${uniqueSuffix}.com`,
+          });
+
+          await csiSalesAndBillingPage.clickNextOnAddSalesPartnerWizard();
+          await csiSalesAndBillingPage.expectSalesPartnerEmptyFieldValidationMessage(
+            expectsValidationMessage,
+          );
+        });
+      }
+    });
+
     test.describe('SB-022 create billing partner', () => {
       test('SB-022', async ({ csiSalesAndBillingPage }) => {
         const billingPartnerName = csiUniqueBillingPartnerName();
@@ -122,6 +270,21 @@ test.describe('CSI · Sales and Billing', () => {
         await csiSalesAndBillingPage.fillAddBillingPartnerForm(billingPartnerName, csiTestEmail());
         await csiSalesAndBillingPage.submitPackage();
         await csiSalesAndBillingPage.expectBillingPartnerCreated();
+      });
+    });
+
+    test.describe('SB-023 Create Billing Partner with no Sales Partner linked', () => {
+      test('SB-023', async ({ csiSalesAndBillingPage }) => {
+        const billingPartnerName = csiUniqueBillingPartnerName();
+
+        await csiSalesAndBillingPage.openBillingPartnerList();
+        await csiSalesAndBillingPage.clickAddBillingPartner();
+        await csiSalesAndBillingPage.fillAddBillingPartnerFormWithoutSalesPartner(
+          billingPartnerName,
+          csiTestEmail(),
+        );
+
+        await expect(csiSalesAndBillingPage.submitButton).toBeDisabled();
       });
     });
 
@@ -198,7 +361,7 @@ test.describe('CSI · Sales and Billing', () => {
 
         await csiSalesAndBillingPage.openClientList();
         await csiSalesAndBillingPage.clickAddClient();
-        await csiSalesAndBillingPage.fillAddClientFormSb029(sb029AddClientFormSteps(formData));
+        await csiSalesAndBillingPage.fillAddClientFormSb030(sb029AddClientFormSteps(formData));
         await csiSalesAndBillingPage.submitPackage();
         await csiSalesAndBillingPage.expectClientCreated();
       });
@@ -210,7 +373,7 @@ test.describe('CSI · Sales and Billing', () => {
 
         await csiSalesAndBillingPage.openClientList();
         await csiSalesAndBillingPage.clickAddClient();
-        await csiSalesAndBillingPage.fillAddClientFormSb029(sb030AddClientFormSteps(formData));
+        await csiSalesAndBillingPage.fillAddClientFormSb030(sb030AddClientFormSteps(formData));
         await csiSalesAndBillingPage.submitPackage();
         await csiSalesAndBillingPage.expectClientDuplicateNameRejected();
       });
@@ -222,12 +385,12 @@ test.describe('CSI · Sales and Billing', () => {
 
         await csiSalesAndBillingPage.openClientList();
         await csiSalesAndBillingPage.clickAddClient();
-        await csiSalesAndBillingPage.fillAddClientFormSb029(sb031AddClientFormSteps(formData));
+        await csiSalesAndBillingPage.fillAddClientFormSb030(sb031AddClientFormSteps(formData));
         await csiSalesAndBillingPage.submitPackage();
         await csiSalesAndBillingPage.expectClientDuplicateEmailRejected();
       });
     });
-    
+
     test.describe('Navigate to Sales Order and create sales order', () => {
       test('Navigate to Sales Order and create sales order', async ({
         csiSalesAndBillingPage,
@@ -255,6 +418,63 @@ test.describe('CSI · Sales and Billing', () => {
         );
 
         const salesOrderDatePickerMaxAttempts = 4;
+        await csiSalesAndBillingPage.pickTodaySalesStartDate(salesOrderDatePickerMaxAttempts);
+        await csiSalesAndBillingPage.fillSalesOrderDuration(duration);
+        await csiSalesAndBillingPage.selectFirstBillingMode();
+        await csiSalesAndBillingPage.selectAllSalesOrderModulesAndSetUnits(unitsPerModule);
+        await csiSalesAndBillingPage.continueSalesOrderToReview();
+        await csiSalesAndBillingPage.submitPackage();
+        await csiSalesAndBillingPage.expectSalesOrderCreated();
+      });
+    });
+
+    test.describe('SB-048 Sales Order — select Billing Partner not linked to Sales Partner', () => {
+      test('SB-048', async ({ csiSalesAndBillingPage }) => {
+        const salesOrderDropdownMaxAttempts = 4;
+
+        await csiSalesAndBillingPage.openSalesAndBilling();
+        await csiSalesAndBillingPage.openSalesOrder();
+        await csiSalesAndBillingPage.clickAddSalesOrder();
+        await csiSalesAndBillingPage.selectLastOptionByTriggerText(
+          'Select Client',
+          salesOrderDropdownMaxAttempts,
+        );
+        await csiSalesAndBillingPage.selectOptionByTriggerText(
+          'Select Sales Partner',
+          'Asia Insurance',
+          salesOrderDropdownMaxAttempts,
+        );
+        await csiSalesAndBillingPage.expectNoBillingPartnerForSearch(
+          'z',
+          salesOrderDropdownMaxAttempts,
+        );
+      });
+    });
+
+    test.describe('SB-054 Sales Order — select client not linked to Sales Partner', () => {
+      test('SB-054', async ({ csiSalesAndBillingPage }) => {
+        const duration = csiSalesOrderDuration();
+        const unitsPerModule = csiSalesOrderUnitsPerModule();
+        const salesOrderDropdownMaxAttempts = 4;
+        const salesOrderDatePickerMaxAttempts = 4;
+
+        await csiSalesAndBillingPage.openSalesAndBilling();
+        await csiSalesAndBillingPage.openSalesOrder();
+        await csiSalesAndBillingPage.clickAddSalesOrder();
+        await csiSalesAndBillingPage.selectOptionByTriggerText(
+          'Select Sales Partner',
+          'Avotech',
+          salesOrderDropdownMaxAttempts,
+        );
+        await csiSalesAndBillingPage.selectSalesOrderClientByOrganizationNameForAm009(
+          SB054_CLIENT_NAME,
+          salesOrderDropdownMaxAttempts,
+        );
+        await csiSalesAndBillingPage.selectFirstBillingPartnerOption(salesOrderDropdownMaxAttempts);
+        await csiSalesAndBillingPage.selectFirstOptionByTriggerText(
+          'Select Package Type',
+          salesOrderDropdownMaxAttempts,
+        );
         await csiSalesAndBillingPage.pickTodaySalesStartDate(salesOrderDatePickerMaxAttempts);
         await csiSalesAndBillingPage.fillSalesOrderDuration(duration);
         await csiSalesAndBillingPage.selectFirstBillingMode();

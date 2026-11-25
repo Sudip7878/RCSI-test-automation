@@ -1,12 +1,5 @@
 import { test } from '../../../fixtures/csi/testSetup';
-import { csiAccountManagementFirstName, csiAccountManagementLastName } from '../../../utils/csi/accountManagementTestData';
-import { phoneNumber } from '../../../utils/csi/am008OrganizationTestData';
-import {
-  organizationCategory,
-  randomEmail,
-  randomOrganizationName,
-  signupLanguage,
-} from '../../../utils/csi/am008OrganizationTestData';
+import { SignUpDetails } from '../../../data/csi/SignUpWithWeakPassword.json';
 // 1. Define your scenarios with an assertion flag
 const weakPasswordScenarios = [
   { label: 'too short (123)', password: '123', shouldShowError: true },
@@ -22,16 +15,16 @@ test.describe('Signup with weak password validations', () => {
     test(`should validate password behavior for: ${label}`, async ({ csiSignupPage }) => {
       
       await csiSignupPage.gotoSignup();
-      await csiSignupPage.enterEmail(randomEmail());
+      await csiSignupPage.enterEmail(SignUpDetails.testEmail);
 
       // Fill form with current password from loop
       await csiSignupPage.fillSignupDetails(
-        csiAccountManagementFirstName(),
-        csiAccountManagementLastName(),
-        randomOrganizationName(5),
-        organizationCategory,
-        phoneNumber,
-        signupLanguage,
+        SignUpDetails.FirstName,
+        SignUpDetails.LastName,
+        SignUpDetails.OrganizationName,
+        'Banking',
+        SignUpDetails.PhoneNumber,
+        'English',
         password
       );
 

@@ -48,6 +48,39 @@ export class CsiIncidentReportPage extends BasePage {
     return this.page.getByRole('tabpanel', { name: 'Comment' });
   }
 
+  private async revealCommentIfOlder(commentText: string, exact = true) {
+    const comment = this.commentTabPanel().getByText(commentText, { exact });
+    const showOlderComments = this.commentTabPanel().getByRole('link', {
+      name: 'Show older comments',
+      exact: true,
+    });
+    let clicks = 0;
+
+    for (; clicks < 100; clicks += 1) {
+      await this.page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+
+      if (await comment.isVisible().catch(() => false)) {
+        return;
+      }
+
+      if (!(await showOlderComments.isVisible().catch(() => false))) {
+        break;
+      }
+
+      await showOlderComments.scrollIntoViewIfNeeded();
+      const previousComments = await this.commentTabPanel().innerText();
+      await showOlderComments.click();
+      await expect(async () => {
+        expect(await this.commentTabPanel().innerText()).not.toBe(previousComments);
+      }).toPass({ timeout: 15_000 });
+    }
+
+    await expect(
+      comment,
+      `IR-015: comment "${commentText}" was not found after ${clicks} Show older comments click(s)`,
+    ).toBeVisible({ timeout: 60_000 });
+  }
+
   private async ensureIncidentDetailView() {
     await expect(this.page.getByText(/Incident Description/i)).toBeVisible({ timeout: 60_000 });
   }
@@ -198,6 +231,94 @@ export class CsiIncidentReportPage extends BasePage {
     await expect(authPage.getByText('Phone number', { exact: true })).not.toBeVisible({ timeout: 1_000 });
   }
 
+  /** IR-018: verify Incident Response redirects securely without exposing internal identifiers. */
+  async clickIncidentResponseAndExpectSecureRedirect(internalEmail: string) {
+    const link = this.page.getByRole('link', { name: 'Incident Response' });
+    await expect(link).toBeVisible({ timeout: 60_000 });
+
+    const context = this.page.context();
+    const authRequests: Array<Promise<{ url: URL; headers: Record<string, string> }>> = [];
+    const onRequest = (request: import('@playwright/test').Request) => {
+      const requestUrl = new URL(request.url());
+      if (requestUrl.hostname === CSI_BLACKPANDA_AUTH_HOST) {
+        authRequests.push(request.allHeaders().then((headers) => ({ url: requestUrl, headers })));
+      }
+    };
+
+    context.on('request', onRequest);
+    try {
+      const popupPromise = context.waitForEvent('page', { timeout: 10_000 }).catch(() => null);
+      await link.click();
+      const popup = await popupPromise;
+      const authPage = popup ?? this.page;
+
+      await authPage.waitForURL(
+        (url) => {
+          try {
+            return url.hostname === CSI_BLACKPANDA_AUTH_HOST;
+          } catch {
+            return false;
+          }
+        },
+        { timeout: 120_000, waitUntil: 'domcontentloaded' },
+      );
+
+      const finalUrl = new URL(authPage.url());
+      expect(finalUrl.protocol).toBe('https:');
+
+      const requests = await Promise.all(authRequests);
+      expect(requests.length).toBeGreaterThan(0);
+
+      const forbiddenIdentifier = /(?:^|[^a-z0-9])(?:org|user)[_-]?id(?:$|[^a-z0-9])/i;
+      const internalMarkers = [
+        { label: 'reporter email', value: internalEmail.toLowerCase() },
+        { label: 'CSI hostname', value: new URL(CSI_BASE_URL).hostname.toLowerCase() },
+      ];
+      const violations: string[] = [];
+
+      const checkUrl = (url: URL, label: string) => {
+        if (url.protocol !== 'https:') {
+          violations.push(`${label}: non-HTTPS URL`);
+        }
+        for (const [name, value] of url.searchParams) {
+          if (forbiddenIdentifier.test(name) || forbiddenIdentifier.test(value)) {
+            violations.push(`${label}: internal identifier in query`);
+          }
+          const internalMarker = internalMarkers.find((marker) =>
+            `${name}=${value}`.toLowerCase().includes(marker.value),
+          );
+          if (internalMarker) {
+            violations.push(`${label}: ${internalMarker.label} in query`);
+          }
+        }
+      };
+
+      checkUrl(finalUrl, 'redirect URL');
+      for (const [index, request] of requests.entries()) {
+        checkUrl(request.url, `redirect request ${index + 1}`);
+        for (const [name, value] of Object.entries(request.headers)) {
+          if (forbiddenIdentifier.test(name) || forbiddenIdentifier.test(value)) {
+            violations.push(`redirect request ${index + 1}: internal identifier in header`);
+          }
+          const internalMarker = internalMarkers.find(
+            (marker) =>
+              !(name.toLowerCase() === 'referer' && marker.label === 'CSI hostname') &&
+              `${name}=${value}`.toLowerCase().includes(marker.value),
+          );
+          if (internalMarker) {
+            violations.push(
+              `redirect request ${index + 1}: ${internalMarker.label} in header "${name}"`,
+            );
+          }
+        }
+      }
+
+      expect(violations).toEqual([]);
+    } finally {
+      context.off('request', onRequest);
+    }
+  }
+
   async startNewIncidentForm() {
     await expect(this.addNewIncidentButton).toBeVisible();
     await this.addNewIncidentButton.click();
@@ -291,6 +412,85 @@ export class CsiIncidentReportPage extends BasePage {
     await expect(row).toBeVisible({ timeout: 60_000 });
     await row.getByRole('button', { name: 'See Details' }).click();
     await this.ensureIncidentDetailView();
+  }
+
+  /** IR-020: open the first listed incident detail and capture its URL for access checks. */
+  async openFirstIncidentDetailsAndCaptureUrl(): Promise<string> {
+    const grid = this.incidentDashboardGrid();
+    await expect(grid).toBeVisible({ timeout: 60_000 });
+
+    const rows = await grid.getByRole('row').all();
+    for (const row of rows) {
+      const seeDetails = row.getByRole('button', { name: 'See Details' });
+      if (await seeDetails.isVisible().catch(() => false)) {
+        await seeDetails.click();
+        await this.ensureIncidentDetailView();
+        return this.page.url();
+      }
+    }
+
+    throw new Error('IR-020: no incident report with a See Details action was found');
+  }
+
+  /** IR-020: revisit a previously captured incident detail URL under another account. */
+  async openIncidentReportDetailUrl(detailUrl: string) {
+    const target = new URL(detailUrl);
+    const app = new URL(CSI_BASE_URL);
+    if (target.origin !== app.origin || target.pathname !== CSI_INCIDENT_REPORT_DETAIL_PATH) {
+      throw new Error('IR-020: captured URL is not an Incident Report detail URL on this CSI instance');
+    }
+
+    await this.page.goto(target.toString());
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  /** IR-015: scan dashboard pages and return the CaseId for a matching Reporter. */
+  async findIncidentReportCaseIdByReporterName(reporterName: string): Promise<string> {
+    const grid = this.incidentDashboardGrid();
+    await expect(grid).toBeVisible({ timeout: 60_000 });
+
+    const headers = await grid.getByRole('columnheader').allInnerTexts();
+    const reporterColumn = headers.findIndex((header) => header.trim() === 'Reporter');
+    const caseIdColumn = headers.findIndex((header) => header.trim() === 'CaseId');
+    if (reporterColumn < 0 || caseIdColumn < 0) {
+      throw new Error('IR-015: incident report grid is missing the Reporter or CaseId column');
+    }
+
+    const nextPage = this.page.getByRole('button', { name: 'go to next page' });
+    for (let pagesWalked = 0; pagesWalked <= 200; pagesWalked += 1) {
+      const rows = await grid.getByRole('row').all();
+      for (const row of rows) {
+        const cells = row.getByRole('gridcell');
+        if ((await cells.count()) <= Math.max(reporterColumn, caseIdColumn)) {
+          continue;
+        }
+
+        const rowReporter = (await cells.nth(reporterColumn).innerText()).trim();
+        const caseId = (await cells.nth(caseIdColumn).innerText()).trim();
+        if (rowReporter === reporterName) {
+          return caseId;
+        }
+      }
+
+      if (!(await nextPage.isVisible().catch(() => false))) {
+        break;
+      }
+      const disabled = await nextPage.evaluate((button) => (button as HTMLButtonElement).disabled);
+      if (disabled) {
+        break;
+      }
+      if (pagesWalked === 200) {
+        throw new Error('IR-015: incident report pagination exceeded 200 pages');
+      }
+
+      const previousPageText = await grid.innerText();
+      await nextPage.click();
+      await expect(async () => {
+        expect(await grid.innerText()).not.toBe(previousPageText);
+      }).toPass({ timeout: 30_000 });
+    }
+
+    throw new Error(`IR-015: could not find Reporter "${reporterName}" in the incident report grid`);
   }
 
   /**
@@ -414,12 +614,155 @@ export class CsiIncidentReportPage extends BasePage {
     });
   }
 
+  async postDetailComment(commentText: string) {
+    await this.ensureIncidentDetailView();
+    await this.ensureCommentTabSelected();
+
+    const commentBox = this.page.getByRole('textbox', { name: /Add a Comment/i });
+    await expect(commentBox).toBeVisible({ timeout: 30_000 });
+    await this.page.waitForTimeout(5_000);
+    await commentBox.fill(commentText);
+    await commentBox.click();
+
+    const saveButton = this.commentTabPanel().getByRole('button', { name: 'Save', exact: true });
+    await expect(saveButton).toBeVisible({ timeout: 30_000 });
+    await saveButton.click();
+    await expect(this.page.getByText('Comment added successfully!', { exact: true })).toBeVisible({
+      timeout: 60_000,
+    });
+  }
+
+  /** IR-014: upload an inert file sample and require explicit rejection or sandbox evidence. */
+  async uploadIr014InertFile(params: { fileName: string; mimeType: string; contents: string }) {
+    await this.ensureIncidentDetailView();
+    await this.ensureCommentTabSelected();
+
+    const commentBox = this.page.getByRole('textbox', { name: /Add a Comment/i });
+    await expect(commentBox).toBeVisible({ timeout: 30_000 });
+    await commentBox.click();
+    const dialogMessagePromise = this.page
+      .waitForEvent('dialog', { timeout: 5_000 })
+      .then(async (dialog) => {
+        const message = dialog.message();
+        await dialog.accept();
+        return message;
+      })
+      .catch((error: unknown) => {
+        if (error instanceof Error && error.name === 'TimeoutError') {
+          return undefined;
+        }
+        throw error;
+      });
+    const fileChooserPromise = this.page.waitForEvent('filechooser');
+    await this.page.getByText('Upload File', { exact: true }).click();
+    const fileChooser = await fileChooserPromise;
+    await fileChooser.setFiles({
+      name: params.fileName,
+      mimeType: params.mimeType,
+      buffer: Buffer.from(params.contents, 'utf8'),
+    });
+
+    const dialogMessage = await dialogMessagePromise;
+    const rejectionMessage =
+      /doesn['’]t correspond to the accepted files? type|does not correspond to the accepted files? type|blocked|rejected|sandbox(?:ed)?|quarantined|unsupported file|file type.*not allowed|invalid file/i;
+    if (dialogMessage && rejectionMessage.test(dialogMessage)) {
+      return;
+    }
+
+    const securityNotice = this.page.getByText(
+      rejectionMessage,
+    ).last();
+    const uploadedNotice = this.page.getByText('File uploaded successfully!', { exact: true });
+
+    await expect(async () => {
+      expect(
+        (await securityNotice.isVisible().catch(() => false)) ||
+          (await uploadedNotice.isVisible().catch(() => false)),
+      ).toBe(true);
+    }).toPass({ timeout: 60_000 });
+
+    if (await uploadedNotice.isVisible()) {
+      throw new Error(`IR-014: "${params.fileName}" was accepted instead of blocked or sandboxed`);
+    }
+
+    await expect(
+      securityNotice,
+      `IR-014: "${params.fileName}" should be blocked or show sandbox/quarantine handling`,
+    ).toBeVisible();
+  }
+
+  /** IR-014: verify comment markup is rendered as text and does not execute. */
+  async postIr014XssCommentAndExpectSanitized(commentText: string) {
+    const commentPrefix = commentText.split('<', 1)[0]?.trim();
+    if (!commentPrefix) {
+      throw new Error('IR-014: XSS test comment must include a visible text prefix');
+    }
+
+    await this.page.evaluate(() => {
+      delete document.body.dataset.ir014XssExecuted;
+    });
+
+    await this.postDetailComment(commentText);
+    await this.ensureCommentTabSelected();
+    await this.revealCommentIfOlder(commentPrefix, false);
+
+    const comment = this.commentTabPanel().getByText(commentPrefix, { exact: false }).last();
+    const executableMarkupExists = await comment.evaluate((commentNode) => {
+      const executableSelector = 'script, [onerror], [onload], [onclick], [onmouseover]';
+      return (
+        commentNode.matches(executableSelector) ||
+        commentNode.querySelector(executableSelector) != null ||
+        commentNode.parentElement?.querySelector(executableSelector) != null
+      );
+    });
+    expect(
+      executableMarkupExists,
+      'IR-014: comment markup must not retain executable HTML or event handlers',
+    ).toBe(false);
+
+    const executed = await this.page.evaluate(
+      () => document.body.dataset.ir014XssExecuted === 'true',
+    );
+    expect(executed, 'IR-014: XSS test marker must not execute').toBe(false);
+    await expect(comment).toBeVisible();
+  }
+
   async expectDetailViewShowsCommentText(commentText: string) {
     await this.ensureIncidentDetailView();
     await this.ensureCommentTabSelected();
     await expect(this.commentTabPanel().getByText(commentText, { exact: true })).toBeVisible({
       timeout: 60_000,
     });
+  }
+
+  /** IR-015: inspect exact Edit text in the matching comment's DOM container. */
+  async expectDetailCommentNotEditable(commentText: string) {
+    await this.ensureIncidentDetailView();
+    await this.ensureCommentTabSelected();
+
+    await this.revealCommentIfOlder(commentText);
+    const comment = this.commentTabPanel().getByText(commentText, { exact: true });
+    const hasEditText = await comment.evaluate((commentNode) => {
+      const panel = commentNode.closest('[role="tabpanel"]');
+      if (!panel) {
+        throw new Error('IR-015: matching comment is not inside the Comment tab panel');
+      }
+
+      const commentContainer =
+        commentNode.closest('article, li, [data-testid*="comment" i], [class*="comment" i]') ??
+        commentNode.parentElement;
+      if (!commentContainer || !panel.contains(commentContainer)) {
+        throw new Error('IR-015: could not locate the matching comment container in the DOM');
+      }
+
+      return Array.from(commentContainer.querySelectorAll('*')).some(
+        (element) =>
+          element.children.length === 0 &&
+          element.textContent?.trim() === 'Edit' &&
+          element !== commentNode,
+      );
+    });
+    expect(hasEditText).toBe(false);
   }
 
   async expectDetailCommentAttachmentAliasVisible(aliasPdfFileName: string) {

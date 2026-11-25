@@ -27,6 +27,14 @@ import {
   SB027_BILLING_PARTNER_PAYMENT_METHOD_OPTION,
   SB027_DUPLICATE_BILLING_PARTNER_NAME_ERROR,
   SB067_NO_PERMISSION_MESSAGE_TIMEOUT_MS,
+  csiSalesPartnerContactEmail,
+  csiSalesPartnerDomain,
+  csiSalesPartnerS3BucketName,
+  csiSalesPartnerS3BucketUrl,
+  csiSalesPartnerSendgridReplyToEmail,
+  csiSalesPartnerSendgridSenderName,
+  csiUniqueSalesPartnerName,
+  csiUniqueTimestampSuffix,
 } from '../../utils/csi/salesAndBillingTestData';
 import {
   sb057HeaderOrgLogoLocator,
@@ -46,6 +54,12 @@ import { BasePage } from '../BasePage';
 /** Pause before each sales-order VirtualSelect open (AM-009, SB-046, SB-052). */
 export const CSI_SALES_ORDER_DROPDOWN_SETTLE_MS = 5_000;
 
+type BrandingLogoFile = {
+  name: string;
+  mimeType: string;
+  buffer: Buffer;
+};
+
 export class CsiSalesAndBillingPage extends BasePage {
   readonly salesOrderLink = this.page.getByRole('link', { name: 'Sales Order' });
   readonly addSalesOrderButton = this.page.getByRole('button', { name: 'Add Sales Order' });
@@ -57,6 +71,7 @@ export class CsiSalesAndBillingPage extends BasePage {
 
   readonly packageNameInput = this.page.getByRole('textbox', { name: 'Package Name*' });
   readonly packageDescriptionInput = this.page.getByRole('textbox', { name: /description/i });
+  readonly packageModuleCheckboxes = this.page.getByRole('grid').getByRole('checkbox');
 
   readonly salesPartnerDropdown = this.page.getByText('Select Sales Partner');
   readonly avotechSalesPartnerOption = this.page.getByRole('option', { name: 'Avotech' });
@@ -84,6 +99,9 @@ export class CsiSalesAndBillingPage extends BasePage {
   readonly addSalesPartnerButton = this.page.getByRole('button', { name: 'Add Sales Partner' });
   readonly salesPartnerPartnerNameInput = this.page.getByRole('textbox', { name: 'Partner Name*' });
   readonly salesPartnerDomainInput = this.page.getByRole('textbox', { name: 'Domain*' });
+  readonly salesPartnerEmptyFieldValidationMessage = this.page.getByText('This field is required.', {
+    exact: true,
+  });
   readonly salesPartnerS3BucketNameInput = this.page.getByRole('textbox', { name: 'S3 Bucket Name*' });
   readonly salesPartnerS3BucketUrlInput = this.page.getByRole('textbox', { name: 'S3 Bucket URL*' });
   readonly salesPartnerSendgridSenderNameInput = this.page.getByRole('textbox', {
@@ -97,6 +115,12 @@ export class CsiSalesAndBillingPage extends BasePage {
   });
   readonly salesPartnerSubdomainExampleInput = this.page.getByRole('textbox', { name: 'ex: google.com' });
   readonly nextButton = this.page.getByRole('button', { name: 'Next' });
+  readonly brandingDetailsChangeLogoLink = this.page.locator('a[data-link][href="#"]', {
+    hasText: 'Change Logo',
+  });
+  readonly brandingDetailsSelectLogoPrompt = this.page.locator('span[data-expression=""]', {
+    hasText: 'Select or Drop Image File here',
+  });
 
   private salesOrderFieldTrigger(triggerText: string): Locator {
     return this.page.getByText(triggerText, { exact: true });
@@ -259,6 +283,39 @@ export class CsiSalesAndBillingPage extends BasePage {
     }
   }
 
+  async selectOptionByTriggerText(
+    triggerText: string,
+    optionName: string,
+    maxAttempts = 4,
+  ) {
+    const trigger = this.salesOrderFieldTrigger(triggerText);
+    const option = this.page.getByRole('listbox').getByRole('option', {
+      name: optionName,
+      exact: true,
+    });
+    await this.waitForElement(trigger);
+
+    let lastError: unknown;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      await this.waitForSalesOrderDropdownToSettle();
+      await trigger.click();
+
+      try {
+        await expect(option).toBeVisible({ timeout: 15_000 });
+        await option.click();
+        return;
+      } catch (error) {
+        lastError = error;
+        if (attempt === maxAttempts - 1) {
+          throw lastError;
+        }
+        await this.page.keyboard.press('Escape').catch(() => {});
+        await this.safeSleep(500);
+      }
+    }
+  }
+
   /**
    * AM-009: search Client Name for the organization created in the same flow.
    * Separate from {@link selectLastOptionByTriggerText}; uses the same dropdown settle as SB-046.
@@ -322,6 +379,36 @@ export class CsiSalesAndBillingPage extends BasePage {
     await this.selectFirstOptionByTriggerText('Select Billing Partner', maxAttempts);
   }
 
+  async expectNoBillingPartnerForSearch(searchTerm: string, maxAttempts = 4) {
+    const trigger = this.salesOrderFieldTrigger('Select Billing Partner');
+    await this.waitForElement(trigger);
+
+    let lastError: unknown;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      await this.waitForSalesOrderDropdownToSettle();
+      await trigger.click();
+
+      try {
+        const searchInput = this.page.getByPlaceholder(/Search/i).filter({ visible: true }).last();
+        await expect(searchInput).toBeVisible({ timeout: 15_000 });
+        await searchInput.fill(searchTerm);
+        await expect(this.page.locator('.vscomp-no-search-results:visible').last()).toHaveText(
+          'No Result Found',
+          { timeout: 15_000 },
+        );
+        return;
+      } catch (error) {
+        lastError = error;
+        if (attempt === maxAttempts - 1) {
+          throw lastError;
+        }
+        await this.page.keyboard.press('Escape').catch(() => {});
+        await this.safeSleep(500);
+      }
+    }
+  }
+
   /** AM-009: Billing Partner listbox is portaled; pick the first option from the open listbox. */
   async selectFirstBillingPartnerOptionForAm009(maxAttempts = 4) {
     await this.page.waitForTimeout(3_000);
@@ -351,7 +438,7 @@ export class CsiSalesAndBillingPage extends BasePage {
     }
   }
 
-  async selectAllModulesAndSetUnitPrice(unitPrice: number) {
+  async selectAllModulesAndSetUnitPrice(unitPrice: number | null) {
     const moduleGrid = this.page.getByRole('grid');
     const checkboxes = await moduleGrid.getByRole('checkbox').all();
     expect(checkboxes.length).toBeGreaterThan(0);
@@ -365,7 +452,7 @@ export class CsiSalesAndBillingPage extends BasePage {
 
     for (const unitPriceInput of unitPriceInputs) {
       await expect(unitPriceInput).toBeEnabled();
-      await unitPriceInput.fill(String(unitPrice));
+      await unitPriceInput.fill(unitPrice === null ? '' : String(unitPrice));
     }
   }
 
@@ -607,7 +694,7 @@ export class CsiSalesAndBillingPage extends BasePage {
     await select.selectOption(firstValue);
   }
 
-  async fillAddClientFormSb029(steps: Sb030AddClientFormStep[]) {
+  async fillAddClientFormSb030(steps: Sb030AddClientFormStep[]) {
     for (const step of steps) {
       if (step.type === 'textbox') {
         const input = this.page.getByRole('textbox', { name: step.name });
@@ -676,6 +763,28 @@ export class CsiSalesAndBillingPage extends BasePage {
     await emailInput.fill(email);
 
     await this.selectVirtualSelectOption('Select Sales Partner', 'Avotech');
+    await this.selectVirtualSelectOption(
+      'Select Payment Method',
+      SB027_BILLING_PARTNER_PAYMENT_METHOD_OPTION,
+    );
+
+    const addressInput = this.page.getByRole('textbox', { name: 'Address*' });
+    await addressInput.click();
+    await addressInput.fill('Test Address');
+  }
+
+  /** SB-023: fill required Billing Partner details without selecting a Sales Partner. */
+  async fillAddBillingPartnerFormWithoutSalesPartner(
+    billingPartnerName: string,
+    email: string,
+  ) {
+    await this.billingPartnerNameInput.click();
+    await this.billingPartnerNameInput.fill(billingPartnerName);
+
+    const emailInput = this.page.getByRole('textbox', { name: 'Email*' });
+    await emailInput.click();
+    await emailInput.fill(email);
+
     await this.selectVirtualSelectOption(
       'Select Payment Method',
       SB027_BILLING_PARTNER_PAYMENT_METHOD_OPTION,
@@ -858,6 +967,113 @@ export class CsiSalesAndBillingPage extends BasePage {
     await expect(this.salesPartnerPartnerNameInput).toBeVisible({ timeout: 30_000 });
   }
 
+  async fillSalesPartnerBasicInformationSb017(domain: string) {
+    const uniqueSuffix = csiUniqueTimestampSuffix();
+    const partnerName = `${csiUniqueSalesPartnerName()}_SB017`;
+
+    await this.openSalesPartnerList();
+    await this.clickAddSalesPartner();
+    await this.fillSalesPartnerBasicInformation({
+      partnerName,
+      domain,
+      s3BucketName: csiSalesPartnerS3BucketName(),
+      s3BucketUrl: csiSalesPartnerS3BucketUrl(),
+      sendgridSenderName: csiSalesPartnerSendgridSenderName(),
+      sendgridReplyToEmail: csiSalesPartnerSendgridReplyToEmail(),
+      salesPartnerContactEmail: csiSalesPartnerContactEmail(),
+      subdomainExampleHost: `sb017-${uniqueSuffix}.com`,
+    });
+    await expect(this.salesPartnerDomainInput).toHaveValue(domain);
+  }
+
+  async expectInvalidLogoFileTypeRejectionToast() {
+    await expect(
+      this.page
+        .locator('.toast-message')
+        .filter({ hasText: /^FIle doesn't correspond to the accepted files type to accept$/ }),
+    ).toBeVisible();
+  }
+
+  async openBrandingDetailsLogoPicker(
+    file: BrandingLogoFile,
+    validFallbackLogo: BrandingLogoFile,
+    svgScriptMarker?: string,
+  ) {
+    await expect(this.brandingDetailsChangeLogoLink).toBeVisible();
+    await this.brandingDetailsChangeLogoLink.click();
+    await expect(this.brandingDetailsSelectLogoPrompt).toBeVisible();
+
+    const logoInput = this.page.locator('input[type="file"]').first();
+    await expect(logoInput).toBeAttached();
+    const existingImageSources = await this.page.locator('img').evaluateAll((images) =>
+      images.map((image) => (image as HTMLImageElement).currentSrc || (image as HTMLImageElement).src),
+    );
+    await logoInput.setInputFiles(file);
+
+    let rejected = false;
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      const fileCount = await logoInput.evaluate(
+        (input: HTMLInputElement) => input.files?.length ?? 0,
+      );
+      const bodyText = await this.page.locator('body').innerText();
+      rejected =
+        (await this.page
+          .locator('.toast-message')
+          .filter({ hasText: /^FIle doesn't correspond to the accepted files type to accept$/ })
+          .isVisible()) ||
+        fileCount === 0 ||
+        /invalid|unsupported|only.*image|image.*only|file size|maximum.*size|too large|upload a valid file|doesn't correspond to the accepted files type/i.test(
+          bodyText,
+        );
+      if (rejected) {
+        break;
+      }
+      await this.page.waitForTimeout(200);
+    }
+
+    if (svgScriptMarker === undefined || rejected) {
+      expect(rejected, `${file.name} should be rejected`).toBe(true);
+      if (file.mimeType === 'application/x-msdownload' || file.mimeType === 'application/pdf') {
+        await this.expectInvalidLogoFileTypeRejectionToast();
+      }
+      await logoInput.setInputFiles(validFallbackLogo);
+    } else {
+      const scriptExecuted = await this.page.evaluate(
+        (marker) => document.documentElement.dataset[marker] === 'true',
+        svgScriptMarker,
+      );
+      expect(scriptExecuted, 'SVG script must not execute').toBe(false);
+
+      const svgWasSanitized = await this.page.evaluate(async (previousSources) => {
+        const svgSources = Array.from(document.querySelectorAll('img'))
+          .map((image) => image.currentSrc || image.src)
+          .filter(
+            (source) =>
+              !previousSources.includes(source) &&
+              (source.startsWith('blob:') || source.startsWith('data:image/svg+xml')),
+          );
+        if (svgSources.length === 0) {
+          return false;
+        }
+
+        for (const source of svgSources) {
+          const content = await fetch(source).then((response) => response.text());
+          if (/<script\b|\bon[a-z]+\s*=|javascript\s*:/i.test(content)) {
+            return false;
+          }
+        }
+        return true;
+      }, existingImageSources);
+      expect(svgWasSanitized, 'Accepted SVG must be sanitized').toBe(true);
+    }
+
+    const uploadDialog = this.page.getByRole('dialog');
+    const saveLogoButton = uploadDialog.getByRole('button', { name: 'Save' });
+    await expect(saveLogoButton).toBeEnabled();
+    await saveLogoButton.click();
+    await expect(uploadDialog).toBeHidden();
+  }
+
   async fillSalesPartnerBasicInformation(params: {
     partnerName: string;
     domain: string;
@@ -897,6 +1113,14 @@ export class CsiSalesAndBillingPage extends BasePage {
   async clickNextOnAddSalesPartnerWizard() {
     await expect(this.nextButton).toBeVisible();
     await this.nextButton.click();
+  }
+
+  async expectSalesPartnerEmptyFieldValidationMessage(shouldBeVisible: boolean) {
+    if (shouldBeVisible) {
+      await expect(this.salesPartnerEmptyFieldValidationMessage).toBeVisible();
+    } else {
+      await expect(this.salesPartnerEmptyFieldValidationMessage).toBeHidden();
+    }
   }
 
   async fillSalesPartnerEmailTemplateStep(uniqueSuffix: string) {
