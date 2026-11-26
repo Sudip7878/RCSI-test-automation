@@ -244,6 +244,31 @@ export class CsiAccountManagementPage extends BasePage {
     });
   }
 
+  /** AM-064: capture the displayed name of the first user-list row. */
+  async readFirstUserListNameAm064(): Promise<string> {
+    await this.clearUserListFilters();
+    const firstNameCell = this.userListGrid()
+      .locator('tbody tr.table-row')
+      .first()
+      .locator('td[data-header="Name"]');
+    await expect(firstNameCell).toBeVisible({ timeout: 30_000 });
+
+    const name = (await firstNameCell.textContent())?.replace(/\s+/g, ' ').trim() ?? '';
+    expect(name, 'The first user-list row must contain a user name').toBeTruthy();
+    return name;
+  }
+
+  /** AM-064: search by user name and wait until the result list contains no users. */
+  async searchUserListByNameAndExpectNoResultsAm064(name: string) {
+    await this.clearUserListFilters();
+    const rows = this.userListGrid().locator('tbody tr.table-row');
+    await expect(rows.first()).toBeVisible({ timeout: 30_000 });
+
+    await this.userNameSearchBox.fill(name);
+    await this.userSearchButton.click();
+    await expect(rows).toHaveCount(0, { timeout: 90_000 });
+  }
+
   async expectUserGridShowsEmail(email: string) {
     const emailCell = this.userListGrid().getByRole('gridcell', { name: email });
     await expect(emailCell).toBeVisible({ timeout: 60_000 });

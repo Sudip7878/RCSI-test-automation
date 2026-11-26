@@ -1009,6 +1009,48 @@ test.describe('CSI · Account Management', () => {
     });
   });
 
+  /**
+   * AM-064: a user listed in Org B must not appear when Org A system owner searches by name.
+   */
+  test.describe('AM-064 OrgA Admin cannot modify OrgB settings', () => {
+    test.describe.configure({ timeout: 180_000 });
+
+    test('AM-064', async ({ csiLoginPage, csiAccountManagementPage }) => {
+      if (
+        !process.env.CSI_ORG_A_SYSTEM_OWNER_TEST_PASSWORD?.length ||
+        !process.env.CSI_ORG_A_SYSTEM_OWNER_TEST_EMAIL?.trim()?.length ||
+        !process.env.CSI_ORG_B_SYSTEM_OWNER_TEST_PASSWORD?.length ||
+        !process.env.CSI_ORG_B_SYSTEM_OWNER_TEST_EMAIL?.trim()?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiOrgBSystemOwnerTestEmail(),
+        csiOrgBSystemOwnerTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+
+      await csiAccountManagementPage.openUserListWithSearchReady();
+      const orgBFirstUserName = await csiAccountManagementPage.readFirstUserListNameAm064();
+
+      await csiLoginPage.logoutViaHeaderMenu();
+      await csiLoginPage.expectEmailStepVisible();
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiOrgASystemOwnerTestEmail(),
+        csiOrgASystemOwnerTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+
+      await csiAccountManagementPage.openUserListWithSearchReady();
+      await csiAccountManagementPage.searchUserListByNameAndExpectNoResultsAm064(orgBFirstUserName);
+    });
+  });
+
   test.describe('AM-050 user deactivation and reactivation', () => {
     test.describe.configure({ timeout: 180_000 });
 
