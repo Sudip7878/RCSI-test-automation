@@ -334,6 +334,24 @@ export class CsiIncidentReportPage extends BasePage {
     await this.dataLeakageSelect.selectOption({ label: 'General / No Leakage' });
   }
 
+  /** IR-006: complete all incident fields except Incident Type and Description. */
+  async fillIncidentFormExceptTypeAndDescription(affectedSystems: string) {
+    await this.gradingOfVictimSelect.selectOption({ label: 'General Staff' });
+    await this.numberOfImpactedPeopleSelect.selectOption({ label: 'Single Department' });
+    await this.interruptionSelect.selectOption({ label: 'Non-production' });
+    await this.dataLeakageSelect.selectOption({ label: 'General / No Leakage' });
+    await this.affectedSystemsInput.fill(affectedSystems);
+    await this.affectedSystemsInput.blur();
+  }
+
+  /** IR-006: submit an incomplete incident form and expect its validation message. */
+  async submitIncompleteIncidentFormAndExpectValidation() {
+    await this.saveButton.click();
+    await expect(this.page.locator('.toast-message')).toHaveText('Please fill the complete form.', {
+      timeout: 30_000,
+    });
+  }
+
   async fillDescriptionAndAffectedSystems(description: string, affectedSystems: string) {
     await this.descriptionInput.click();
     await this.descriptionInput.fill(description);
