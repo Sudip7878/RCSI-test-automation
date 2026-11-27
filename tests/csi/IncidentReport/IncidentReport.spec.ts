@@ -70,6 +70,33 @@ test.describe('CSI · Incident Report', () => {
     });
   });
 
+  test.describe('IR-006 — submit incident with missing required fields', () => {
+    test('IR-006', async ({ csiLoginPage, csiIncidentReportPage }) => {
+      if (
+        !process.env.CSI_INCIDENT_REPORTER_ONLY_TEST_EMAIL?.trim()?.length ||
+        !process.env.CSI_INCIDENT_REPORTER_ONLY_TEST_PASSWORD?.length
+      ) {
+        test.skip();
+        return;
+      }
+
+      await csiLoginPage.gotoLogin();
+      await csiLoginPage.signInWithEmailAndPassword(
+        csiIncidentReporterOnlyTestEmail(),
+        csiIncidentReporterOnlyTestPassword(),
+      );
+      await csiLoginPage.expectOnHome();
+
+      await csiIncidentReportPage.openIncidentResponseFromSidebar();
+      await csiIncidentReportPage.openDashboard();
+      await csiIncidentReportPage.startNewIncidentForm();
+      await csiIncidentReportPage.fillIncidentFormExceptTypeAndDescription(
+        csiIncidentAffectedSystems(),
+      );
+      await csiIncidentReportPage.submitIncompleteIncidentFormAndExpectValidation();
+    });
+  });
+
   test.describe('IR-001 — assign Incident Reporter role', () => {
     test('IR-001', async ({
       csiLoginPage,
